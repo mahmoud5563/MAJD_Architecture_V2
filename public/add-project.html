@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إضافة مشروع - MAJD Architecture</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- لأيقونات Font Awesome -->
+    <style>
+        :root {
+            --primary-color: #014C47;
+            --primary-dark: #003a35;
+            --secondary-bg: #e6e6e6;
+            --text-color: #333;
+            --light-text-color: #f4f4f4;
+            --border-color: #ddd;
+            --sidebar-width: 250px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            direction: rtl;
+            text-align: right;
+        }
+
+        /* Header Styling */
+        .header {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        .header .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .header .user-info span {
+            margin-right: 15px;
+            /* Adjust for RTL */
+        }
+
+        .header .logout-button {
+            background-color: var(--primary-dark);
+            color: var(--light-text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .header .logout-button:hover {
+            background-color: #002b28;
+        }
+
+        .menu-toggle {
+            display: none;
+            /* Hidden on larger screens */
+            background: none;
+            border: none;
+            color: var(--light-text-color);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Layout Container */
+        .main-container {
+            display: flex;
+            flex: 1;
+            /* Allows container to take remaining height */
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+            position: relative;
+            /* Changed from absolute to relative for smoother flow */
+            flex-shrink: 0;
+            /* Prevent sidebar from shrinking */
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 5px;
+        }
+
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--light-text-color);
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar ul li a i {
+            margin-left: 10px;
+            /* Adjust for RTL */
+            font-size: 18px;
+        }
+
+        .sidebar ul li a:hover,
+        .sidebar ul li.active a {
+            background-color: var(--primary-dark);
+            border-radius: 0 20px 20px 0;
+            /* Rounded corners on the right for RTL */
+        }
+
+        /* Main Content Area */
+        .content-area {
+            flex-grow: 1;
+            /* Takes up remaining space */
+            padding: 20px;
+            overflow-y: auto;
+            /* Enable scrolling for content if it overflows */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Center content horizontally */
+        }
+
+        /* Form Styling */
+        .form-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 700px;
+            /* Max width for the form */
+            margin-top: 20px;
+            margin-bottom: 30px;
+        }
+
+        .form-container h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: right;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+            font-size: 16px;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="date"],
+        .form-group textarea,
+        .form-group select {
+            width: calc(100% - 20px);
+            /* Adjust for padding */
+            padding: 12px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .form-button {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .form-button.cancel {
+            background-color: #6c757d;
+        }
+
+        .form-button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .form-button.cancel:hover {
+            background-color: #5a6268;
+        }
+
+        .form-message {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .form-message.error {
+            background-color: #ffe6e6;
+            color: #cc0000;
+            border: 1px solid #cc0000;
+        }
+
+        .form-message.success {
+            background-color: #e6ffe6;
+            color: #008000;
+            border: 1px solid #008000;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .header .user-info span {
+                display: none;
+                /* Hide username on small screens */
+            }
+
+            .menu-toggle {
+                display: block;
+                /* Show menu toggle button */
+            }
+
+            .sidebar {
+                position: fixed;
+                /* Fixed position for overlay sidebar */
+                top: 0;
+                right: 0;
+                /* Position sidebar to the right for RTL */
+                height: 100%;
+                width: var(--sidebar-width);
+                transform: translateX(100%);
+                /* Initially hidden to the right */
+                z-index: 999;
+                /* Ensure it's above other content */
+                box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+                /* Shadow on the left for RTL */
+                padding-top: 70px;
+                /* Space for header */
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+                /* Show sidebar */
+            }
+
+            .content-area {
+                margin-right: 0;
+                /* No margin when sidebar is hidden */
+            }
+
+
+
+            /* Overlay for when sidebar is open */
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 998;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+
+            .form-container {
+                padding: 20px;
+                margin-left: 20px;
+                margin-right: 20px;
+            }
+
+            .form-container h1 {
+                font-size: 24px;
+            }
+
+            .form-button {
+                padding: 12px 25px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="logo">
+            MAJD Architecture
+        </div>
+        <div class="user-info">
+            <span id="loggedInUser"></span>
+            <button class="logout-button" id="logoutButton">تسجيل الخروج</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="overlay" id="sidebarOverlay"></div>
+
+        <div class="sidebar" id="sidebar">
+            <ul>
+                <li><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i> الرئيسية</a></li>
+                <li class="active"><a href="/add-project.html" data-page="add-project"><i
+                            class="fas fa-plus-circle"></i> إضافة مشروع</a></li>
+                <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a>
+                </li>
+                <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
+                <li><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a>
+                </li>
+                <li><a href="/add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i> إضافة
+                        خزينة</a></li>
+                <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
+                <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
+                <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a>
+                </li>
+                <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
+            </ul>
+        </div>
+
+        <div class="content-area" id="contentArea">
+            <div class="form-container">
+                <h1>إضافة مشروع جديد</h1>
+                <form id="addProjectForm">
+                    <div class="form-group">
+                        <label for="projectName">اسم المشروع:</label>
+                        <input type="text" id="projectName" name="projectName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="projectAddress">العنوان:</label>
+                        <input type="text" id="projectAddress" name="address" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="projectDescription">الوصف:</label>
+                        <textarea id="projectDescription" name="description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="projectEngineer">المهندس:</label>
+                        <select id="projectEngineer" name="engineer">
+                            <option value="">(اختياري) - اختر مهندس</option>
+                            <!-- Engineers will be loaded here -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="projectClient">العميل:</label>
+                        <select id="projectClient" name="client">
+                            <option value="">(اختياري) - اختر عميل</option>
+                            <!-- Clients will be loaded here -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="projectStartDate">تاريخ البدء:</label>
+                        <input type="date" id="projectStartDate" name="startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="projectEndDate">تاريخ الانتهاء:</label>
+                        <input type="date" id="projectEndDate" name="endDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="projectNotes">ملاحظات:</label>
+                        <textarea id="projectNotes" name="notes"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="projectStatus">الحالة:</label>
+                        <select id="projectStatus" name="status">
+                            <option value="جاري">جاري</option>
+                            <option value="مكتمل">مكتمل</option>
+                            <option value="معلق">معلق</option>
+                            <option value="ملغى">ملغى</option>
+                        </select>
+                    </div>
+                    <div class="form-message" id="addProjectMessage"></div>
+                    <div class="form-buttons">
+                        <button type="submit" class="form-button">إضافة المشروع</button>
+                        <button type="button" class="form-button cancel" id="cancelAddProject">إلغاء</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = "http://localhost:3000";
+        // Client-side authentication check and redirection
+        document.addEventListener('DOMContentLoaded', function () {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const decodedPayload = decodeURIComponent(escape(window.atob(base64)));
+                const payload = JSON.parse(decodedPayload);
+
+                const username = payload.user.username || 'مستخدم';
+                const role = payload.user.role || 'غير محدد';
+
+                document.getElementById('loggedInUser').textContent = `مرحباً، ${username} (${role})`;
+
+                // Client-side authorization based on role for sidebar visibility
+                const sidebar = document.getElementById('sidebar');
+                const addProjectLink = sidebar.querySelector('[data-page="add-project"]');
+                const usersLink = sidebar.querySelector('[data-page="users"]');
+                const categoriesLink = sidebar.querySelector('[data-page="categories"]'); // Added for categories
+                const addTreasuryLink = sidebar.querySelector('[data-page="add-treasury"]');
+                const treasuriesLink = sidebar.querySelector('[data-page="treasuries"]');
+                const contractorsLink = sidebar.querySelector('[data-page="contractors"]'); // Added for contractors
+                const BASE_API_URL = '';
+
+
+                if (role === 'مهندس') {
+                    if (addProjectLink) addProjectLink.style.display = 'none'; // لا يمكن للمهندس إضافة مشروع
+                    if (usersLink) usersLink.style.display = 'none';
+                    if (categoriesLink) categoriesLink.style.display = 'none'; // Hide for engineer
+                    if (addTreasuryLink) addTreasuryLink.style.display = 'none';
+                    if (treasuriesLink) treasuriesLink.style.display = 'none';
+                    if (contractorsLink) contractorsLink.style.display = 'none'; // Hide for engineer
+                } else if (role === 'مدير حسابات') {
+                    if (usersLink) usersLink.style.display = 'none';
+                }
+                // Set active link in sidebar (for this page)
+                const currentPageLink = document.querySelector(`.sidebar ul li a[data-page="add-project"]`);
+                if (currentPageLink) {
+                    currentPageLink.parentElement.classList.add('active');
+                }
+                // Update sidebar links with fixed main treasury ID
+                const mainTreasuryLink = sidebar.querySelector('[data-page="main-treasury"]');
+                if (mainTreasuryLink) {
+                    mainTreasuryLink.href = '/treasury-details.html?id=6850dc69d55abdb99c06f0ad';
+                }
+
+            } catch (e) {
+                console.error("Failed to decode token:", e);
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            }
+
+            // Logout functionality
+            const logout = () => {
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            };
+            document.getElementById('logoutButton').addEventListener('click', logout);
+            document.getElementById('sidebarLogoutButton').addEventListener('click', logout);
+
+            // Responsive Sidebar Toggle (for this page as well)
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            // متغير لتخزين رابط الوجهة مؤقتًا
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+                sidebarOverlay.classList.toggle('active');
+                document.body.classList.toggle('sidebar-open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+                document.body.classList.remove('sidebar-open');
+            });
+
+            // تنقل مباشر لما المستخدم يضغط على لينك
+            sidebar.addEventListener('click', (event) => {
+                const link = event.target.closest('a');
+                if (link && link.href && link.id !== 'sidebarLogoutButton') {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                    document.body.classList.remove('sidebar-open');
+                    // مفيش preventDefault، وسيب التنقل يشتغل عادي
+                }
+            });
+
+
+
+            /* --- Logic for Add Project Form --- */
+            const addProjectForm = document.getElementById('addProjectForm');
+            const addProjectMessage = document.getElementById('addProjectMessage');
+            const projectEngineerSelect = document.getElementById('projectEngineer');
+            const projectClientSelect = document.getElementById('projectClient');
+            const cancelAddProjectBtn = document.getElementById('cancelAddProject');
+
+
+            // Function to load dropdowns
+            const loadFormDropdowns = async () => {
+                // Fetch engineers for dropdown
+                try {
+                    const engineersResponse = await fetch(`${BASE_URL}/api/users/engineers`, { // <-- Changed API endpoint here
+                        headers: {
+                            'x-auth-token': localStorage.getItem('token')
+                        }
+                    });
+                    if (engineersResponse.ok) {
+                        const engineers = await engineersResponse.json();
+                        engineers.forEach(engineer => {
+                            const option = document.createElement('option');
+                            option.value = engineer._id;
+                            option.textContent = engineer.username;
+                            projectEngineerSelect.appendChild(option);
+                        });
+                    } else {
+                        console.error('Failed to fetch engineers:', await engineersResponse.json());
+                        addProjectMessage.className = 'form-message error';
+                        addProjectMessage.textContent = 'فشل في جلب قائمة المهندسين.';
+                        addProjectMessage.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error fetching engineers:', error);
+                    addProjectMessage.className = 'form-message error';
+                    addProjectMessage.textContent = 'خطأ في الاتصال بالخادم لجلب المهندسين.';
+                    addProjectMessage.style.display = 'block';
+                }
+
+                // Fetch clients for dropdown (now that /api/clients exists)
+                try {
+                    const clientsResponse = await fetch(`${BASE_URL}/api/clients`, {
+                        headers: {
+                            'x-auth-token': localStorage.getItem('token')
+                        }
+                    });
+                    if (clientsResponse.ok) {
+                        const clients = await clientsResponse.json();
+                        clients.forEach(client => {
+                            const option = document.createElement('option');
+                            option.value = client._id;
+                            option.textContent = client.clientName;
+                            projectClientSelect.appendChild(option);
+                        });
+                    } else {
+                        console.error('Failed to fetch clients:', await clientsResponse.json());
+                        addProjectMessage.className = 'form-message error';
+                        addProjectMessage.textContent = 'فشل في جلب قائمة العملاء.';
+                        addProjectMessage.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error fetching clients:', error);
+                    addProjectMessage.className = 'form-message error';
+                    addProjectMessage.textContent = 'خطأ في الاتصال بالخادم لجلب العملاء.';
+                    addProjectMessage.style.display = 'block';
+                }
+            };
+
+            // Call to load dropdowns on page load
+            loadFormDropdowns();
+
+            // Check if we are in edit mode
+            const urlParams = new URLSearchParams(window.location.search);
+            const projectId = urlParams.get('id');
+            const pageTitle = document.querySelector('.form-container h1');
+            const submitButton = addProjectForm.querySelector('button[type="submit"]');
+
+            if (projectId) {
+                pageTitle.textContent = 'تعديل مشروع موجود';
+                submitButton.textContent = 'حفظ التعديلات';
+                fetchProjectDetailsForEdit(projectId);
+            } else {
+                pageTitle.textContent = 'إضافة مشروع جديد';
+                submitButton.textContent = 'إضافة المشروع';
+                // Set default start date to today
+                document.getElementById('projectStartDate').valueAsDate = new Date();
+            }
+
+            async function fetchProjectDetailsForEdit(id) {
+                try {
+                    const response = await fetch(`${BASE_URL}/api/projects/${id}`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    const project = await response.json();
+                    if (response.ok) {
+                        document.getElementById('projectName').value = project.projectName;
+                        document.getElementById('projectAddress').value = project.address;
+                        document.getElementById('projectDescription').value = project.description || '';
+                        document.getElementById('projectStartDate').value = project.startDate.substring(0, 10); // Format YYYY-MM-DD
+                        document.getElementById('projectEndDate').value = project.endDate ? project.endDate.substring(0, 10) : '';
+                        document.getElementById('projectNotes').value = project.notes || '';
+                        document.getElementById('projectStatus').value = project.status;
+
+                        // Set selected engineer and client
+                        if (project.engineer) {
+                            // Ensure engineers are loaded before setting value
+                            // We need to re-call populateDropdown if it hasn't finished yet or if we're reloading
+                            // This ensures the options are available when setting the value
+                            await populateDropdown(projectEngineerSelect, '/api/users/engineers', '_id', 'username', '(اختياري) - اختر مهندس'); // <-- Changed API endpoint here
+                            projectEngineerSelect.value = project.engineer._id;
+                        } else {
+                            projectEngineerSelect.value = '';
+                        }
+                        if (project.client) {
+                            // Ensure clients are loaded before setting value
+                            await populateDropdown(projectClientSelect, '/api/clients', '_id', 'clientName', '(اختياري) - اختر عميل');
+                            projectClientSelect.value = project.client._id;
+                        } else {
+                            projectClientSelect.value = '';
+                        }
+                    } else {
+                        addProjectMessage.className = 'form-message error';
+                        addProjectMessage.textContent = project.message || 'فشل في جلب بيانات المشروع للتعديل.';
+                        addProjectMessage.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error fetching project for edit:', error);
+                    addProjectMessage.className = 'form-message error';
+                    addProjectMessage.textContent = 'خطأ في الاتصال بالخادم لجلب بيانات المشروع.';
+                    addProjectMessage.style.display = 'block';
+                }
+            }
+
+
+            // Handle form submission
+            addProjectForm.addEventListener('submit', async function (event) {
+                event.preventDefault();
+
+                const formData = new FormData(addProjectForm);
+                const projectData = {};
+                for (let [key, value] of formData.entries()) {
+                    if (value === '') {
+                        projectData[key] = undefined;
+                    } else {
+                        projectData[key] = value;
+                    }
+                }
+
+                Object.keys(projectData).forEach(key => {
+                    if (projectData[key] === undefined) {
+                        delete projectData[key];
+                    }
+                });
+
+                console.log("Sending project data:", projectData);
+
+                const method = projectId ? 'PUT' : 'POST';
+                const url = projectId ? `/api/projects/${projectId}` : '/api/projects';
+
+                try {
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-auth-token': localStorage.getItem('token')
+                        },
+                        body: JSON.stringify(projectData)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        addProjectMessage.className = 'form-message success';
+                        addProjectMessage.textContent = data.message || 'تم حفظ المشروع بنجاح.';
+                        addProjectMessage.style.display = 'block';
+
+                        // If it's an edit, reload project details page
+                        if (projectId) {
+                            setTimeout(() => {
+                                window.location.href = `/project-details.html?id=${projectId}`;
+                            }, 1500);
+                        } else {
+                            // If it's a new project, clear form and reload dropdowns
+                            addProjectForm.reset();
+                            document.getElementById('projectStartDate').valueAsDate = new Date(); // Reset start date
+                            projectEngineerSelect.innerHTML = '<option value="">(اختياري) - اختر مهندس</option>';
+                            projectClientSelect.innerHTML = '<option value="">(اختياري) - اختر عميل</option>';
+                            loadFormDropdowns();
+                            setTimeout(() => { addProjectMessage.style.display = 'none'; }, 3000); // Hide message
+                        }
+                    } else {
+                        addProjectMessage.className = 'form-message error';
+                        addProjectMessage.textContent = data.message || 'فشل في حفظ المشروع. الرجاء التحقق من البيانات.';
+                        addProjectMessage.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error saving project:', error);
+                    addProjectMessage.className = 'form-message error';
+                    addProjectMessage.textContent = 'حدث خطأ أثناء الاتصال بالخادم. الرجاء المحاولة لاحقاً.';
+                    addProjectMessage.style.display = 'block';
+                }
+            });
+
+            // Redirect to projects list on cancel button click
+            if (cancelAddProjectBtn) {
+                cancelAddProjectBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.location.href = '/projects.html';
+                });
+            }
+            // Set active link in sidebar (for this page)
+            const currentPageLink = document.querySelector(`.sidebar ul li a[data-page="add-project"]`);
+            if (currentPageLink) {
+                currentPageLink.parentElement.classList.add('active');
+            }
+        });
+    </script>
+</body>
+
+</html>

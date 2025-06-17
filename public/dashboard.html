@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - MAJD Architecture</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #014C47;
+            --primary-dark: #003a35;
+            --secondary-bg: #e6e6e6;
+            --text-color: #333;
+            --light-text-color: #f4f4f4;
+            --border-color: #ddd;
+            --sidebar-width: 250px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            direction: rtl;
+            text-align: right;
+        }
+
+        /* Header Styling */
+        .header {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        .header .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .header .user-info span {
+            margin-right: 15px;
+        }
+
+        .header .logout-button {
+            background-color: var(--primary-dark);
+            color: var(--light-text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .header .logout-button:hover {
+            background-color: #002b28;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--light-text-color);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Layout Container */
+        .main-container {
+            display: flex;
+            flex: 1;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 5px;
+        }
+
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--light-text-color);
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar ul li a i {
+            margin-left: 10px;
+            font-size: 18px;
+        }
+
+        .sidebar ul li a:hover,
+        .sidebar ul li.active a {
+            background-color: var(--primary-dark);
+            border-radius: 0 20px 20px 0;
+        }
+
+        /* Main Content Area */
+        .content-area {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .page-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card .icon {
+            font-size: 45px;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        .card h2 {
+            font-size: 22px;
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            font-size: 18px;
+            color: #555;
+            margin: 0;
+        }
+
+        .card.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .header .user-info span {
+                display: none;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                right: 0;
+                height: 100%;
+                width: var(--sidebar-width);
+                transform: translateX(100%);
+                z-index: 999;
+                box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+                padding-top: 70px;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .content-area {
+                margin-right: 0;
+            }
+
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 998;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                /* Stack cards vertically on small screens */
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="logo">
+            MAJD Architecture
+        </div>
+        <div class="user-info">
+            <span id="loggedInUser"></span>
+            <button class="logout-button" id="logoutButton">تسجيل الخروج</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="overlay" id="sidebarOverlay"></div>
+
+        <div class="sidebar" id="sidebar">
+            <ul>
+                <li class="active"><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>
+                        الرئيسية</a></li>
+                <li><a href="/add-project.html" data-page="add-project"><i class="fas fa-plus-circle"></i> إضافة
+                        مشروع</a></li>
+                <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a>
+                </li>
+                <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
+                <li><a href="contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a>
+                </li>
+                <li><a href="/add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i> إضافة
+                        خزينة</a></li>
+                <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
+                <li><a href="users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
+                <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a>
+                </li>
+                <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
+            </ul>
+        </div>
+
+        <div class="content-area" id="contentArea">
+            <div class="page-header">
+                <h1>لوحة التحكم</h1>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Project Summary Card -->
+                <div class="card" id="projectsSummaryCard">
+                    <div class="icon"><i class="fas fa-project-diagram"></i></div>
+                    <h2>المشاريع</h2>
+                    <p>إجمالي المشاريع: <span id="totalProjects">0</span></p>
+                    <p>مشاريع جارية: <span id="ongoingProjects">0</span></p>
+                    <p>مشاريع مكتملة: <span id="completedProjects">0</span></p>
+                </div>
+
+                <!-- Clients Summary Card -->
+                <div class="card" id="clientsSummaryCard">
+                    <div class="icon"><i class="fas fa-users"></i></div>
+                    <h2>العملاء</h2>
+                    <p>إجمالي العملاء: <span id="totalClients">0</span></p>
+                    <p>عملاء نشطون: <span id="activeClients">0</span></p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = "http://localhost:3000";
+
+        // Client-side authentication check and redirection
+        document.addEventListener('DOMContentLoaded', function () {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+
+            let currentUserRole = '';
+
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const decodedPayload = decodeURIComponent(escape(window.atob(base64)));
+                const payload = JSON.parse(decodedPayload);
+
+                const username = payload.user.username || 'مستخدم';
+                const role = payload.user.role || 'غير محدد';
+                currentUserRole = role;
+
+                document.getElementById('loggedInUser').textContent = `مرحباً، ${username} (${role})`;
+
+                // Client-side authorization based on role for sidebar visibility
+                const sidebar = document.getElementById('sidebar');
+                const addProjectLink = sidebar.querySelector('[data-page="add-project"]');
+                const usersLink = sidebar.querySelector('[data-page="users"]');
+                const categoriesLink = sidebar.querySelector('[data-page="categories"]');
+                const addTreasuryLink = sidebar.querySelector('[data-page="add-treasury"]');
+                const treasuriesLink = sidebar.querySelector('[data-page="treasuries"]');
+
+
+                if (role === 'مهندس') {
+                    if (addProjectLink) addProjectLink.style.display = 'none';
+                    if (usersLink) usersLink.style.display = 'none';
+                    if (categoriesLink) categoriesLink.style.display = 'none';
+                    if (addTreasuryLink) addTreasuryLink.style.display = 'none';
+                    if (treasuriesLink) treasuriesLink.style.display = 'none';
+                } else if (role === 'مدير حسابات') {
+                    if (usersLink) usersLink.style.display = 'none';
+                }
+            } catch (e) {
+                console.error("Failed to decode token:", e);
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            }
+
+            // Logout functionality
+            const logout = () => {
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            };
+            document.getElementById('logoutButton').addEventListener('click', logout);
+            document.getElementById('sidebarLogoutButton').addEventListener('click', logout);
+
+            // Responsive Sidebar Toggle
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+                sidebarOverlay.classList.toggle('active');
+                document.body.classList.toggle('sidebar-open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+                document.body.classList.remove('sidebar-open');
+            });
+
+            // تنقل مباشر لما المستخدم يضغط على لينك
+            sidebar.addEventListener('click', (event) => {
+                const link = event.target.closest('a');
+                if (link && link.href && link.id !== 'sidebarLogoutButton') {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                    document.body.classList.remove('sidebar-open');
+                    // مفيش preventDefault، وسيب التنقل يشتغل عادي
+                }
+            });
+
+
+            // بعد انتهاء transition، يتم التوجيه إذا كان فيه رابط محفوظ
+            sidebar.addEventListener('transitionend', (event) => {
+                if (
+                    event.propertyName === 'transform' &&
+                    !sidebar.classList.contains('active') &&
+                    targetLinkHref
+                ) {
+                    window.location.href = targetLinkHref;
+                    targetLinkHref = null;
+                    sidebar.style.pointerEvents = 'auto';
+                    sidebarOverlay.style.pointerEvents = 'auto';
+                }
+            });
+
+
+
+
+            /* --- Dashboard Data Fetching --- */
+
+            // Function to fetch project summary
+            const fetchProjectSummary = async () => {
+                const projectsSummaryCard = document.getElementById('projectsSummaryCard');
+                projectsSummaryCard.classList.add('loading');
+                try {
+                    const response = await fetch(`${BASE_URL}/api/projects`, {
+                        headers: {
+                            'x-auth-token': localStorage.getItem('token')
+                        }
+                    });
+                    const projects = await response.json();
+
+                    if (response.ok) {
+                        const total = projects.length;
+                        const ongoing = projects.filter(p => p.status === 'جاري').length;
+                        const completed = projects.filter(p => p.status === 'مكتمل').length;
+
+                        document.getElementById('totalProjects').textContent = total;
+                        document.getElementById('ongoingProjects').textContent = ongoing;
+                        document.getElementById('completedProjects').textContent = completed;
+                    } else {
+                        console.error('Failed to fetch project summary:', projects.message);
+                        document.getElementById('totalProjects').textContent = 'خطأ';
+                    }
+                } catch (error) {
+                    console.error('Error fetching project summary:', error);
+                    document.getElementById('totalProjects').textContent = 'خطأ';
+                } finally {
+                    projectsSummaryCard.classList.remove('loading');
+                }
+            };
+
+            // Function to fetch client summary
+            const fetchClientSummary = async () => {
+                const clientsSummaryCard = document.getElementById('clientsSummaryCard');
+                clientsSummaryCard.classList.add('loading');
+                try {
+                    const response = await fetch(`${BASE_URL}/api/clients`, {
+                        headers: {
+                            'x-auth-token': localStorage.getItem('token')
+                        }
+                    });
+                    const clients = await response.json();
+
+                    if (response.ok) {
+                        const total = clients.length;
+                        // Assuming all clients are "active" for now, or you can add a status field to Client model
+                        document.getElementById('totalClients').textContent = total;
+                        document.getElementById('activeClients').textContent = total; // Placeholder for active clients
+                    } else {
+                        console.error('Failed to fetch client summary:', clients.message);
+                        document.getElementById('totalClients').textContent = 'خطأ';
+                    }
+                } catch (error) {
+                    console.error('Error fetching client summary:', error);
+                    document.getElementById('totalClients').textContent = 'خطأ';
+                } finally {
+                    clientsSummaryCard.classList.remove('loading');
+                }
+            };
+
+
+            // Function to fetch treasuries summary
+            const fetchTreasuriesSummary = async () => {
+                const treasuriesSummaryCard = document.getElementById('treasuriesSummaryCard');
+                treasuriesSummaryCard.classList.add('loading');
+                try {
+                    const response = await fetch(`${BASE_URL}/api/treasuries`, {
+                        headers: {
+                            'x-auth-token': localStorage.getItem('token')
+                        }
+                    });
+                    const treasuries = await response.json();
+
+                    if (response.ok) {
+                        const total = treasuries.length;
+                        const totalBalance = treasuries.reduce((sum, t) => sum + t.currentBalance, 0);
+
+                        document.getElementById('totalTreasuries').textContent = total;
+                        document.getElementById('totalTreasuryBalance').textContent = totalBalance.toFixed(2);
+                    } else {
+                        console.error('Failed to fetch treasuries summary:', treasuries.message);
+                        document.getElementById('totalTreasuries').textContent = 'خطأ';
+                    }
+                } catch (error) {
+                    console.error('Error fetching treasuries summary:', error);
+                    document.getElementById('totalTreasuries').textContent = 'خطأ';
+                } finally {
+                    treasuriesSummaryCard.classList.remove('loading');
+                }
+            };
+
+
+            // Call all summary functions on page load
+            fetchProjectSummary();
+            fetchClientSummary();
+            fetchFinancialSummary();
+            fetchTreasuriesSummary();
+        });
+    </script>
+</body>
+
+</html>

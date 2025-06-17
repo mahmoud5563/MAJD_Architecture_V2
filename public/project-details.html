@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تفاصيل المشروع - MAJD Architecture</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #014C47;
+            --primary-dark: #003a35;
+            --secondary-bg: #e6e6e6;
+            --text-color: #333;
+            --light-text-color: #f4f4f4;
+            --border-color: #ddd;
+            --sidebar-width: 250px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            direction: rtl;
+            text-align: right;
+        }
+
+        /* Header Styling */
+        .header {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        .header .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .header .user-info span {
+            margin-right: 15px;
+        }
+
+        .header .logout-button {
+            background-color: var(--primary-dark);
+            color: var(--light-text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .header .logout-button:hover {
+            background-color: #002b28;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--light-text-color);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Layout Container */
+        .main-container {
+            display: flex;
+            flex: 1;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 5px;
+        }
+
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--light-text-color);
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar ul li a i {
+            margin-left: 10px;
+            font-size: 18px;
+        }
+
+        .sidebar ul li a:hover,
+        .sidebar ul li.active a {
+            background-color: var(--primary-dark);
+            border-radius: 0 20px 20px 0;
+        }
+
+        /* Main Content Area */
+        .content-area {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .page-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .details-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 900px;
+            /* Wider for details */
+            margin: 0 auto;
+            /* Center the container */
+        }
+
+        .details-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background-color: #f8f8f8;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+
+        .details-section h4 {
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 22px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            /* Responsive grid */
+            gap: 15px;
+        }
+
+        .details-grid p {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+
+        .details-grid p strong {
+            color: #555;
+            margin-left: 8px;
+        }
+
+        .details-full-width {
+            margin-top: 15px;
+        }
+
+        .details-full-width p {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+
+        .details-full-width p strong {
+            color: #555;
+            margin-left: 8px;
+        }
+
+        .action-button {
+            /* Renamed from add-button for clarity in detail pages */
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 5px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-bottom: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-button.edit {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        .action-button.delete {
+            background-color: #dc3545;
+        }
+
+        .action-button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .action-button.edit:hover {
+            background-color: #e0a800;
+        }
+
+        .action-button.delete:hover {
+            background-color: #c82333;
+        }
+
+
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .details-table th,
+        .details-table td {
+            padding: 12px 15px;
+            border: 1px solid #eee;
+            text-align: right;
+            font-size: 15px;
+        }
+
+        .details-table th {
+            background-color: #f0f0f0;
+            color: var(--text-color);
+            font-weight: bold;
+        }
+
+        /* Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            width: 90%;
+            max-width: 500px;
+            animation-name: animatetop;
+            animation-duration: 0.4s;
+            text-align: right;
+        }
+
+        @keyframes animatetop {
+            from {
+                top: -300px;
+                opacity: 0
+            }
+
+            to {
+                top: 0;
+                opacity: 1
+            }
+        }
+
+        .close-button {
+            color: #aaa;
+            float: left;
+            font-size: 28px;
+            font-weight: bold;
+            margin-left: -10px;
+            margin-top: -10px;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-content h3 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+
+        .modal-form-group {
+            margin-bottom: 15px;
+        }
+
+        .modal-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+            font-size: 15px;
+        }
+
+        .modal-form-group input[type="text"],
+        .modal-form-group input[type="number"],
+        .modal-form-group input[type="date"],
+        .modal-form-group textarea,
+        .modal-form-group select {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 15px;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+        }
+
+        .modal-form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .modal-button {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-button.cancel {
+            background-color: #6c757d;
+        }
+
+        .modal-button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .modal-button.cancel:hover {
+            background-color: #5a6268;
+        }
+
+        .modal-message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+            text-align: center;
+        }
+
+        .modal-message.error {
+            background-color: #ffe6e6;
+            color: #cc0000;
+            border: 1px solid #cc0000;
+        }
+
+        .modal-message.success {
+            background-color: #e6ffe6;
+            color: #008000;
+            border: 1px solid #008000;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .header .user-info span {
+                display: none;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                right: 0;
+                height: 100%;
+                width: var(--sidebar-width);
+                transform: translateX(100%);
+                z-index: 999;
+                box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+                padding-top: 70px;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .content-area {
+                margin-right: 0;
+            }
+
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 998;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+
+            .details-container {
+                padding: 20px;
+            }
+
+            .details-grid {
+                grid-template-columns: 1fr;
+                /* Stack details vertically on small screens */
+            }
+
+            .action-button {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+
+            .details-table th,
+            .details-table td {
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+
+            .modal-content {
+                padding: 20px;
+                width: 95%;
+            }
+
+            .modal-content h3 {
+                font-size: 20px;
+            }
+
+            .modal-button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="logo">
+            MAJD Architecture
+        </div>
+        <div class="user-info">
+            <span id="loggedInUser"></span>
+            <button class="logout-button" id="logoutButton">تسجيل الخروج</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="overlay" id="sidebarOverlay"></div>
+        <div class="sidebar" id="sidebar">
+
+            <ul>
+                <li><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i> الرئيسية</a></li>
+                <li><a href="/add-project.html" data-page="add-project"><i class="fas fa-plus-circle"></i> إضافة
+                        مشروع</a></li>
+                <li class="active"><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i>
+                        المشاريع</a></li>
+                <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
+                <li><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a>
+                </li>
+                <li><a href="/add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i> إضافة
+                        خزينة</a></li>
+                <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
+                <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
+                <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a>
+                </li>
+                <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
+            </ul>
+        </div>
+
+        <div class="content-area" id="contentArea">
+            <div class="page-header">
+                <h1>تفاصيل المشروع: <span id="projectTitle"></span></h1>
+                <div>
+                    <button class="action-button edit" id="editProjectBtn"><i class="fas fa-edit"></i> تعديل
+                        المشروع</button>
+                    <button class="action-button delete" id="deleteProjectBtn"><i class="fas fa-trash-alt"></i> حذف
+                        المشروع</button>
+                    <button class="action-button" id="backToProjectsBtn"><i class="fas fa-arrow-right"></i> العودة
+                        للمشاريع</button>
+                </div>
+            </div>
+
+            <div class="details-container">
+                <div class="details-section">
+                    <h4>بيانات المشروع</h4>
+                    <div class="details-grid">
+                        <p><strong>اسم المشروع:</strong> <span id="detailProjectName"></span></p>
+                        <p><strong>العنوان:</strong> <span id="detailProjectAddress"></span></p>
+                        <p><strong>المهندس:</strong> <span id="detailProjectEngineer"></span></p>
+                        <p><strong>العميل:</strong> <span id="detailProjectClient"></span></p>
+                        <p><strong>تاريخ البدء:</strong> <span id="detailProjectStartDate"></span></p>
+                        <p><strong>تاريخ الانتهاء:</strong> <span id="detailProjectEndDate"></span></p>
+                        <p><strong>الحالة:</strong> <span id="detailProjectStatus"></span></p>
+                    </div>
+                    <div class="details-full-width">
+                        <p><strong>الوصف:</strong> <span id="detailProjectDescription"></span></p>
+                        <p><strong>ملاحظات:</strong> <span id="detailProjectNotes"></span></p>
+                    </div>
+                </div>
+
+                <div class="details-section">
+                    <h4>ملخص المعاملات المالية</h4>
+                    <div class="details-grid">
+                        <p><strong>إجمالي الإيرادات:</strong> <span id="summaryTotalRevenue">0.00</span> ج.م</p>
+                        <p><strong>إجمالي المصروفات:</strong> <span id="summaryTotalExpenses">0.00</span> ج.م</p>
+                        <p><strong>صافي الربح / الخسارة:</strong> <span id="summaryNetProfitLoss">0.00</span> ج.م</p>
+                    </div>
+                </div>
+
+                <div class="details-section">
+                    <h4>دفعات المقاولين</h4>
+                    <div class="details-grid">
+                        <p><strong>المبلغ المتفق عليه الكلي:</strong> <span id="contractorAgreedAmount">0.00</span> ج.م
+                        </p>
+                        <p><strong>المدفوع الكلي:</strong> <span id="contractorPaidAmount">0.00</span> ج.م</p>
+                        <p><strong>المتبقي الكلي:</strong> <span id="contractorRemainingAmount">0.00</span> ج.م</p>
+                    </div>
+                    <button class="action-button" id="addContractAgreementBtn"><i class="fas fa-handshake"></i> إضافة
+                        اتفاق مقاول</button>
+                    <button class="action-button" id="addContractPaymentBtn"><i class="fas fa-money-check-alt"></i>
+                        إضافة دفعة مقاول</button>
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>المقاول</th>
+                                <th>المبلغ المتفق عليه (للاتفاقية)</th>
+                                <th>المدفوع من الاتفاقية</th>
+                                <th>المتبقي من الاتفاقية</th>
+                                <th>تاريخ الدفعة</th>
+                                <th>مبلغ الدفعة</th>
+                                <th>الخزينة</th>
+                                <th>الوصف</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contractorPaymentsTableBody">
+                            <tr>
+                                <td colspan="9" style="text-align: center;">لا توجد دفعات مقاولين حالياً.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="details-section">
+                    <h4>المصروفات</h4>
+                    <button class="action-button" id="addExpenseBtn"><i class="fas fa-plus"></i> إضافة مصروف</button>
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>المبلغ</th>
+                                <th>الوصف</th>
+                                <th>التصنيف</th>
+                                <th>التاريخ</th>
+                                <th>البائع</th>
+                                <th>الخزينة</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projectExpensesTableBody">
+                            <tr>
+                                <td colspan="7" style="text-align: center;">لا توجد مصروفات حالياً.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="details-section">
+                    <h4>الإيرادات</h4>
+                    <button class="action-button" id="addRevenueBtn"><i class="fas fa-plus"></i> إضافة إيراد</button>
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>المبلغ</th>
+                                <th>الوصف</th>
+                                <th>التاريخ</th>
+                                <th>طريقة التحويل</th>
+                                <th>الخزينة</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projectRevenuesTableBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center;">لا توجد إيرادات حالياً.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="modal-message" id="pageMessage" style="display: none;"></div>
+                <div class="details-buttons" style="text-align: center; margin-top: 30px;">
+                    <button type="button" class="action-button" id="exportProjectExcelBtn"><i
+                            class="fas fa-file-excel"></i> تصدير Excel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals for Add/Edit Expense, Revenue, Contract Agreement, Contract Payment -->
+
+    <!-- Add/Edit Expense Modal -->
+    <div id="expenseModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3 id="expenseModalTitle">إضافة مصروف</h3>
+            <form id="expenseForm">
+                <input type="hidden" id="expenseProjectId">
+                <input type="hidden" id="expenseId">
+                <div class="modal-form-group">
+                    <label for="expenseAmount">المبلغ:</label>
+                    <input type="number" id="expenseAmount" name="amount" required step="0.01">
+                </div>
+                <div class="modal-form-group">
+                    <label for="expenseDescription">الوصف:</label>
+                    <textarea id="expenseDescription" name="description"></textarea>
+                </div>
+                <div class="modal-form-group">
+                    <label for="expenseCategory">التصنيف:</label>
+                    <select id="expenseCategory" name="category" required>
+                        <option value="">اختر تصنيف</option>
+                        <!-- Categories will be loaded here dynamically -->
+                    </select>
+                </div>
+                <div class="modal-form-group">
+                    <label for="expenseDate">التاريخ:</label>
+                    <input type="date" id="expenseDate" name="date" required>
+                </div>
+                <div class="modal-form-group">
+                    <label for="expenseVendor">البائع:</label>
+                    <input type="text" id="expenseVendor" name="vendor">
+                </div>
+                <div class="modal-form-group">
+                    <label for="expenseTreasury">الخزينة/العهدة:</label>
+                    <select id="expenseTreasury" name="treasury" required>
+                        <option value="">اختر خزينة</option>
+                        <!-- Treasuries/Accounts will be loaded here -->
+                    </select>
+                </div>
+                <div class="modal-message" id="expenseModalMessage"></div>
+                <div class="modal-buttons">
+                    <button type="submit" class="modal-button">حفظ المصروف</button>
+                    <button type="button" class="modal-button cancel" id="cancelExpenseButton">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add/Edit Revenue Modal -->
+    <div id="revenueModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3 id="revenueModalTitle">إضافة إيراد</h3>
+            <form id="revenueForm">
+                <input type="hidden" id="revenueProjectId">
+                <input type="hidden" id="revenueId">
+                <div class="modal-form-group">
+                    <label for="revenueAmount">المبلغ:</label>
+                    <input type="number" id="revenueAmount" name="amount" required step="0.01">
+                </div>
+                <div class="modal-form-group">
+                    <label for="revenueDescription">الوصف:</label>
+                    <textarea id="revenueDescription" name="description"></textarea>
+                </div>
+                <div class="modal-form-group">
+                    <label for="revenueDate">التاريخ:</label>
+                    <input type="date" id="revenueDate" name="date" required>
+                </div>
+                <div class="modal-form-group">
+                    <label for="revenuePaymentMethod">طريقة التحويل:</label>
+                    <select id="revenuePaymentMethod" name="paymentMethod" required>
+                        <option value="">اختر طريقة</option>
+                        <option value="كاش">كاش</option>
+                        <option value="تحويل بنكي">تحويل بنكي</option>
+                        <option value="شيك">شيك</option>
+                    </select>
+                </div>
+                <div class="modal-form-group">
+                    <label for="revenueTreasury">الخزينة/العهدة:</label>
+                    <select id="revenueTreasury" name="treasury" required>
+                        <option value="">اختر خزينة</option>
+                        <!-- Treasuries/Accounts will be loaded here -->
+                    </select>
+                </div>
+                <div class="modal-message" id="revenueModalMessage"></div>
+                <div class="modal-buttons">
+                    <button type="submit" class="modal-button">حفظ الإيراد</button>
+                    <button type="button" class="modal-button cancel" id="cancelRevenueButton">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Contract Agreement Modal -->
+    <div id="contractAgreementModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3>إضافة اتفاق مقاول</h3>
+            <form id="contractAgreementForm">
+                <input type="hidden" id="agreementProjectId">
+                <div class="modal-form-group">
+                    <label for="agreementContractor">اسم المقاول:</label>
+                    <select id="agreementContractor" name="contractorId" required>
+                        <option value="">اختر المقاول</option>
+                        <!-- Contractors will be loaded here -->
+                    </select>
+                </div>
+                <div class="modal-form-group">
+                    <label for="agreementAmount">المبلغ المتفق عليه (ج.م):</label>
+                    <input type="number" id="agreementAmount" name="agreedAmount" required step="0.01">
+                </div>
+                <div class="modal-form-group">
+                    <label for="agreementDescription">الوصف:</label>
+                    <textarea id="agreementDescription" name="description"></textarea>
+                </div>
+                <div class="modal-message" id="contractAgreementMessage"></div>
+                <div class="modal-buttons">
+                    <button type="submit" class="modal-button">حفظ الاتفاق</button>
+                    <button type="button" class="modal-button cancel" id="cancelContractAgreementButton">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Contract Payment Modal -->
+    <div id="contractPaymentModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3>إضافة دفعة مقاول</h3>
+            <form id="contractPaymentForm">
+                <input type="hidden" id="paymentProjectId">
+                <input type="hidden" id="paymentAgreementId">
+                <div class="modal-form-group">
+                    <label for="paymentContractAgreement">اتفاق المقاول:</label>
+                    <select id="paymentContractAgreement" name="contractorAgreementId" required>
+                        <option value="">اختر اتفاق مقاول</option>
+                        <!-- Contractor agreements for this project will be loaded here -->
+                    </select>
+                </div>
+                <div class="modal-form-group">
+                    <label for="paymentAmount">مبلغ الدفعة (ج.م):</label>
+                    <input type="number" id="paymentAmount" name="amount" required step="0.01">
+                </div>
+                <div class="modal-form-group">
+                    <label for="paymentDescription">الوصف (اختياري):</label>
+                    <textarea id="paymentDescription" name="description"></textarea>
+                </div>
+                <div class="modal-form-group">
+                    <label for="paymentDate">التاريخ:</label>
+                    <input type="date" id="paymentDate" name="date" required>
+                </div>
+                <div class="modal-form-group">
+                    <label for="paymentTreasury">الخزينة/العهدة:</label>
+                    <select id="paymentTreasury" name="treasuryId" required>
+                        <option value="">اختر خزينة</option>
+                        <!-- Treasuries/Accounts will be loaded here -->
+                    </select>
+                </div>
+                <div class="modal-message" id="contractPaymentMessage"></div>
+                <div class="modal-buttons">
+                    <button type="submit" class="modal-button">إضافة الدفعة</button>
+                    <button type="button" class="modal-button cancel" id="cancelContractPaymentButton">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script> <!-- For Excel export -->
+    <script>
+        const BASE_URL = "http://localhost:3000";
+        // Client-side authentication check and redirection
+        document.addEventListener('DOMContentLoaded', function () {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+
+            let currentUserRole = '';
+            let currentProjectId = null; // To store the ID of the currently viewed project
+
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const decodedPayload = decodeURIComponent(escape(window.atob(base64)));
+                const payload = JSON.parse(decodedPayload);
+
+                const username = payload.user.username || 'مستخدم';
+                const role = payload.user.role || 'غير محدد';
+                currentUserRole = role;
+
+                document.getElementById('loggedInUser').textContent = `مرحباً، ${username} (${role})`;
+
+                // Client-side authorization for sidebar visibility (adjust as needed)
+                const sidebar = document.getElementById('sidebar');
+                const addProjectLink = sidebar.querySelector('[data-page="add-project"]');
+                const usersLink = sidebar.querySelector('[data-page="users"]');
+                const categoriesLink = sidebar.querySelector('[data-page="categories"]');
+                const addTreasuryLink = sidebar.querySelector('[data-page="add-treasury"]');
+                const treasuriesLink = sidebar.querySelector('[data-page="treasuries"]');
+                const contractorsLink = sidebar.querySelector('[data-page="contractors"]');
+                const mainTreasuryLink = sidebar.querySelector('[data-page="main-treasury"]'); // Assuming main treasury link is still present
+
+                // Adjust roles for visibility based on your final requirements
+                if (role === 'مهندس') {
+                    // Hide sensitive links for 'مهندس'
+                    if (addProjectLink) addProjectLink.style.display = 'none';
+                    if (usersLink) usersLink.style.display = 'none';
+                    if (categoriesLink) categoriesLink.style.display = 'none';
+                    if (addTreasuryLink) addTreasuryLink.style.display = 'none';
+                    if (treasuriesLink) treasuriesLink.style.display = 'none';
+                    if (contractorsLink) contractorsLink.style.display = 'none';
+                    if (mainTreasuryLink) mainTreasuryLink.style.display = 'none';
+
+                    // Hide buttons related to financial/contract management for Engineer
+                    document.getElementById('editProjectBtn').style.display = 'none';
+                    document.getElementById('deleteProjectBtn').style.display = 'none';
+                    document.getElementById('addContractAgreementBtn').style.display = 'none';
+                    document.getElementById('addContractPaymentBtn').style.display = 'none';
+                    document.getElementById('addExpenseBtn').style.display = 'none';
+                    document.getElementById('addRevenueBtn').style.display = 'none';
+                    document.getElementById('exportProjectExcelBtn').style.display = 'none';
+
+                } else if (role === 'مدير حسابات') {
+                    // مدير حسابات لا يمكنه إضافة/تعديل/حذف المستخدمين أو المشاريع بالكامل
+                    if (usersLink) usersLink.style.display = 'none';
+                    if (addProjectLink) addProjectLink.style.display = 'block'; // يمكنه رؤية هذه الصفحة لكن ليس إضافة مشروع جديد
+                    document.getElementById('deleteProjectBtn').style.display = 'none'; // لا يمكنه حذف المشاريع
+
+                } else if (role === 'مدير') {
+                    // المدير لديه صلاحيات كاملة، لا يوجد إخفاء
+                    // ولكن يجب تفعيل الأزرار بناء على ذلك.
+                }
+
+                // Set active link in sidebar (for this page)
+                const currentPageLink = document.querySelector(`.sidebar ul li a[data-page="projects"]`);
+                if (currentPageLink) {
+                    currentPageLink.parentElement.classList.add('active');
+                }
+            } catch (e) {
+                console.error("Failed to decode token:", e);
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            }
+
+            // Get project ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            currentProjectId = urlParams.get('id');
+
+            if (!currentProjectId) {
+                document.getElementById('contentArea').innerHTML = '<h1 style="text-align: center; margin-top: 50px; color: #dc3545;">خطأ: لم يتم تحديد معرف المشروع.</h1><p style="text-align: center;"><button onclick="window.location.href=\'/projects.html\'" style="padding: 10px 20px; background-color: var(--primary-color); color: white; border: none; border-radius: 5px; cursor: pointer;">العودة للمشاريع</button></p>';
+                return;
+            }
+
+            // Logout functionality
+            const logout = () => {
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            };
+            document.getElementById('logoutButton').addEventListener('click', logout);
+            document.getElementById('sidebarLogoutButton').addEventListener('click', logout);
+
+            // Responsive Sidebar Toggle
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+                sidebarOverlay.classList.toggle('active');
+                document.body.classList.toggle('sidebar-open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+                document.body.classList.remove('sidebar-open');
+            });
+
+            // تنقل مباشر لما المستخدم يضغط على لينك
+            sidebar.addEventListener('click', (event) => {
+                const link = event.target.closest('a');
+                if (link && link.href && link.id !== 'sidebarLogoutButton') {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                    document.body.classList.remove('sidebar-open');
+                    // مفيش preventDefault، وسيب التنقل يشتغل عادي
+                }
+            });
+
+
+            /* --- Project Details Page Logic --- */
+            const projectTitleSpan = document.getElementById('projectTitle');
+            const detailProjectNameSpan = document.getElementById('detailProjectName');
+            const detailProjectAddressSpan = document.getElementById('detailProjectAddress');
+            const detailProjectDescriptionSpan = document.getElementById('detailProjectDescription');
+            const detailProjectEngineerSpan = document.getElementById('detailProjectEngineer');
+            const detailProjectClientSpan = document.getElementById('detailProjectClient');
+            const detailProjectStartDateSpan = document.getElementById('detailProjectStartDate');
+            const detailProjectEndDateSpan = document.getElementById('detailProjectEndDate');
+            const detailProjectStatusSpan = document.getElementById('detailProjectStatus');
+            const detailProjectNotesSpan = document.getElementById('detailProjectNotes');
+
+            const summaryTotalRevenueSpan = document.getElementById('summaryTotalRevenue');
+            const summaryTotalExpensesSpan = document.getElementById('summaryTotalExpenses');
+            const summaryNetProfitLossSpan = document.getElementById('summaryNetProfitLoss');
+
+            const contractorAgreedAmountSpan = document.getElementById('contractorAgreedAmount');
+            const contractorPaidAmountSpan = document.getElementById('contractorPaidAmount');
+            const contractorRemainingAmountSpan = document.getElementById('contractorRemainingAmount');
+            const contractorPaymentsTableBody = document.getElementById('contractorPaymentsTableBody');
+
+            const projectExpensesTableBody = document.getElementById('projectExpensesTableBody');
+            const projectRevenuesTableBody = document.getElementById('projectRevenuesTableBody');
+
+            const pageMessage = document.getElementById('pageMessage');
+            const backToProjectsBtn = document.getElementById('backToProjectsBtn');
+            const editProjectBtn = document.getElementById('editProjectBtn');
+            const deleteProjectBtn = document.getElementById('deleteProjectBtn');
+            const exportProjectExcelBtn = document.getElementById('exportProjectExcelBtn');
+
+            // Modals and buttons
+            const expenseModal = document.getElementById('expenseModal');
+            const revenueModal = document.getElementById('revenueModal');
+            const contractAgreementModal = document.getElementById('contractAgreementModal');
+            const contractPaymentModal = document.getElementById('contractPaymentModal');
+
+            const addExpenseBtn = document.getElementById('addExpenseBtn');
+            const addRevenueBtn = document.getElementById('addRevenueBtn');
+            const addContractAgreementBtn = document.getElementById('addContractAgreementBtn');
+            const addContractPaymentBtn = document.getElementById('addContractPaymentBtn');
+
+            // Form inputs within modals
+            const expenseForm = document.getElementById('expenseForm');
+            const expenseProjectIdInput = document.getElementById('expenseProjectId');
+            const expenseAmountInput = document.getElementById('expenseAmount');
+            const expenseDescriptionInput = document.getElementById('expenseDescription');
+            const expenseCategorySelect = document.getElementById('expenseCategory');
+            const expenseDateInput = document.getElementById('expenseDate');
+            const expenseVendorInput = document.getElementById('expenseVendor');
+            const expenseTreasurySelect = document.getElementById('expenseTreasury');
+            const expenseModalMessage = document.getElementById('expenseModalMessage');
+            const cancelExpenseButton = document.getElementById('cancelExpenseButton');
+
+            const revenueForm = document.getElementById('revenueForm');
+            const revenueProjectIdInput = document.getElementById('revenueProjectId');
+            const revenueAmountInput = document.getElementById('revenueAmount');
+            const revenueDescriptionInput = document.getElementById('revenueDescription');
+            const revenueDateInput = document.getElementById('revenueDate');
+            const revenuePaymentMethodSelect = document.getElementById('revenuePaymentMethod');
+            const revenueTreasurySelect = document.getElementById('revenueTreasury'); // New Treasury for Revenue
+            const revenueModalMessage = document.getElementById('revenueModalMessage');
+            const cancelRevenueButton = document.getElementById('cancelRevenueButton');
+
+            const contractAgreementForm = document.getElementById('contractAgreementForm');
+            const agreementProjectIdInput = document.getElementById('agreementProjectId');
+            const agreementContractorSelect = document.getElementById('agreementContractor');
+            const agreementAmountInput = document.getElementById('agreementAmount');
+            const agreementDescriptionInput = document.getElementById('agreementDescription');
+            const contractAgreementMessage = document.getElementById('contractAgreementMessage');
+            const cancelContractAgreementButton = document.getElementById('cancelContractAgreementButton');
+
+            const contractPaymentForm = document.getElementById('contractPaymentForm');
+            const paymentProjectIdInput = document.getElementById('paymentProjectId');
+            const paymentAgreementIdInput = document.getElementById('paymentAgreementId');
+            const paymentContractAgreementSelect = document.getElementById('paymentContractAgreement'); // This will hold agreement IDs
+            const paymentAmountInput = document.getElementById('paymentAmount');
+            const paymentDescriptionInput = document.getElementById('paymentDescription'); // Added description for payment
+            const paymentDateInput = document.getElementById('paymentDate');
+            const paymentTreasurySelect = document.getElementById('paymentTreasury');
+            const contractPaymentMessage = document.getElementById('contractPaymentMessage');
+            const cancelContractPaymentButton = document.getElementById('cancelContractPaymentButton');
+
+
+            // Helper function to format dates
+            const formatDate = (dateString) => {
+                if (!dateString) return 'غير محدد';
+                return new Date(dateString).toLocaleDateString('ar-EG');
+            };
+
+            // Helper function to populate dropdowns
+            async function populateDropdown(selectElement, apiUrl, valueKey, textKey, defaultOptionText = 'اختر', customFilter = null, customTextFormatter = null) {
+                selectElement.innerHTML = `<option value="">${defaultOptionText}</option>`;
+                try {
+                    const response = await fetch(apiUrl, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    if (response.ok) {
+                        let items = await response.json();
+                        if (customFilter && typeof customFilter === 'function') {
+                            items = items.filter(customFilter);
+                        }
+                        items.forEach(item => {
+                            const option = document.createElement('option');
+                            option.value = item[valueKey];
+                            option.textContent = customTextFormatter ? customTextFormatter(item) : item[textKey];
+                            selectElement.appendChild(option);
+                        });
+                    } else {
+                        console.error(`Failed to fetch items from ${apiUrl}:`, await response.json());
+                    }
+                } catch (error) {
+                    console.error(`Error fetching items from ${apiUrl}:`, error);
+                }
+            }
+
+            // Function to fetch and display project details and related financial data
+            const fetchProjectDetails = async () => {
+                pageMessage.style.display = 'none';
+                projectTitleSpan.textContent = 'جاري التحميل...';
+
+                // Fetch project details
+                try {
+                    const projectResponse = await fetch(`${BASE_URL}/api/projects/${currentProjectId}/details`, { // Use details endpoint for summary
+                        headers: {
+                            'x-auth-token': localStorage.getItem('token')
+                        }
+                    });
+                    const projectData = await projectResponse.json();
+
+                    if (projectResponse.ok) {
+                        projectTitleSpan.textContent = projectData.projectName;
+                        detailProjectNameSpan.textContent = projectData.projectName;
+                        detailProjectAddressSpan.textContent = projectData.address;
+                        detailProjectDescriptionSpan.textContent = projectData.description || 'لا يوجد وصف.';
+                        detailProjectEngineerSpan.textContent = projectData.engineer ? projectData.engineer.username : 'غير محدد';
+                        detailProjectClientSpan.textContent = projectData.client ? projectData.client.clientName : 'غير محدد';
+                        detailProjectStartDateSpan.textContent = formatDate(projectData.startDate);
+                        detailProjectEndDateSpan.textContent = formatDate(projectData.endDate);
+                        detailProjectStatusSpan.textContent = projectData.status;
+                        detailProjectNotesSpan.textContent = projectData.notes || 'لا توجد ملاحظات.';
+
+                        // Populate financial summary (now from backend calculated values)
+                        summaryTotalRevenueSpan.textContent = (projectData.totalRevenue || 0).toFixed(2) + ' ج.م';
+                        summaryTotalExpensesSpan.textContent = (projectData.totalExpenses || 0).toFixed(2) + ' ج.م';
+                        summaryNetProfitLossSpan.textContent = (projectData.netProfitLoss || 0).toFixed(2) + ' ج.م';
+
+                        contractorAgreedAmountSpan.textContent = (projectData.totalAgreedContractorAmount || 0).toFixed(2) + ' ج.م';
+                        contractorPaidAmountSpan.textContent = (projectData.totalPaidContractorAmount || 0).toFixed(2) + ' ج.م';
+                        contractorRemainingAmountSpan.textContent = (projectData.totalRemainingContractorAmount || 0).toFixed(2) + ' ج.م';
+
+                    } else {
+                        pageMessage.className = 'modal-message error';
+                        pageMessage.textContent = projectData.message || 'فشل في جلب تفاصيل المشروع.';
+                        pageMessage.style.display = 'block';
+                        return; // Stop if project details fail
+                    }
+                } catch (error) {
+                    console.error('Error fetching project details:', error);
+                    pageMessage.className = 'modal-message error';
+                    pageMessage.textContent = 'خطأ في الاتصال بالخادم لجلب تفاصيل المشروع.';
+                    pageMessage.style.display = 'block';
+                    return; // Stop if project details fail
+                }
+
+                // Fetch Expenses for this project
+                try {
+                    const expensesResponse = await fetch(`${BASE_URL}/api/transactions?project=${currentProjectId}&type=سحب`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    const expenses = await expensesResponse.json();
+                    projectExpensesTableBody.innerHTML = '';
+                    if (expenses.length > 0) {
+                        expenses.forEach(exp => {
+                            const row = projectExpensesTableBody.insertRow();
+                            row.innerHTML = `
+                                <td>${exp.amount.toFixed(2)} ج.م</td>
+                                <td>${exp.description || '-'}</td>
+                                <td>${exp.category ? exp.category.name : '-'}</td>
+                                <td>${formatDate(exp.date)}</td>
+                                <td>${exp.vendor || '-'}</td>
+                                <td>${exp.treasury ? exp.treasury.name : '-'}</td>
+                                <td class="action-buttons">
+                                    <button class="delete-expense" data-id="${exp._id}"><i class="fas fa-trash-alt"></i> حذف</button>
+                                </td>
+                            `;
+                        });
+                    } else {
+                        projectExpensesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">لا توجد مصروفات حالياً لهذا المشروع.</td></tr>';
+                    }
+                } catch (error) {
+                    console.error('Error fetching project expenses:', error);
+                    projectExpensesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">فشل في تحميل المصروفات.</td></tr>';
+                }
+
+                // Fetch Revenues for this project
+                try {
+                    const revenuesResponse = await fetch(`${BASE_URL}/api/transactions?project=${currentProjectId}&type=إيداع`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    const revenues = await revenuesResponse.json();
+                    projectRevenuesTableBody.innerHTML = '';
+                    if (revenues.length > 0) {
+                        revenues.forEach(rev => {
+                            const row = projectRevenuesTableBody.insertRow();
+                            row.innerHTML = `
+                                <td>${rev.amount.toFixed(2)} ج.م</td>
+                                <td>${rev.description || '-'}</td>
+                                <td>${formatDate(rev.date)}</td>
+                                <td>${rev.paymentMethod || '-'}</td>
+                                <td>${rev.treasury ? rev.treasury.name : '-'}</td>
+                                <td class="action-buttons">
+                                    <button class="delete-revenue" data-id="${rev._id}"><i class="fas fa-trash-alt"></i> حذف</button>
+                                </td>
+                            `;
+                        });
+                    } else {
+                        projectRevenuesTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">لا توجد إيرادات حالياً لهذا المشروع.</td></tr>';
+                    }
+                } catch (error) {
+                    console.error('Error fetching project revenues:', error);
+                    projectRevenuesTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">فشل في تحميل الإيرادات.</td></tr>';
+                }
+
+                // Fetch Contractor Payments for this project
+                try {
+                    const contractorPaymentsResponse = await fetch(`${BASE_URL}/api/contract-payments/${currentProjectId}`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    const payments = await contractorPaymentsResponse.json();
+                    contractorPaymentsTableBody.innerHTML = '';
+                    if (payments.length > 0) {
+                        payments.forEach(pay => {
+                            const row = contractorPaymentsTableBody.insertRow();
+                            row.innerHTML = `
+                                <td>${pay.contractorName || '-'}</td>
+                                <td>${pay.agreedAmount.toFixed(2)}</td>
+                                <td>${pay.paidAmount.toFixed(2)}</td>
+                                <td>${(pay.agreedAmount - pay.paidAmount).toFixed(2)}</td>
+                                <td>${formatDate(pay.date)}</td>
+                                <td>${pay.amount.toFixed(2)}</td>
+                                <td>${pay.treasury || '-'}</td>
+                                <td>${pay.description || '-'}</td>
+                                <td class="action-buttons">
+                                    <button class="delete-contract-payment" data-id="${pay._id}"><i class="fas fa-trash-alt"></i> حذف</button>
+                                </td>
+                            `;
+                        });
+                    } else {
+                        contractorPaymentsTableBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">لا توجد دفعات مقاولين حالياً لهذا المشروع.</td></tr>';
+                    }
+                } catch (error) {
+                    console.error('Error fetching contractor payments:', error);
+                    contractorPaymentsTableBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">فشل في تحميل دفعات المقاولين.</td></tr>';
+                }
+            };
+
+            // Initial fetch on page load
+            fetchProjectDetails();
+
+            // Back to projects button
+            backToProjectsBtn.addEventListener('click', () => {
+                window.location.href = '/projects.html';
+            });
+
+            // Edit Project Button (redirect to add-project page with ID)
+            editProjectBtn.addEventListener('click', () => {
+                if (currentUserRole !== 'مدير' && currentUserRole !== 'مدير حسابات') {
+                    pageMessage.className = 'modal-message error';
+                    pageMessage.textContent = 'ليس لديك صلاحية لتعديل المشاريع.';
+                    pageMessage.style.display = 'block';
+                    setTimeout(() => pageMessage.style.display = 'none', 3000);
+                    return;
+                }
+                window.location.href = `/add-project.html?id=${currentProjectId}`; // Reuse add-project for editing
+            });
+
+            // Delete Project Button
+            deleteProjectBtn.addEventListener('click', async () => {
+                if (currentUserRole !== 'مدير' && currentUserRole !== 'مدير حسابات') {
+                    pageMessage.className = 'modal-message error';
+                    pageMessage.textContent = 'ليس لديك صلاحية لحذف المشاريع.';
+                    pageMessage.style.display = 'block';
+                    setTimeout(() => pageMessage.style.display = 'none', 3000);
+                    return;
+                }
+
+                if (confirm('هل أنت متأكد أنك تريد حذف هذا المشروع؟ سيؤدي هذا إلى حذف جميع البيانات المرتبطة به. لا يمكن التراجع عن هذا الإجراء.')) {
+                    try {
+                        const response = await fetch(`${BASE_URL}/api/projects/${currentProjectId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'x-auth-token': localStorage.getItem('token')
+                            }
+                        });
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            pageMessage.className = 'modal-message success';
+                            pageMessage.textContent = data.message;
+                            pageMessage.style.display = 'block';
+                            setTimeout(() => {
+                                window.location.href = '/projects.html'; // Redirect after successful deletion
+                            }, 1500);
+                        } else {
+                            pageMessage.className = 'modal-message error';
+                            pageMessage.textContent = data.message || 'فشل في حذف المشروع.';
+                            pageMessage.style.display = 'block';
+                        }
+                    } catch (error) {
+                        console.error('Error deleting project:', error);
+                        pageMessage.className = 'modal-message error';
+                        pageMessage.textContent = 'خطأ في الاتصال بالخادم أثناء حذف المشروع.';
+                        pageMessage.style.display = 'block';
+                    }
+                }
+            });
+
+
+            // General function to close modals
+            function setupModalCloseListeners(modalElement, cancelButton) {
+                modalElement.querySelector('.close-button').addEventListener('click', () => {
+                    modalElement.style.display = 'none';
+                    // Reset message div inside modal
+                    const modalMessageDiv = modalElement.querySelector('.modal-message');
+                    if (modalMessageDiv) {
+                        modalMessageDiv.style.display = 'none';
+                    }
+                });
+                if (cancelButton) {
+                    cancelButton.addEventListener('click', () => {
+                        modalElement.style.display = 'none';
+                        const modalMessageDiv = modalElement.querySelector('.modal-message');
+                        if (modalMessageDiv) {
+                            modalMessageDiv.style.display = 'none';
+                        }
+                    });
+                }
+                window.addEventListener('click', (event) => {
+                    if (event.target === modalElement) {
+                        modalElement.style.display = 'none';
+                        const modalMessageDiv = modalElement.querySelector('.modal-message');
+                        if (modalMessageDiv) {
+                            modalMessageDiv.style.display = 'none';
+                        }
+                    }
+                });
+            }
+
+            // Setup listeners for all modals
+            setupModalCloseListeners(expenseModal, cancelExpenseButton);
+            setupModalCloseListeners(revenueModal, cancelRevenueButton);
+            setupModalCloseListeners(contractAgreementModal, cancelContractAgreementButton);
+            setupModalCloseListeners(contractPaymentModal, cancelContractPaymentButton);
+
+
+            // Open Expense Modal
+            addExpenseBtn.addEventListener('click', async () => {
+                if (currentUserRole !== 'مدير' && currentUserRole !== 'مدير حسابات') {
+                    pageMessage.className = 'modal-message error';
+                    pageMessage.textContent = 'ليس لديك صلاحية لإضافة مصروفات.';
+                    pageMessage.style.display = 'block';
+                    setTimeout(() => pageMessage.style.display = 'none', 3000);
+                    return;
+                }
+                expenseModal.style.display = 'flex';
+                expenseForm.reset();
+                expenseProjectIdInput.value = currentProjectId;
+                expenseDateInput.valueAsDate = new Date(); // Set current date
+                await populateDropdown(expenseCategorySelect, '/api/categories', '_id', 'name', 'اختر تصنيف');
+                await populateDropdown(expenseTreasurySelect, '/api/treasuries', '_id', 'name', 'اختر خزينة');
+            });
+
+            // Open Revenue Modal
+            addRevenueBtn.addEventListener('click', async () => {
+                if (currentUserRole !== 'مدير' && currentUserRole !== 'مدير حسابات') {
+                    pageMessage.className = 'modal-message error';
+                    pageMessage.textContent = 'ليس لديك صلاحية لإضافة إيرادات.';
+                    pageMessage.style.display = 'block';
+                    setTimeout(() => pageMessage.style.display = 'none', 3000);
+                    return;
+                }
+                revenueModal.style.display = 'flex';
+                revenueForm.reset();
+                revenueProjectIdInput.value = currentProjectId;
+                revenueDateInput.valueAsDate = new Date(); // Set current date
+                await populateDropdown(revenueTreasurySelect, '/api/treasuries', '_id', 'name', 'اختر خزينة'); // Populate treasury
+            });
+
+            // Open Contract Agreement Modal
+            addContractAgreementBtn.addEventListener('click', async () => {
+                if (currentUserRole !== 'مدير' && currentUserRole !== 'مدير حسابات') {
+                    pageMessage.className = 'modal-message error';
+                    pageMessage.textContent = 'ليس لديك صلاحية لإضافة اتفاقيات مقاولين.';
+                    pageMessage.style.display = 'block';
+                    setTimeout(() => pageMessage.style.display = 'none', 3000);
+                    return;
+                }
+                contractAgreementModal.style.display = 'flex';
+                contractAgreementForm.reset();
+                agreementProjectIdInput.value = currentProjectId;
+                await populateDropdown(agreementContractorSelect, '/api/contractors', '_id', 'contractorName', 'اختر المقاول');
+            });
+
+            // Open Contract Payment Modal
+            addContractPaymentBtn.addEventListener('click', async () => {
+                if (currentUserRole !== 'مدير' && currentUserRole !== 'مدير حسابات') {
+                    pageMessage.className = 'modal-message error';
+                    pageMessage.textContent = 'ليس لديك صلاحية لإضافة دفعات مقاولين.';
+                    pageMessage.style.display = 'block';
+                    setTimeout(() => pageMessage.style.display = 'none', 3000);
+                    return;
+                }
+                contractPaymentModal.style.display = 'flex';
+                contractPaymentForm.reset();
+                paymentProjectIdInput.value = currentProjectId;
+                paymentDateInput.valueAsDate = new Date(); // Set current date
+
+                // Populate contractor agreements for this project
+                await populateDropdown(
+                    paymentContractAgreementSelect,
+                    `/api/contract-agreements/${currentProjectId}`,
+                    '_id',
+                    'description',
+                    'اختر اتفاق مقاول',
+                    null, // No custom filter
+                    (item) => `${item.contractor.contractorName || 'مقاول غير معروف'} - ${item.description || 'اتفاقية بدون وصف'} (المبلغ: ${item.agreedAmount.toFixed(2)} ج.م, المدفوع: ${item.paidAmount.toFixed(2)} ج.م)` // Custom text display
+                );
+
+                await populateDropdown(paymentTreasurySelect, '/api/treasuries', '_id', 'name', 'اختر خزينة');
+            });
+
+            // Handle Expense Form Submission
+            expenseForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const transactionData = {
+                    project: expenseProjectIdInput.value,
+                    type: 'سحب', // Fixed type for expense (withdrawal)
+                    amount: parseFloat(expenseAmountInput.value),
+                    description: expenseDescriptionInput.value || undefined,
+                    category: expenseCategorySelect.value || undefined,
+                    date: expenseDateInput.value,
+                    vendor: expenseVendorInput.value || undefined,
+                    treasury: expenseTreasurySelect.value // Treasury is required for transaction
+                };
+
+                Object.keys(transactionData).forEach(key => {
+                    if (transactionData[key] === undefined) {
+                        delete transactionData[key];
+                    }
+                });
+
+                try {
+                    const response = await fetch(`${BASE_URL}/api/transactions`, { // Use existing transactions API
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-auth-token': localStorage.getItem('token')
+                        },
+                        body: JSON.stringify(transactionData)
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        expenseModalMessage.className = 'modal-message success';
+                        expenseModalMessage.textContent = data.message || 'تم حفظ المصروف بنجاح.';
+                        expenseModalMessage.style.display = 'block';
+                        fetchProjectDetails(); // Refresh project details and tables
+                        setTimeout(() => expenseModal.style.display = 'none', 1500);
+                    } else {
+                        expenseModalMessage.className = 'modal-message error';
+                        expenseModalMessage.textContent = data.message || 'فشل في حفظ المصروف.';
+                        expenseModalMessage.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error saving expense:', error);
+                    expenseModalMessage.className = 'modal-message error';
+                    expenseModalMessage.textContent = 'حدث خطأ أثناء الاتصال بالخادم.';
+                    expenseModalMessage.style.display = 'block';
+                }
+            });
+
+            // Handle Revenue Form Submission
+            revenueForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const transactionData = {
+                    project: revenueProjectIdInput.value,
+                    type: 'إيداع', // Fixed type for revenue (deposit)
+                    amount: parseFloat(revenueAmountInput.value),
+                    description: revenueDescriptionInput.value || undefined,
+                    date: revenueDateInput.value,
+                    paymentMethod: revenuePaymentMethodSelect.value,
+                    treasury: revenueTreasurySelect.value // Treasury is required for transaction
+                };
+
+                Object.keys(transactionData).forEach(key => {
+                    if (transactionData[key] === undefined) {
+                        delete transactionData[key];
+                    }
+                });
+
+                try {
+                    const response = await fetch(`${BASE_URL}/api/transactions`, { // Use existing transactions API
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-auth-token': localStorage.getItem('token')
+                        },
+                        body: JSON.stringify(transactionData)
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        revenueModalMessage.className = 'modal-message success';
+                        revenueModalMessage.textContent = data.message || 'تم حفظ الإيراد بنجاح.';
+                        revenueModalMessage.style.display = 'block';
+                        fetchProjectDetails(); // Refresh project details and tables
+                        setTimeout(() => revenueModal.style.display = 'none', 1500);
+                    } else {
+                        revenueModalMessage.className = 'modal-message error';
+                        revenueModalMessage.textContent = data.message || 'فشل في حفظ الإيراد.';
+                        revenueModalMessage.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error saving revenue:', error);
+                    revenueModalMessage.className = 'modal-message error';
+                    revenueModalMessage.textContent = 'خطأ في الاتصال بالخادم.';
+                    revenueModalMessage.style.display = 'block';
+                }
+            });
+
+            // Handle Contract Agreement Form Submission
+            contractAgreementForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const agreementData = {
+                    project: agreementProjectIdInput.value,
+                    contractor: agreementContractorSelect.value,
+                    agreedAmount: parseFloat(agreementAmountInput.value),
+                    description: agreementDescriptionInput.value || undefined
+                };
+
+                Object.keys(agreementData).forEach(key => {
+                    if (agreementData[key] === undefined) {
+                        delete agreementData[key];
+                    }
+                });
+
+                try {
+                    const response = await fetch(`${BASE_URL}/api/contract-agreements`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-auth-token': localStorage.getItem('token')
+                        },
+                        body: JSON.stringify(agreementData)
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        contractAgreementMessage.className = 'modal-message success';
+                        contractAgreementMessage.textContent = data.message || 'تم حفظ اتفاق المقاول بنجاح.';
+                        contractAgreementMessage.style.display = 'block';
+                        fetchProjectDetails(); // Refresh project details and tables
+                        setTimeout(() => contractAgreementModal.style.display = 'none', 1500);
+                    } else {
+                        contractAgreementMessage.className = 'modal-message error';
+                        contractAgreementMessage.textContent = data.message || 'فشل في حفظ اتفاق المقاول.';
+                        contractAgreementMessage.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error saving contract agreement:', error);
+                    contractAgreementMessage.className = 'modal-message error';
+                    contractAgreementMessage.textContent = 'خطأ في الاتصال بالخادم.';
+                    contractAgreementMessage.style.display = 'block';
+                }
+            });
+
+            // Handle Contract Payment Form Submission
+            contractPaymentForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const paymentData = {
+                    contractAgreementId: paymentContractAgreementSelect.value,
+                    amount: parseFloat(paymentAmountInput.value),
+                    date: paymentDateInput.value,
+                    treasuryId: paymentTreasurySelect.value,
+                    description: paymentDescriptionInput.value || undefined // Include description
+                };
+
+                Object.keys(paymentData).forEach(key => {
+                    if (paymentData[key] === undefined) {
+                        delete paymentData[key];
+                    }
+                });
+
+                try {
+                    const response = await fetch(`${BASE_URL}/api/contract-payments`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-auth-token': localStorage.getItem('token')
+                        },
+                        body: JSON.stringify(paymentData)
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        contractPaymentMessage.className = 'modal-message success';
+                        contractPaymentMessage.textContent = data.message || 'تم حفظ دفعة المقاول بنجاح.';
+                        contractPaymentMessage.style.display = 'block';
+                        fetchProjectDetails(); // Refresh project details and tables
+                        setTimeout(() => contractPaymentModal.style.display = 'none', 1500);
+                    } else {
+                        contractPaymentMessage.className = 'modal-message error';
+                        contractPaymentMessage.textContent = data.message || 'فشل في حفظ دفعة المقاول.';
+                        contractPaymentMessage.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error saving contract payment:', error);
+                    contractPaymentMessage.className = 'modal-message error';
+                    contractPaymentMessage.textContent = 'خطأ في الاتصال بالخادم.';
+                    contractPaymentMessage.style.display = 'block';
+                }
+            });
+
+            // Handle Delete buttons for Expenses, Revenues, and Contract Payments
+            document.addEventListener('click', async (event) => {
+                const target = event.target.closest('button');
+                if (!target) return;
+
+                const transactionId = target.dataset.id;
+
+                // Determine the action based on the button's class
+                let deleteApiUrl = '';
+                let confirmationMessage = '';
+                let successMessage = '';
+                let errorMessage = '';
+
+                if (target.classList.contains('delete-expense')) {
+                    if (currentUserRole !== 'مدير' && currentUserRole !== 'مدير حسابات') {
+                        pageMessage.className = 'modal-message error';
+                        pageMessage.textContent = 'ليس لديك صلاحية لحذف المصروفات.';
+                        pageMessage.style.display = 'block';
+                        setTimeout(() => pageMessage.style.display = 'none', 3000);
+                        return;
+                    }
+                    deleteApiUrl = `/api/transactions/${transactionId}`;
+                    confirmationMessage = 'هل أنت متأكد أنك تريد حذف هذا المصروف؟ سيتم عكس تأثيره على الخزينة والمشروع.';
+                    successMessage = 'تم حذف المصروف بنجاح.';
+                    errorMessage = 'فشل في حذف المصروف.';
+                } else if (target.classList.contains('delete-revenue')) {
+                    if (currentUserRole !== 'مدير' && currentUserRole !== 'مدير حسابات') {
+                        pageMessage.className = 'modal-message error';
+                        pageMessage.textContent = 'ليس لديك صلاحية لحذف الإيرادات.';
+                        pageMessage.style.display = 'block';
+                        setTimeout(() => pageMessage.style.display = 'none', 3000);
+                        return;
+                    }
+                    deleteApiUrl = `/api/transactions/${transactionId}`;
+                    confirmationMessage = 'هل أنت متأكد أنك تريد حذف هذا الإيراد؟ سيتم عكس تأثيره على الخزينة والمشروع.';
+                    successMessage = 'تم حذف الإيراد بنجاح.';
+                    errorMessage = 'فشل في حذف الإيراد.';
+                } else if (target.classList.contains('delete-contract-payment')) {
+                    if (currentUserRole !== 'مدير' && currentUserRole !== 'مدير حسابات') {
+                        pageMessage.className = 'modal-message error';
+                        pageMessage.textContent = 'ليس لديك صلاحية لحذف دفعات المقاولين.';
+                        pageMessage.style.display = 'block';
+                        setTimeout(() => pageMessage.style.display = 'none', 3000);
+                        return;
+                    }
+                    deleteApiUrl = `/api/contract-payments/${transactionId}`;
+                    confirmationMessage = 'هل أنت متأكد أنك تريد حذف دفعة المقاول هذه؟ سيتم عكس تأثيرها على اتفاق المقاول والمقاول والخزينة والمشروع.';
+                    successMessage = 'تم حذف دفعة المقاول بنجاح.';
+                    errorMessage = 'فشل في حذف دفعة المقاول.';
+                } else {
+                    return; // Not a delete button for these sections
+                }
+
+                if (confirm(confirmationMessage)) {
+                    try {
+                        const response = await fetch(deleteApiUrl, {
+                            method: 'DELETE',
+                            headers: {
+                                'x-auth-token': localStorage.getItem('token')
+                            }
+                        });
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            pageMessage.className = 'modal-message success';
+                            pageMessage.textContent = data.message || successMessage;
+                            pageMessage.style.display = 'block';
+                            fetchProjectDetails(); // Refresh project details and tables
+                            setTimeout(() => pageMessage.style.display = 'none', 3000);
+                        } else {
+                            pageMessage.className = 'modal-message error';
+                            pageMessage.textContent = data.message || errorMessage;
+                            pageMessage.style.display = 'block';
+                            setTimeout(() => pageMessage.style.display = 'none', 3000);
+                        }
+                    } catch (error) {
+                        console.error(`Error deleting item from ${deleteApiUrl}:`, error);
+                        pageMessage.className = 'modal-message error';
+                        pageMessage.textContent = 'خطأ في الاتصال بالخادم أثناء عملية الحذف.';
+                        pageMessage.style.display = 'block';
+                        setTimeout(() => pageMessage.style.display = 'none', 3000);
+                    }
+                }
+            });
+
+
+            // Excel Export Logic
+            exportProjectExcelBtn.addEventListener('click', async () => {
+                pageMessage.className = 'modal-message';
+                pageMessage.textContent = 'جاري إعداد ملف Excel...';
+                pageMessage.style.display = 'block';
+
+                try {
+                    const projectResponse = await fetch(`${BASE_URL}/api/projects/${currentProjectId}/details`, { // Fetch details from the /details endpoint
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    const projectDetails = await projectResponse.json();
+
+                    if (!projectResponse.ok) {
+                        throw new Error(projectDetails.message || 'فشل في جلب بيانات المشروع.');
+                    }
+
+                    // Fetch individual transactions and contractor payments as they are not returned by project details endpoint directly
+                    const expensesResponse = await fetch(`${BASE_URL}/api/transactions?project=${currentProjectId}&type=سحب`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    const expenses = await expensesResponse.json();
+
+                    const revenuesResponse = await fetch(`${BASE_URL}/api/transactions?project=${currentProjectId}&type=إيداع`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    const revenues = await revenuesResponse.json();
+
+                    const contractorPaymentsResponse = await fetch(`${BASE_URL}/api/contract-payments/${currentProjectId}`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    const contractorPayments = await contractorPaymentsResponse.json();
+
+                    const wb = XLSX.utils.book_new();
+
+                    // Sheet 1: Project Details
+                    const detailsData = [
+                        ['تفاصيل المشروع'],
+                        ['', ''],
+                        ['اسم المشروع:', projectDetails.projectName],
+                        ['العنوان:', projectDetails.address],
+                        ['المهندس:', projectDetails.engineer ? projectDetails.engineer.username : 'غير محدد'],
+                        ['العميل:', projectDetails.client ? projectDetails.client.clientName : 'غير محدد'],
+                        ['تاريخ البدء:', formatDate(projectDetails.startDate)],
+                        ['تاريخ الانتهاء:', formatDate(projectDetails.endDate)],
+                        ['الحالة:', projectDetails.status],
+                        ['الوصف:', projectDetails.description || ''],
+                        ['ملاحظات:', projectDetails.notes || '']
+                    ];
+                    const ws_details = XLSX.utils.aoa_to_sheet(detailsData);
+                    XLSX.utils.book_append_sheet(wb, ws_details, "تفاصيل المشروع");
+
+                    // Sheet 2: Financial Summary
+                    const financialSummaryData = [
+                        ['ملخص المعاملات المالية'],
+                        ['', ''],
+                        ['إجمالي الإيرادات:', (projectDetails.totalRevenue || 0).toFixed(2) + ' ج.م'],
+                        ['إجمالي المصروفات:', (projectDetails.totalExpenses || 0).toFixed(2) + ' ج.م'],
+                        ['صافي الربح / الخسارة:', (projectDetails.netProfitLoss || 0).toFixed(2) + ' ج.م'],
+                        ['المبلغ المتفق عليه الكلي للمقاولين:', (projectDetails.totalAgreedContractorAmount || 0).toFixed(2) + ' ج.م'],
+                        ['المبلغ المدفوع الكلي للمقاولين:', (projectDetails.totalPaidContractorAmount || 0).toFixed(2) + ' ج.م'],
+                        ['المتبقي الكلي للمقاولين:', (projectDetails.totalRemainingContractorAmount || 0).toFixed(2) + ' ج.م']
+                    ];
+                    const ws_financial = XLSX.utils.aoa_to_sheet(financialSummaryData);
+                    XLSX.utils.book_append_sheet(wb, ws_financial, "ملخص مالي");
+
+                    // Sheet 3: Expenses
+                    const expensesData = [
+                        ['المصروفات'],
+                        ['المبلغ', 'الوصف', 'التصنيف', 'التاريخ', 'البائع', 'الخزينة'],
+                        ...expenses.map(e => [
+                            e.amount.toFixed(2),
+                            e.description || '',
+                            e.category ? e.category.name : '',
+                            formatDate(e.date),
+                            e.vendor || '',
+                            e.treasury ? e.treasury.name : ''
+                        ])
+                    ];
+                    const ws_expenses = XLSX.utils.aoa_to_sheet(expensesData);
+                    XLSX.utils.book_append_sheet(wb, ws_expenses, "المصروفات");
+
+                    // Sheet 4: Revenues
+                    const revenuesData = [
+                        ['الإيرادات'],
+                        ['المبلغ', 'الوصف', 'التاريخ', 'طريقة التحويل', 'الخزينة'],
+                        ...revenues.map(r => [
+                            r.amount.toFixed(2),
+                            r.description || '',
+                            formatDate(r.date),
+                            r.paymentMethod || '',
+                            r.treasury ? r.treasury.name : ''
+                        ])
+                    ];
+                    const ws_revenues = XLSX.utils.aoa_to_sheet(revenuesData);
+                    XLSX.utils.book_append_sheet(wb, ws_revenues, "الإيرادات");
+
+                    // Sheet 5: Contractor Payments
+                    const contractorPaymentsData = [
+                        ['دفعات المقاولين'],
+                        ['اسم المقاول', 'المبلغ المتفق عليه (للاتفاقية)', 'المدفوع من الاتفاقية', 'المتبقي من الاتفاقية', 'تاريخ الدفعة', 'مبلغ الدفعة', 'الخزينة', 'الوصف'],
+                        ...contractorPayments.map(cp => [
+                            cp.contractorName || '',
+                            cp.agreedAmount.toFixed(2),
+                            cp.paidAmount.toFixed(2),
+                            (cp.agreedAmount - cp.paidAmount).toFixed(2),
+                            formatDate(cp.date),
+                            cp.amount.toFixed(2),
+                            cp.treasury || '',
+                            cp.description || ''
+                        ])
+                    ];
+                    const ws_contractor_payments = XLSX.utils.aoa_to_sheet(contractorPaymentsData);
+                    XLSX.utils.book_append_sheet(wb, ws_contractor_payments, "دفعات المقاولين");
+
+
+                    // Generate and download
+                    XLSX.writeFile(wb, `${projectDetails.projectName}_تفاصيل_المشروع.xlsx`);
+                    pageMessage.className = 'modal-message success';
+                    pageMessage.textContent = 'تم تصدير ملف Excel بنجاح.';
+
+                } catch (error) {
+                    console.error('Error exporting Excel:', error);
+                    pageMessage.className = 'modal-message error';
+                    pageMessage.textContent = error.message || 'فشل في تصدير ملف Excel.';
+                } finally {
+                    setTimeout(() => pageMessage.style.display = 'none', 3000);
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
