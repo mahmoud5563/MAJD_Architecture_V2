@@ -2,6 +2,10 @@
 const mongoose = require('mongoose');
 
 const transactionSchema = new mongoose.Schema({
+    recordedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
     treasury: { // الخزينة التي تمت فيها الحركة المالية
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Treasury',
@@ -14,7 +18,7 @@ const transactionSchema = new mongoose.Schema({
     },
     type: { // نوع المعاملة: 'إيداع' (إيراد), 'سحب' (مصروف), 'تحويل' (بين الخزائن), 'دفعة مقاول'
         type: String,
-        enum: ['إيداع', 'سحب', 'تحويل', 'دفعة مقاول'],
+        enum: ['إيداع', 'مصروف', 'تحويل', 'دفعة مقاول'],
         required: true
     },
     amount: {
@@ -34,7 +38,7 @@ const transactionSchema = new mongoose.Schema({
     category: { // تصنيف المصروفات (إذا كان النوع مصروف)
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Category',
-        required: function() { return this.type === 'سحب'; } // مطلوب فقط إذا كان النوع 'سحب'
+        required: function() { return this.type === 'سحب'; }
     },
     vendor: { // البائع/المستفيد (إذا كان مصروف)
         type: String,
@@ -44,7 +48,6 @@ const transactionSchema = new mongoose.Schema({
     paymentMethod: { // طريقة الدفع/التحويل (إذا كان إيداع)
         type: String,
         enum: ['كاش', 'تحويل بنكي', 'شيك'],
-        required: function() { return this.type === 'إيداع'; } // مطلوب فقط إذا كان النوع 'إيداع'
     },
     // حقول خاصة بالتحويلات
     targetTreasury: {

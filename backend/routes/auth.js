@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken'); // لاستخدام JWT لتوليد الت
 // @desc    Register a new user (for initial setup/testing)
 // @access  Public
 router.post('/register', async (req, res) => {
-    const { username, password, role, phoneNumber, email } = req.body;
+    const { username, password, role } = req.body;
 
     try {
         let user = await User.findOne({ username }); // التحقق إذا كان اسم المستخدم موجودًا بالفعل
@@ -20,9 +20,7 @@ router.post('/register', async (req, res) => {
         user = new User({
             username,
             password, // سيتم تشفيرها تلقائيا بواسطة pre('save') hook
-            role: role || 'مهندس', // دور افتراضي إذا لم يتم تحديده
-            phoneNumber,
-            email
+            role: role || 'مهندس'  // دور افتراضي إذا لم يتم تحديده
         });
 
         await user.save(); // حفظ المستخدم في قاعدة البيانات، مما يؤدي إلى تشفير كلمة المرور

@@ -21,7 +21,7 @@ router.post('/', auth, authorizeRoles('مدير', 'مدير حسابات'), asyn
         res.status(201).json({ message: 'تم إضافة التصنيف بنجاح.', category: newCategory });
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('حدث خطأ في الخادم أثناء إضافة التصنيف.');
+        res.status(500).json({  message : 'حدث خطأ في الخادم أثناء إضافة التصنيف.'});
     }
 });
 
@@ -35,7 +35,7 @@ router.get('/', auth, async (req, res) => {
         res.json(categories);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('حدث خطأ في الخادم أثناء جلب التصنيفات.');
+        res.status(500).json({  message : 'حدث خطأ في الخادم أثناء جلب التصنيفات.'});
     }
 });
 
@@ -54,7 +54,7 @@ router.get('/:id', auth, async (req, res) => {
         if (err.kind === 'ObjectId') {
             return res.status(400).json({ message: 'معرف التصنيف غير صالح.' });
         }
-        res.status(500).send('حدث خطأ في الخادم أثناء جلب التصنيف.');
+        res.status(500).json({  message : 'حدث خطأ في الخادم أثناء جلب التصنيف.'});
     }
 });
 
@@ -86,7 +86,7 @@ router.put('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), as
         if (err.kind === 'ObjectId') {
             return res.status(400).json({ message: 'معرف التصنيف غير صالح.' });
         }
-        res.status(500).send('حدث خطأ في الخادم أثناء تحديث التصنيف.');
+        res.status(500).json({  message : 'حدث خطأ في الخادم أثناء تحديث التصنيف.'});
     }
 });
 
@@ -115,7 +115,7 @@ router.delete('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'),
         if (err.kind === 'ObjectId') {
             return res.status(400).json({ message: 'معرف التصنيف غير صالح.' });
         }
-        res.status(500).send('حدث خطأ في الخادم أثناء حذف التصنيف.');
+        res.status(500).json({  message : 'حدث خطأ في الخادم أثناء حذف التصنيف.'});
     }
 });
 

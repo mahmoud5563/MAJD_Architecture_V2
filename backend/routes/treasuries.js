@@ -58,7 +58,7 @@ router.post('/', auth, authorizeRoles('مدير', 'مدير حسابات'), asyn
 
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('حدث خطأ في الخادم أثناء إضافة الخزينة.');
+        res.status(500).json({  message : 'حدث خطأ في الخادم أثناء إضافة الخزينة.'});
     }
 });
 
@@ -75,7 +75,7 @@ router.get('/', auth, async (req, res) => {
         res.json(treasuries);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('حدث خطأ في الخادم أثناء جلب الخزائن.');
+        res.status(500).json({  message : 'حدث خطأ في الخادم أثناء جلب الخزائن.'});
     }
 });
 
@@ -97,7 +97,7 @@ router.get('/:id', auth, async (req, res) => {
         if (err.kind === 'ObjectId') {
             return res.status(400).json({ message: 'معرف الخزينة غير صالح.' });
         }
-        res.status(500).send('حدث خطأ في الخادم أثناء جلب تفاصيل الخزينة.');
+        res.status(500).json({  message : 'حدث خطأ في الخادم أثناء جلب تفاصيل الخزينة.'});
     }
 });
 
@@ -169,7 +169,7 @@ router.get('/:id/details', auth, authorizeRoles('مدير', 'مدير حسابا
         if (err.kind === 'ObjectId') {
             return res.status(400).json({ message: 'معرف الخزينة غير صالح.' });
         }
-        res.status(500).send('حدث خطأ في الخادم أثناء جلب تفاصيل الخزينة الكاملة.');
+        res.status(500).json({ massage: 'حدث خطأ في الخادم أثناء جلب تفاصيل الخزينة الكاملة.'});
     }
 });
 
@@ -243,7 +243,7 @@ router.put('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), as
         if (err.kind === 'ObjectId') {
             return res.status(400).json({ message: 'معرف الخزينة، المهندس، أو المشروع غير صالح.' });
         }
-        res.status(500).send('حدث خطأ في الخادم أثناء تحديث الخزينة.');
+        res.status(500).json({ massage : 'حدث خطأ في الخادم أثناء تحديث الخزينة.'});
     }
 });
 
@@ -282,7 +282,7 @@ router.delete('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'),
         if (err.kind === 'ObjectId') {
             return res.status(400).json({ message: 'معرف الخزينة غير صالح.' });
         }
-        res.status(500).send('حدث خطأ في الخادم أثناء حذف الخزينة.');
+        res.status(500).json({  message : 'حدث خطأ في الخادم أثناء حذف الخزينة.'});
     }
 });
 

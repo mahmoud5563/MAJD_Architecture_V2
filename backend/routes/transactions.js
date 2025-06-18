@@ -90,7 +90,7 @@ router.post('/', auth, authorizeRoles('مدير', 'مدير حسابات'), asyn
         if (err.kind === 'ObjectId') {
             return res.status(400).json({ message: 'معرف غير صالح في بيانات المعاملة.' });
         }
-        res.status(500).send('حدث خطأ في الخادم أثناء إضافة المعاملة.');
+        res.status(500).json({  message : 'حدث خطأ في الخادم أثناء إضافة المعاملة.'});
     }
 });
 
@@ -166,7 +166,7 @@ router.get('/', auth, async (req, res) => {
         res.json(transactions);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('حدث خطأ في الخادم أثناء جلب المعاملات.');
+        res.status(500).json({  message : 'حدث خطأ في الخادم أثناء جلب المعاملات.'});
     }
 });
 
@@ -210,7 +210,7 @@ router.get('/:id', auth, async (req, res) => {
         if (err.kind === 'ObjectId') {
             return res.status(400).json({ message: 'معرف المعاملة غير صالح.' });
         }
-        res.status(500).send('حدث خطأ في الخادم أثناء جلب المعاملة.');
+        res.status(500).json({  message : 'حدث خطأ في الخادم أثناء جلب المعاملة.'});
     }
 });
 
@@ -250,7 +250,7 @@ router.put('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), as
         if (err.kind === 'ObjectId') {
             return res.status(400).json({ message: 'معرف المعاملة غير صالح.' });
         }
-        res.status(500).send('حدث خطأ في الخادم أثناء تحديث المعاملة.');
+        res.status(500).json({  message : 'حدث خطأ في الخادم أثناء تحديث المعاملة.'});
     }
 });
 
@@ -326,7 +326,7 @@ router.delete('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'),
         if (err.kind === 'ObjectId') {
             return res.status(400).json({ message: 'معرف المعاملة غير صالح.' });
         }
-        res.status(500).send('حدث خطأ في الخادم أثناء حذف المعاملة.');
+        res.status(500).json({  message : 'حدث خطأ في الخادم أثناء حذف المعاملة.'});
     }
 });
 

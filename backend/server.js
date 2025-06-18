@@ -66,6 +66,13 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 
+// ميدل وير عام للتعامل مع أي خطأ غير متوقع في أي Route
+app.use((err, req, res, next) => {
+    console.error('🔥 Unhandled Error:', err.stack);
+    res.status(500).json({ message: 'حدث خطأ غير متوقع في الخادم.' });
+});
+
+
 // تشغيل الخادم
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
