@@ -1122,7 +1122,7 @@
 
                 // Fetch Expenses for this project
                 try {
-                    const expensesResponse = await fetch(`${BASE_URL}/api/transactions?project=${currentProjectId}&type=سحب`, {
+                    const expensesResponse = await fetch(`${BASE_URL}/api/transactions?project=${currentProjectId}&type=مصروف`, {
                         headers: { 'x-auth-token': localStorage.getItem('token') }
                     });
                     const expenses = await expensesResponse.json();
@@ -1390,9 +1390,9 @@
             // Handle Expense Form Submission
             expenseForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const transactionData = {
+               const transactionData  = {
                     project: expenseProjectIdInput.value,
-                    type: 'سحب', // Fixed type for expense (withdrawal)
+                    type: 'مصروف', // Fixed type for expense (withdrawal)
                     amount: parseFloat(expenseAmountInput.value),
                     description: expenseDescriptionInput.value || undefined,
                     category: expenseCategorySelect.value || undefined,
@@ -1682,7 +1682,7 @@
                     }
 
                     // Fetch individual transactions and contractor payments as they are not returned by project details endpoint directly
-                    const expensesResponse = await fetch(`${BASE_URL}/api/transactions?project=${currentProjectId}&type=سحب`, {
+                    const expensesResponse = await fetch(`${BASE_URL}/api/transactions?project=${currentProjectId}&type=مصروف`, {
                         headers: { 'x-auth-token': localStorage.getItem('token') }
                     });
                     const expenses = await expensesResponse.json();

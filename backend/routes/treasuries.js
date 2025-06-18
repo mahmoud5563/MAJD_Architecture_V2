@@ -140,8 +140,8 @@ router.get('/:id/details', auth, authorizeRoles('مدير', 'مدير حسابا
                 if (trans.type === 'إيداع') {
                     // المبلغ المدفوع (إيداع)
                     totalDeposits += trans.amount;
-                } else if (trans.type === 'سحب') {
-                    // المبلغ المسحوب (سحب)
+                } else if (trans.type === 'مصروف') {
+                    // المبلغ المصروف (صرف)
                     totalWithdrawals += trans.amount;
                 } else if (trans.type === 'تحويل') {
                     // المبلغ المحول منها

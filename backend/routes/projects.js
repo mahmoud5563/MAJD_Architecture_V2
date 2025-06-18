@@ -159,7 +159,7 @@ router.get('/:id/details', auth, async (req, res) => {
         }
 
         // جلب المصروفات والإيرادات المرتبطة بالمشروع
-        const expenses = await Transaction.find({ project: projectId, type: 'سحب' });
+        const expenses = await Transaction.find({ project: projectId, type: 'مصروف' });
         const revenues = await Transaction.find({ project: projectId, type: 'إيداع' });
 
         // حساب إجمالي الإيرادات

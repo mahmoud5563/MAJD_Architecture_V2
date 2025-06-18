@@ -16,7 +16,7 @@ const transactionSchema = new mongoose.Schema({
         ref: 'Project',
         required: false // المعاملة يمكن أن تكون غير مرتبطة بمشروع (مثل رواتب الموظفين العامة)
     },
-    type: { // نوع المعاملة: 'إيداع' (إيراد), 'سحب' (مصروف), 'تحويل' (بين الخزائن), 'دفعة مقاول'
+    type: { // نوع المعاملة: 'إيداع' (إيراد), '' (مصروف), 'تحويل' (بين الخزائن), 'دفعة مقاول'
         type: String,
         enum: ['إيداع', 'مصروف', 'تحويل', 'دفعة مقاول'],
         required: true
@@ -38,7 +38,7 @@ const transactionSchema = new mongoose.Schema({
     category: { // تصنيف المصروفات (إذا كان النوع مصروف)
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Category',
-        required: function() { return this.type === 'سحب'; }
+        required: function() { return this.type === 'مصروف'; }
     },
     vendor: { // البائع/المستفيد (إذا كان مصروف)
         type: String,

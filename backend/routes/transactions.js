@@ -31,8 +31,8 @@ router.post('/', auth, authorizeRoles('مدير', 'مدير حسابات'), asyn
             amount: parseFloat(amount),
             description,
             date,
-            category: category || undefined, // Category is for 'سحب'
-            vendor: vendor || undefined, // Vendor is for 'سحب'
+            category: category || undefined, // Category is for 'مصروف'
+            vendor: vendor || undefined, // Vendor is for 'مصروف'
             paymentMethod: paymentMethod || undefined, // Payment method for 'إيداع'
             targetTreasury: targetTreasury || undefined // Target treasury for 'تحويل'
         });
@@ -47,7 +47,7 @@ router.post('/', auth, authorizeRoles('مدير', 'مدير حسابات'), asyn
                     await associatedProject.save();
                 }
             }
-        } else if (type === 'سحب') { // مصروف
+        } else if (type === 'مصروف') { // مصروف
             if (sourceTreasury.currentBalance < newTransaction.amount) {
                 return res.status(400).json({ message: 'الرصيد في الخزينة غير كافٍ لإجراء هذا المصروف.' });
             }
@@ -236,7 +236,7 @@ router.put('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), as
         transaction.description = description !== undefined ? description : transaction.description;
         transaction.date = date !== undefined ? date : transaction.date;
 
-        if (transaction.type === 'سحب') {
+        if (transaction.type === 'مصروف') {
             transaction.category = category !== undefined ? category : transaction.category;
             transaction.vendor = vendor !== undefined ? vendor : transaction.vendor;
         } else if (transaction.type === 'إيداع') {
@@ -281,7 +281,7 @@ router.delete('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'),
                     await associatedProject.save();
                 }
             }
-        } else if (transaction.type === 'سحب') {
+        } else if (transaction.type === 'مصروف') {
             if (sourceTreasury) sourceTreasury.currentBalance += transaction.amount;
             if (transaction.project) {
                 const associatedProject = await Project.findById(transaction.project);
