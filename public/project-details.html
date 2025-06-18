@@ -1388,10 +1388,11 @@
             });
 
             // Handle Expense Form Submission
+            
             expenseForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                const transactionData  = {
-                    project: expenseProjectIdInput.value,
+                    project: new URLSearchParams(window.location.search).get('id'),
                     type: 'مصروف', // Fixed type for expense (withdrawal)
                     amount: parseFloat(expenseAmountInput.value),
                     description: expenseDescriptionInput.value || undefined,
