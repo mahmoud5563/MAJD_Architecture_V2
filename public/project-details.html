@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تفاصيل المشروع - MAJD Architecture</title>
+   <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         :root {
@@ -653,11 +655,140 @@
                         </tbody>
                     </table>
                 </div>
-
                 <div class="modal-message" id="pageMessage" style="display: none;"></div>
-                <div class="details-buttons" style="text-align: center; margin-top: 30px;">
-                    <button type="button" class="action-button" id="exportProjectExcelBtn"><i
-                            class="fas fa-file-excel"></i> تصدير Excel</button>
+
+                <div class="details-buttons"
+                    style="display: flex; justify-content: center; gap: 15px; margin-top: 30px;">
+                    <button type="button" class="action-button" id="exportProjectExcelBtn" style="display: none;">
+                        <i class="fas fa-file-excel"></i> تصدير Excel
+                    </button>
+
+
+
+
+
+
+
+
+
+<script>
+document.getElementById('exportProjectExcelBtn').addEventListener('click', function () {
+    console.log("✅ زر التصدير شغال");
+
+    const wb = XLSX.utils.book_new();
+
+    // 🟦 1- بيانات المشروع
+    const projectDetailsData = [
+        ['تفاصيل المشروع'],
+        ['اسم المشروع', document.getElementById('detailProjectName').textContent.trim()],
+        ['العنوان', document.getElementById('detailProjectAddress').textContent.trim()],
+        ['المهندس', document.getElementById('detailProjectEngineer').textContent.trim()],
+        ['العميل', document.getElementById('detailProjectClient').textContent.trim()],
+        ['تاريخ البدء', document.getElementById('detailProjectStartDate').textContent.trim()],
+        ['تاريخ الانتهاء', document.getElementById('detailProjectEndDate').textContent.trim()],
+        ['الحالة', document.getElementById('detailProjectStatus').textContent.trim()],
+        ['الوصف', document.getElementById('detailProjectDescription').textContent.trim()],
+        ['ملاحظات', document.getElementById('detailProjectNotes').textContent.trim()],
+    ];
+    const projectSheet = XLSX.utils.aoa_to_sheet(projectDetailsData);
+    XLSX.utils.book_append_sheet(wb, projectSheet, 'Project_Info');
+
+    // 🟦 2- المصروفات
+    const expensesTable = document.getElementById('projectExpensesTableBody');
+    const expensesData = [['المبلغ', 'الوصف', 'التصنيف', 'التاريخ', 'البائع', 'الخزينة']];
+    let totalExpenses = 0;
+    for (let row of expensesTable.rows) {
+        if (row.cells.length >= 6) {
+            const amount = parseFloat(row.cells[0].textContent.trim()) || 0;
+            totalExpenses += amount;
+
+            expensesData.push([
+                row.cells[0].textContent.trim(),
+                row.cells[1].textContent.trim(),
+                row.cells[2].textContent.trim(),
+                row.cells[3].textContent.trim(),
+                row.cells[4].textContent.trim(),
+                row.cells[5].textContent.trim()
+            ]);
+        }
+    }
+
+    // 🟦 3- دفعات المقاولين
+    const contractorTable = document.getElementById('contractorPaymentsTableBody');
+    const contractorData = [['المقاول', 'المبلغ المتفق عليه', 'المدفوع', 'المتبقي', 'تاريخ الدفعة', 'مبلغ الدفعة', 'الخزينة', 'الوصف']];
+    let totalContractorPayments = 0;
+    for (let row of contractorTable.rows) {
+        if (row.cells.length >= 8) {
+            const paidNow = parseFloat(row.cells[5].textContent.trim()) || 0;
+            totalContractorPayments += paidNow;
+
+            contractorData.push([
+                row.cells[0].textContent.trim(),
+                row.cells[1].textContent.trim(),
+                row.cells[2].textContent.trim(),
+                row.cells[3].textContent.trim(),
+                row.cells[4].textContent.trim(),
+                row.cells[5].textContent.trim(),
+                row.cells[6].textContent.trim(),
+                row.cells[7].textContent.trim()
+            ]);
+        }
+    }
+
+    // 🧾 نضيف الإجماليات في نهاية شيت المصروفات
+    expensesData.push(['', '', '', '', 'إجمالي المصروفات:', totalExpenses.toFixed(2) + ' ج.م']);
+    expensesData.push(['', '', '', '', 'الإجمالي الكلي:', (totalExpenses + totalContractorPayments).toFixed(2) + ' ج.م']);
+
+    const expensesSheet = XLSX.utils.aoa_to_sheet(expensesData);
+    XLSX.utils.book_append_sheet(wb, expensesSheet, 'Expenses');
+
+    // 🟦 4- الإيرادات
+    const revenueTable = document.getElementById('projectRevenuesTableBody');
+    const revenueData = [['المبلغ', 'الوصف', 'التاريخ', 'طريقة التحويل', 'الخزينة']];
+    for (let row of revenueTable.rows) {
+        if (row.cells.length >= 5) {
+            revenueData.push([
+                row.cells[0].textContent.trim(),
+                row.cells[1].textContent.trim(),
+                row.cells[2].textContent.trim(),
+                row.cells[3].textContent.trim(),
+                row.cells[4].textContent.trim()
+            ]);
+        }
+    }
+    revenueData.push(['', '', '', 'الإجمالي:', document.getElementById('summaryTotalRevenue').textContent.trim()]);
+    const revenueSheet = XLSX.utils.aoa_to_sheet(revenueData);
+    XLSX.utils.book_append_sheet(wb, revenueSheet, 'Revenues');
+
+    // 🟦 5- شيت المقاولين
+    contractorData.push(['', '', totalContractorPayments.toFixed(2) + ' ج.م']);
+    const contractorSheet = XLSX.utils.aoa_to_sheet(contractorData);
+    XLSX.utils.book_append_sheet(wb, contractorSheet, 'Contractor_Payments');
+
+    // 🟦 6- صافي الربح / الخسارة
+    const profitLossSheet = XLSX.utils.aoa_to_sheet([
+        ['صافي الربح / الخسارة'],
+        [document.getElementById('summaryNetProfitLoss').textContent.trim()]
+    ]);
+    XLSX.utils.book_append_sheet(wb, profitLossSheet, 'Profit_Loss');
+
+    // 🟦 7- حفظ الملف
+    const fileName = `${document.getElementById('detailProjectName').textContent.trim().replace(/[:\\/?*[\]]/g, '-')}-تفاصيل.xlsx`;
+    XLSX.writeFile(wb, fileName);
+});
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
                 </div>
             </div>
         </div>
@@ -787,7 +918,6 @@
             </form>
         </div>
     </div>
-
     <!-- Add Contract Payment Modal -->
     <div id="contractPaymentModal" class="modal">
         <div class="modal-content">
@@ -832,7 +962,6 @@
     </div>
 
 
-    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script> <!-- For Excel export -->
     <script>
         const BASE_URL = "http://localhost:3000";
         // Client-side authentication check and redirection
@@ -967,6 +1096,9 @@
             const detailProjectEndDateSpan = document.getElementById('detailProjectEndDate');
             const detailProjectStatusSpan = document.getElementById('detailProjectStatus');
             const detailProjectNotesSpan = document.getElementById('detailProjectNotes');
+            const projectEngineerSelect = document.getElementById('projectEngineer');
+
+
 
             const summaryTotalRevenueSpan = document.getElementById('summaryTotalRevenue');
             const summaryTotalExpensesSpan = document.getElementById('summaryTotalExpenses');
@@ -1039,6 +1171,7 @@
             const cancelContractPaymentButton = document.getElementById('cancelContractPaymentButton');
 
 
+
             // Helper function to format dates
             const formatDate = (dateString) => {
                 if (!dateString) return 'غير محدد';
@@ -1084,6 +1217,8 @@
                         }
                     });
                     const projectData = await projectResponse.json();
+                    document.getElementById('exportProjectExcelBtn').style.display = 'inline-block';
+
 
                     if (projectResponse.ok) {
                         projectTitleSpan.textContent = projectData.projectName;
@@ -1126,6 +1261,8 @@
                         headers: { 'x-auth-token': localStorage.getItem('token') }
                     });
                     const expenses = await expensesResponse.json();
+                    document.getElementById('exportProjectExcelBtn').style.display = 'inline-block';
+
                     projectExpensesTableBody.innerHTML = '';
                     if (expenses.length > 0) {
                         expenses.forEach(exp => {
@@ -1156,6 +1293,8 @@
                         headers: { 'x-auth-token': localStorage.getItem('token') }
                     });
                     const revenues = await revenuesResponse.json();
+                    document.getElementById('exportProjectExcelBtn').style.display = 'inline-block';
+
                     projectRevenuesTableBody.innerHTML = '';
                     if (revenues.length > 0) {
                         revenues.forEach(rev => {
@@ -1185,6 +1324,8 @@
                         headers: { 'x-auth-token': localStorage.getItem('token') }
                     });
                     const payments = await contractorPaymentsResponse.json();
+                    document.getElementById('exportProjectExcelBtn').style.display = 'inline-block';
+
                     contractorPaymentsTableBody.innerHTML = '';
                     if (payments.length > 0) {
                         payments.forEach(pay => {
@@ -1388,10 +1529,10 @@
             });
 
             // Handle Expense Form Submission
-            
+
             expenseForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-               const transactionData  = {
+                const transactionData = {
                     project: new URLSearchParams(window.location.search).get('id'),
                     type: 'مصروف', // Fixed type for expense (withdrawal)
                     amount: parseFloat(expenseAmountInput.value),
@@ -1560,6 +1701,8 @@
                         body: JSON.stringify(paymentData)
                     });
                     const data = await response.json();
+                    document.getElementById('exportProjectExcelBtn').style.display = 'inline-block';
+
 
                     if (response.ok) {
                         contractPaymentMessage.className = 'modal-message success';
@@ -1663,139 +1806,35 @@
                         setTimeout(() => pageMessage.style.display = 'none', 3000);
                     }
                 }
+
+
             });
 
 
-            // Excel Export Logic
-            exportProjectExcelBtn.addEventListener('click', async () => {
-                pageMessage.className = 'modal-message';
-                pageMessage.textContent = 'جاري إعداد ملف Excel...';
-                pageMessage.style.display = 'block';
-
-                try {
-                    const projectResponse = await fetch(`${BASE_URL}/api/projects/${currentProjectId}/details`, { // Fetch details from the /details endpoint
-                        headers: { 'x-auth-token': localStorage.getItem('token') }
-                    });
-                    const projectDetails = await projectResponse.json();
-
-                    if (!projectResponse.ok) {
-                        throw new Error(projectDetails.message || 'فشل في جلب بيانات المشروع.');
-                    }
-
-                    // Fetch individual transactions and contractor payments as they are not returned by project details endpoint directly
-                    const expensesResponse = await fetch(`${BASE_URL}/api/transactions?project=${currentProjectId}&type=مصروف`, {
-                        headers: { 'x-auth-token': localStorage.getItem('token') }
-                    });
-                    const expenses = await expensesResponse.json();
-
-                    const revenuesResponse = await fetch(`${BASE_URL}/api/transactions?project=${currentProjectId}&type=إيداع`, {
-                        headers: { 'x-auth-token': localStorage.getItem('token') }
-                    });
-                    const revenues = await revenuesResponse.json();
-
-                    const contractorPaymentsResponse = await fetch(`${BASE_URL}/api/contract-payments/${currentProjectId}`, {
-                        headers: { 'x-auth-token': localStorage.getItem('token') }
-                    });
-                    const contractorPayments = await contractorPaymentsResponse.json();
-
-                    const wb = XLSX.utils.book_new();
-
-                    // Sheet 1: Project Details
-                    const detailsData = [
-                        ['تفاصيل المشروع'],
-                        ['', ''],
-                        ['اسم المشروع:', projectDetails.projectName],
-                        ['العنوان:', projectDetails.address],
-                        ['المهندس:', projectDetails.engineer ? projectDetails.engineer.username : 'غير محدد'],
-                        ['العميل:', projectDetails.client ? projectDetails.client.clientName : 'غير محدد'],
-                        ['تاريخ البدء:', formatDate(projectDetails.startDate)],
-                        ['تاريخ الانتهاء:', formatDate(projectDetails.endDate)],
-                        ['الحالة:', projectDetails.status],
-                        ['الوصف:', projectDetails.description || ''],
-                        ['ملاحظات:', projectDetails.notes || '']
-                    ];
-                    const ws_details = XLSX.utils.aoa_to_sheet(detailsData);
-                    XLSX.utils.book_append_sheet(wb, ws_details, "تفاصيل المشروع");
-
-                    // Sheet 2: Financial Summary
-                    const financialSummaryData = [
-                        ['ملخص المعاملات المالية'],
-                        ['', ''],
-                        ['إجمالي الإيرادات:', (projectDetails.totalRevenue || 0).toFixed(2) + ' ج.م'],
-                        ['إجمالي المصروفات:', (projectDetails.totalExpenses || 0).toFixed(2) + ' ج.م'],
-                        ['صافي الربح / الخسارة:', (projectDetails.netProfitLoss || 0).toFixed(2) + ' ج.م'],
-                        ['المبلغ المتفق عليه الكلي للمقاولين:', (projectDetails.totalAgreedContractorAmount || 0).toFixed(2) + ' ج.م'],
-                        ['المبلغ المدفوع الكلي للمقاولين:', (projectDetails.totalPaidContractorAmount || 0).toFixed(2) + ' ج.م'],
-                        ['المتبقي الكلي للمقاولين:', (projectDetails.totalRemainingContractorAmount || 0).toFixed(2) + ' ج.م']
-                    ];
-                    const ws_financial = XLSX.utils.aoa_to_sheet(financialSummaryData);
-                    XLSX.utils.book_append_sheet(wb, ws_financial, "ملخص مالي");
-
-                    // Sheet 3: Expenses
-                    const expensesData = [
-                        ['المصروفات'],
-                        ['المبلغ', 'الوصف', 'التصنيف', 'التاريخ', 'البائع', 'الخزينة'],
-                        ...expenses.map(e => [
-                            e.amount.toFixed(2),
-                            e.description || '',
-                            e.category ? e.category.name : '',
-                            formatDate(e.date),
-                            e.vendor || '',
-                            e.treasury ? e.treasury.name : ''
-                        ])
-                    ];
-                    const ws_expenses = XLSX.utils.aoa_to_sheet(expensesData);
-                    XLSX.utils.book_append_sheet(wb, ws_expenses, "المصروفات");
-
-                    // Sheet 4: Revenues
-                    const revenuesData = [
-                        ['الإيرادات'],
-                        ['المبلغ', 'الوصف', 'التاريخ', 'طريقة التحويل', 'الخزينة'],
-                        ...revenues.map(r => [
-                            r.amount.toFixed(2),
-                            r.description || '',
-                            formatDate(r.date),
-                            r.paymentMethod || '',
-                            r.treasury ? r.treasury.name : ''
-                        ])
-                    ];
-                    const ws_revenues = XLSX.utils.aoa_to_sheet(revenuesData);
-                    XLSX.utils.book_append_sheet(wb, ws_revenues, "الإيرادات");
-
-                    // Sheet 5: Contractor Payments
-                    const contractorPaymentsData = [
-                        ['دفعات المقاولين'],
-                        ['اسم المقاول', 'المبلغ المتفق عليه (للاتفاقية)', 'المدفوع من الاتفاقية', 'المتبقي من الاتفاقية', 'تاريخ الدفعة', 'مبلغ الدفعة', 'الخزينة', 'الوصف'],
-                        ...contractorPayments.map(cp => [
-                            cp.contractorName || '',
-                            cp.agreedAmount.toFixed(2),
-                            cp.paidAmount.toFixed(2),
-                            (cp.agreedAmount - cp.paidAmount).toFixed(2),
-                            formatDate(cp.date),
-                            cp.amount.toFixed(2),
-                            cp.treasury || '',
-                            cp.description || ''
-                        ])
-                    ];
-                    const ws_contractor_payments = XLSX.utils.aoa_to_sheet(contractorPaymentsData);
-                    XLSX.utils.book_append_sheet(wb, ws_contractor_payments, "دفعات المقاولين");
-
-
-                    // Generate and download
-                    XLSX.writeFile(wb, `${projectDetails.projectName}_تفاصيل_المشروع.xlsx`);
-                    pageMessage.className = 'modal-message success';
-                    pageMessage.textContent = 'تم تصدير ملف Excel بنجاح.';
-
-                } catch (error) {
-                    console.error('Error exporting Excel:', error);
-                    pageMessage.className = 'modal-message error';
-                    pageMessage.textContent = error.message || 'فشل في تصدير ملف Excel.';
-                } finally {
-                    setTimeout(() => pageMessage.style.display = 'none', 3000);
-                }
-            });
-        });
+        }) 
     </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </body>
 
 </html>
