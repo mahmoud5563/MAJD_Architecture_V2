@@ -42,6 +42,7 @@ app.use('/api/contract-payments', contractPaymentsRoutes); // استخدام م�
 app.use('/api/categories', categoriesRoutes); // استخدام مسار التصنيفات
 app.use('/api/users', usersRoutes);         // استخدام مسار المستخدمين
 app.use('/api/general-expenses', generalExpensesRoutes); // استخدام مسار المصروفات العامة
+app.use('/api/backup', require('./routes/backup'));
 
 // ******* أمثلة لمسارات API محمية (يمكن إزالتها لاحقًا) *******
 app.get('/api/protected', auth, (req, res) => {

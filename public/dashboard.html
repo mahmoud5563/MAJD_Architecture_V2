@@ -199,6 +199,55 @@
             pointer-events: none;
         }
 
+        /* Modern backup buttons */
+        #backupButtonsContainer {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            gap: 40px;
+        }
+        .backup-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 22px;
+            background: linear-gradient(90deg, #00bfae 0%, #014C47 100%);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(1,76,71,0.10);
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+            margin-bottom: 0;
+        }
+        .backup-btn i {
+            font-size: 22px;
+        }
+        .backup-btn:hover {
+            background: linear-gradient(90deg, #014C47 0%, #00bfae 100%);
+            transform: translateY(-2px) scale(1.04);
+        }
+        @media (max-width: 600px) {
+            #backupButtonsContainer {
+                flex-direction: column;
+                align-items: center;
+                gap: 0;
+            }
+            .backup-btn {
+                display: block;
+                width: 100%;
+                max-width: 320px;
+                margin: 0 auto;
+                margin-bottom: 0;
+            }
+            #exportBackupBtn {
+                margin-bottom: 24px !important;
+            }
+        }
 
         /* Responsive Adjustments */
         @media (max-width: 768px) {
@@ -292,6 +341,11 @@
         </div>
 
         <div class="content-area" id="contentArea">
+            <div id="backupButtonsContainer" style="display:none; margin-bottom: 25px;">
+                <button id="exportBackupBtn" class="backup-btn"><i class="fas fa-download"></i> تصدير نسخة احتياطية</button>
+                <button id="importBackupBtn" class="backup-btn"><i class="fas fa-upload"></i> استيراد نسخة احتياطية</button>
+                <input type="file" id="importBackupFile" accept="application/json" style="display:none;">
+            </div>
             <div class="page-header">
                 <h1>لوحة التحكم</h1>
             </div>
@@ -336,7 +390,12 @@
                 const payload = JSON.parse(decodedPayload);
 
                 const username = payload.user.username || payload.user.id || 'مستخدم';
-                const role = payload.user.role || 'غير محدد';
+                let role = 'غير محدد';
+                try {
+                    role = payload.user.role || 'غير محدد';
+                } catch (e) {
+                    console.error("Failed to decode role:", e);
+                }
 
                 document.getElementById('loggedInUser').textContent = `مرحباً، ${username} (${role})`;
 
@@ -365,6 +424,11 @@
                 const currentPageLink = document.querySelector(`.sidebar ul li a[data-page="dashboard"]`);
                 if (currentPageLink) {
                     currentPageLink.parentElement.classList.add('active');
+                }
+
+                // إظهار أزرار الباك اب فقط للمدير
+                if (role === 'Manager' || role === 'مدير') {
+                    document.getElementById('backupButtonsContainer').style.display = 'block';
                 }
             } catch (e) {
                 console.error("Failed to decode token:", e);
@@ -507,6 +571,79 @@
             fetchProjectSummary();
             fetchClientSummary();
             
+            // زر تصدير النسخة الاحتياطية
+            const exportBackupBtn = document.getElementById('exportBackupBtn');
+            if (exportBackupBtn) {
+                exportBackupBtn.addEventListener('click', async function() {
+                    exportBackupBtn.disabled = true;
+                    exportBackupBtn.textContent = 'جاري التحميل...';
+                    try {
+                        const res = await fetch(`${BASE_URL}/api/backup/export`, {
+                            headers: { 'x-auth-token': token }
+                        });
+                        if (!res.ok) throw new Error('فشل في تصدير النسخة الاحتياطية');
+                        const data = await res.json();
+                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'backup.json';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    } catch (err) {
+                        alert('حدث خطأ أثناء تصدير النسخة الاحتياطية: ' + err.message);
+                    } finally {
+                        exportBackupBtn.disabled = false;
+                        exportBackupBtn.textContent = 'تصدير نسخة احتياطية';
+                    }
+                });
+            }
+
+            // زر استيراد النسخة الاحتياطية
+            const importBackupBtn = document.getElementById('importBackupBtn');
+            const importBackupFile = document.getElementById('importBackupFile');
+            if (importBackupBtn && importBackupFile) {
+                importBackupBtn.addEventListener('click', function() {
+                    importBackupFile.value = '';
+                    importBackupFile.click();
+                });
+                importBackupFile.addEventListener('change', function() {
+                    if (!importBackupFile.files.length) return;
+                    if (!confirm('تحذير: استرجاع النسخة الاحتياطية سيحذف كل البيانات الحالية ويستبدلها بالنسخة الجديدة! هل أنت متأكد؟')) return;
+                    const file = importBackupFile.files[0];
+                    const reader = new FileReader();
+                    reader.onload = async function(e) {
+                        try {
+                            importBackupBtn.disabled = true;
+                            importBackupBtn.textContent = 'جاري الاستيراد...';
+                            const json = JSON.parse(e.target.result);
+                            const res = await fetch(`${BASE_URL}/api/backup/import`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'x-auth-token': token
+                                },
+                                body: JSON.stringify(json)
+                            });
+                            const result = await res.json();
+                            if (res.ok) {
+                                alert('تم استيراد النسخة الاحتياطية بنجاح! سيتم إعادة تحميل الصفحة.');
+                                window.location.reload();
+                            } else {
+                                alert('فشل في استيراد النسخة الاحتياطية: ' + (result.message || '')); 
+                            }
+                        } catch (err) {
+                            alert('حدث خطأ أثناء استيراد النسخة الاحتياطية: ' + err.message);
+                        } finally {
+                            importBackupBtn.disabled = false;
+                            importBackupBtn.textContent = 'استيراد نسخة احتياطية';
+                        }
+                    };
+                    reader.readAsText(file);
+                });
+            }
         });
     </script>
 </body>
