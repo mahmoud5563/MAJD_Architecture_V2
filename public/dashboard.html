@@ -299,10 +299,51 @@
                 /* Stack cards vertically on small screens */
             }
         }
+
+        #dashboardMessage {
+            position: fixed;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            min-width: 260px;
+            max-width: 90vw;
+            padding: 18px 36px 18px 18px;
+            border-radius: 12px;
+            font-size: 18px;
+            text-align: right;
+            font-weight: bold;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        #dashboardMessage.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #dashboardMessage.success {
+            background: #e6fff0;
+            color: #137a3a;
+            border: 1.5px solid #b2f2d7;
+        }
+        #dashboardMessage.error {
+            background: #fff0f0;
+            color: #b02a37;
+            border: 1.5px solid #f5b2b2;
+        }
+        #dashboardMessage .msg-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 
 <body>
+    <div id="dashboardMessage" style="display:none;"></div>
     <div class="header">
         <button class="menu-toggle" id="menuToggle">
             <i class="fas fa-bars"></i>
@@ -592,8 +633,9 @@
                         a.click();
                         document.body.removeChild(a);
                         URL.revokeObjectURL(url);
+                        showDashboardMessage('تم تصدير النسخة الاحتياطية بنجاح!', 'success', 2000);
                     } catch (err) {
-                        alert('حدث خطأ أثناء تصدير النسخة الاحتياطية: ' + err.message);
+                        showDashboardMessage('حدث خطأ أثناء تصدير النسخة الاحتياطية: ' + err.message, 'error', 2500);
                     } finally {
                         exportBackupBtn.disabled = false;
                         exportBackupBtn.textContent = 'تصدير نسخة احتياطية';
@@ -629,13 +671,13 @@
                             });
                             const result = await res.json();
                             if (res.ok) {
-                                alert('تم استيراد النسخة الاحتياطية بنجاح! سيتم إعادة تحميل الصفحة.');
-                                window.location.reload();
+                                showDashboardMessage('تم استيراد النسخة الاحتياطية بنجاح! سيتم إعادة تحميل الصفحة.', 'success', 2000);
+                                setTimeout(() => window.location.reload(), 2000);
                             } else {
-                                alert('فشل في استيراد النسخة الاحتياطية: ' + (result.message || '')); 
+                                showDashboardMessage('فشل في استيراد النسخة الاحتياطية: ' + (result.message || ''), 'error', 2500);
                             }
                         } catch (err) {
-                            alert('حدث خطأ أثناء استيراد النسخة الاحتياطية: ' + err.message);
+                            showDashboardMessage('حدث خطأ أثناء استيراد النسخة الاحتياطية: ' + err.message, 'error', 2500);
                         } finally {
                             importBackupBtn.disabled = false;
                             importBackupBtn.textContent = 'استيراد نسخة احتياطية';
@@ -645,6 +687,20 @@
                 });
             }
         });
+
+        function showDashboardMessage(message, type = 'success', duration = 2000) {
+            const msgDiv = document.getElementById('dashboardMessage');
+            let icon = type === 'success'
+                ? '<span class="msg-icon">✅</span>'
+                : '<span class="msg-icon">❌</span>';
+            msgDiv.innerHTML = icon + '<span>' + message + '</span>';
+            msgDiv.className = type + ' active';
+            msgDiv.style.display = 'flex';
+            setTimeout(() => {
+                msgDiv.classList.remove('active');
+                setTimeout(() => { msgDiv.style.display = 'none'; }, 400);
+            }, duration);
+        }
     </script>
 </body>
 
