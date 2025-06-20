@@ -478,12 +478,11 @@
                 <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a>
                 </li>
                 <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
-                <li><a href="contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a>
-                </li>
+                <li><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a></li>
                 <li><a href="/add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i> إضافة
                         خزينة</a></li>
                 <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
-                <li><a href="users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
+                <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
                 <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a>
                 </li>
                 <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
@@ -581,7 +580,7 @@
                 const decodedPayload = decodeURIComponent(escape(window.atob(base64)));
                 const payload = JSON.parse(decodedPayload);
 
-                const username = payload.user.username || 'مستخدم';
+                const username = payload.user.username || payload.user.id || 'مستخدم';
                 const role = payload.user.role || 'غير محدد';
 
                 document.getElementById('loggedInUser').textContent = `مرحباً، ${username} (${role})`;
@@ -590,20 +589,25 @@
                 const sidebar = document.getElementById('sidebar');
                 const addProjectLink = sidebar.querySelector('[data-page="add-project"]');
                 const usersLink = sidebar.querySelector('[data-page="users"]');
-                const settingsLink = sidebar.querySelector('[data-page="settings"]');
+                const categoriesLink = sidebar.querySelector('[data-page="categories"]');
                 const addTreasuryLink = sidebar.querySelector('[data-page="add-treasury"]');
                 const treasuriesLink = sidebar.querySelector('[data-page="treasuries"]');
-
+                const contractorsLink = sidebar.querySelector('[data-page="contractors"]');
+                const clientsLink = sidebar.querySelector('[data-page="clients"]');
 
                 if (role === 'مهندس') {
+                    // Hide restricted elements for engineer
                     if (addProjectLink) addProjectLink.style.display = 'none';
                     if (usersLink) usersLink.style.display = 'none';
-                    if (settingsLink) settingsLink.style.display = 'none';
                     if (addTreasuryLink) addTreasuryLink.style.display = 'none';
-                    if (treasuriesLink) treasuriesLink.style.display = 'none';
-                } else if (role === 'مدير حسابات') {
-                    if (usersLink) usersLink.style.display = 'none';
-                    if (settingsLink) settingsLink.style.display = 'none';
+                    if (contractorsLink) contractorsLink.style.display = 'none';
+                    if (clientsLink) clientsLink.style.display = 'none';
+                }
+
+                // Set active link in sidebar (for this page)
+                const currentPageLink = document.querySelector(`.sidebar ul li a[data-page="clients"]`);
+                if (currentPageLink) {
+                    currentPageLink.parentElement.classList.add('active');
                 }
             } catch (e) {
                 console.error("Failed to decode token:", e);

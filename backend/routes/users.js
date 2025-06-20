@@ -2,14 +2,14 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User'); // استيراد موديل المستخدم
-const { auth, authorizeRoles } = require('../middleware/authMiddleware'); // استيراد الـ middleware
+const { auth } = require('../middleware/authMiddleware'); // استيراد الـ middleware
 
 // @route   GET /api/users
 // @desc    Get all users
-// @access  Private (Manager, Accountant Manager)
-router.get('/', auth, authorizeRoles('مدير', 'مدير حسابات'), async (req, res) => {
+// @access  Private (any authenticated user)
+router.get('/', auth, async (req, res) => {
     try {
-        const users = await User.find({}).select('-password').sort({ username: 1 }); // جلب المستخدمين بدون كلمة المرور
+        const users = await User.find({}).select('-password').sort({ username: 1 });
         res.json(users);
     } catch (err) {
         console.error(err.message);
@@ -35,7 +35,7 @@ router.get('/engineers', auth, async (req, res) => {
 // @route   GET /api/users/:id
 // @desc    Get a single user by ID
 // @access  Private (All authenticated users)
-router.get('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), async (req, res) => { // تم إضافة هذا المسار المفقود
+router.get('/:id', auth, async (req, res) => { // تم إضافة هذا المسار المفقود
     try {
         const user = await User.findById(req.params.id).select('-password'); // جلب المستخدم بدون كلمة المرور
         if (!user) {
@@ -53,8 +53,8 @@ router.get('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), as
 
 // @route   POST /api/users
 // @desc    Add a new user
-// @access  Private (Manager, Accountant Manager)
-router.post('/', auth, authorizeRoles('مدير', 'مدير حسابات'), async (req, res) => {
+// @access  Private (any authenticated user)
+router.post('/', auth, async (req, res) => {
     const { username, password, role } = req.body;
 
     try {
@@ -80,8 +80,8 @@ router.post('/', auth, authorizeRoles('مدير', 'مدير حسابات'), asyn
 
 // @route   PUT /api/users/:id
 // @desc    Update a user's details (username, role, and optional password)
-// @access  Private (Manager, Accountant Manager)
-router.put('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), async (req, res) => {
+// @access  Private (any authenticated user)
+router.put('/:id', auth, async (req, res) => {
     const { username, password, role } = req.body;
 
     try {
@@ -120,17 +120,12 @@ router.put('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), as
 
 // @route   DELETE /api/users/:id
 // @desc    Delete a user
-// @access  Private (Manager, Accountant Manager)
-router.delete('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), async (req, res) => {
+// @access  Private (any authenticated user)
+router.delete('/:id', auth, async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
         if (!user) {
             return res.status(404).json({ message: 'المستخدم غير موجود.' });
-        }
-
-        // منع المستخدم من حذف حسابه الخاص
-        if (req.user.id === req.params.id) {
-            return res.status(400).json({ message: 'لا يمكنك حذف حسابك الخاص.' });
         }
 
         await User.deleteOne({ _id: req.params.id });

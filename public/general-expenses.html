@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المصروفات العامة - نظام إدارة المشاريع</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #014C47;
+            --primary-dark: #003a35;
+            --secondary-color: #26a69a;
+            --accent-color: #4db6ac;
+            --text-color: #333;
+            --light-text-color: #f4f4f4;
+            --border-color: #ddd;
+            --background-color: #e6e6e6;
+            --secondary-bg: #f9f9f9;
+            --sidebar-width: 250px;
+            --success-color: #4caf50;
+            --error-color: #f44336;
+            --warning-color: #ff9800;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            direction: rtl;
+        }
+
+        /* Layout */
+        #main-content {
+            margin-right: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        #sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        #sidebar ul li {
+            margin: 0;
+        }
+
+        #sidebar ul li a {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            color: var(--light-text-color);
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        #sidebar ul li a i {
+            margin-left: 10px;
+            width: 20px;
+        }
+
+        #sidebar ul li a:hover,
+        #sidebar ul li a.active {
+            background-color: var(--primary-dark);
+        }
+
+        /* Header */
+        header {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding: 15px 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-content h1 {
+            color: var(--light-text-color);
+            margin: 0;
+        }
+
+        .user-info {
+            font-weight: 500;
+            color: var(--light-text-color);
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--light-text-color);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        /* Page Content */
+        .page-content {
+            padding: 20px;
+        }
+
+        /* Action Bar */
+        .action-bar {
+            margin-bottom: 20px;
+        }
+
+        /* Filter Controls */
+        .filter-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .date-range-filter {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .date-range-filter input[type="date"] {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        /* Total Display */
+        .total-display {
+            background-color: var(--light-text-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .total-display h3 {
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        /* Table */
+        .table-container {
+            background-color: var(--light-text-color);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px 15px;
+            text-align: right;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table th {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            font-weight: 600;
+        }
+
+        .data-table tr:hover {
+            background-color: var(--secondary-bg);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: var(--light-text-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: var(--light-text-color);
+            margin: auto;
+            padding: 0;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: var(--light-text-color);
+        }
+
+        .close-button {
+            color: var(--light-text-color);
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            opacity: 0.8;
+        }
+
+        .close-button:hover {
+            opacity: 1;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 15px;
+            padding: 0 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: #f9f9f9;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: var(--light-text-color);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-actions {
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            background-color: #f9f9f9;
+            border-radius: 0 0 8px 8px;
+        }
+
+        /* Messages */
+        .modal-message {
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .modal-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .modal-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+
+            #main-content {
+                margin-right: 0;
+            }
+
+            #sidebar {
+                transform: translateX(100%);
+                transition: transform 0.3s;
+                position: fixed;
+                z-index: 1001;
+            }
+
+            #sidebar.active {
+                transform: translateX(0);
+            }
+
+            .filter-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .date-range-filter {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h3>نظام إدارة المشاريع</h3>
+        </div>
+        <ul>
+            <li><a href="dashboard.html" data-page="dashboard"><i class="fas fa-tachometer-alt"></i> لوحة التحكم</a></li>
+            <li><a href="projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a></li>
+            <li><a href="add-project.html" data-page="add-project"><i class="fas fa-plus-circle"></i> إضافة مشروع</a></li>
+            <li><a href="treasuries.html" data-page="treasuries"><i class="fas fa-vault"></i> الخزائن</a></li>
+            <li><a href="add-treasury.html" data-page="add-treasury"><i class="fas fa-plus-circle"></i> إضافة خزينة</a></li>
+            <li><a href="general-expenses.html" data-page="general-expenses" class="active"><i class="fas fa-money-bill-wave"></i> المصروفات العامة</a></li>
+            <li><a href="users.html" data-page="users"><i class="fas fa-users"></i> المستخدمين</a></li>
+            <li><a href="categories.html" data-page="categories"><i class="fas fa-tags"></i> التصنيفات</a></li>
+            <li><a href="contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولين</a></li>
+            <li><a href="clients.html" data-page="clients"><i class="fas fa-user-tie"></i> العملاء</a></li>
+            <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content">
+        <!-- Header -->
+        <header>
+            <div class="header-content">
+                <button id="menuToggle" class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1>المصروفات العامة</h1>
+                <div class="user-info">
+                    <span id="loggedInUser">مرحباً، مستخدم</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="page-content">
+            <!-- Add Expense Button -->
+            <div class="action-bar">
+                <button id="addExpenseBtn" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> إضافة مصروف
+                </button>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="filter-controls">
+                <button id="filterTodayBtn" class="btn btn-secondary">فرز اليوم</button>
+                <button id="filterMonthBtn" class="btn btn-secondary">فرز الشهر</button>
+                <div class="date-range-filter">
+                    <label>من تاريخ:</label>
+                    <input type="date" id="startDateInput">
+                    <label>إلى تاريخ:</label>
+                    <input type="date" id="endDateInput">
+                    <button id="filterDateRangeBtn" class="btn btn-secondary">تطبيق</button>
+                </div>
+            </div>
+
+            <!-- Total Display -->
+            <div class="total-display">
+                <h3>إجمالي المصروفات: <span id="totalAmount">0.00</span> ج.م</h3>
+            </div>
+
+            <!-- Expenses Table -->
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>المبلغ</th>
+                            <th>السبب</th>
+                            <th>الخزينة</th>
+                            <th>التاريخ</th>
+                            <th>تم الإنشاء بواسطة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expensesTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center;">جاري تحميل المصروفات...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Page Message -->
+            <div id="pageMessage" class="modal-message" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- Add Expense Modal -->
+    <div id="addExpenseModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>إضافة مصروف جديد</h2>
+                <span class="close-button">&times;</span>
+            </div>
+            <form id="addExpenseForm">
+                <div class="form-group">
+                    <label for="expenseAmount">المبلغ *</label>
+                    <input type="number" id="expenseAmount" name="amount" step="0.01" min="0" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="expenseReason">السبب *</label>
+                    <textarea id="expenseReason" name="reason" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="expenseTreasury">الخزينة *</label>
+                    <select id="expenseTreasury" name="treasuryId" required>
+                        <option value="">اختر الخزينة</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="expenseDate">التاريخ</label>
+                    <input type="date" id="expenseDate" name="date">
+                </div>
+                
+                <div class="modal-message" id="addExpenseMessage" style="display: none;"></div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">إضافة المصروف</button>
+                    <button type="button" id="cancelAddExpenseBtn" class="btn btn-secondary">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = "http://localhost:3000";
+        
+        // Global variables for user info
+        let currentUserRole = '';
+        let currentUserPayload = null;
+        
+        // DOM Elements
+        const addExpenseBtn = document.getElementById('addExpenseBtn');
+        const addExpenseModal = document.getElementById('addExpenseModal');
+        const addExpenseForm = document.getElementById('addExpenseForm');
+        const cancelAddExpenseBtn = document.getElementById('cancelAddExpenseBtn');
+        const closeAddExpenseBtn = addExpenseModal.querySelector('.close-button');
+        const addExpenseMessage = document.getElementById('addExpenseMessage');
+        
+        const expensesTableBody = document.getElementById('expensesTableBody');
+        const totalAmountSpan = document.getElementById('totalAmount');
+        const pageMessage = document.getElementById('pageMessage');
+        
+        // Filter elements
+        const filterTodayBtn = document.getElementById('filterTodayBtn');
+        const filterMonthBtn = document.getElementById('filterMonthBtn');
+        const filterDateRangeBtn = document.getElementById('filterDateRangeBtn');
+        const startDateInput = document.getElementById('startDateInput');
+        const endDateInput = document.getElementById('endDateInput');
+        
+        // Form elements
+        const expenseAmountInput = document.getElementById('expenseAmount');
+        const expenseReasonTextarea = document.getElementById('expenseReason');
+        const expenseTreasurySelect = document.getElementById('expenseTreasury');
+        const expenseDateInput = document.getElementById('expenseDate');
+        
+        // Set today's date as default
+        expenseDateInput.value = new Date().toISOString().split('T')[0];
+        
+        // Client-side authentication check and redirection
+        document.addEventListener('DOMContentLoaded', function () {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const decodedPayload = decodeURIComponent(escape(window.atob(base64)));
+                const payload = JSON.parse(decodedPayload);
+
+                const username = payload.user.username || payload.user.id || 'مستخدم';
+                const role = payload.user.role || 'غير محدد';
+                
+                // Store in global variables
+                currentUserRole = role;
+                currentUserPayload = payload;
+
+                document.getElementById('loggedInUser').textContent = `مرحباً، ${username} (${role})`;
+
+                // Check if user has access to this page
+                if (role !== 'مدير' && role !== 'مدير الحسابات') {
+                    alert('غير مصرح لك بالوصول لهذه الصفحة');
+                    window.location.href = '/dashboard.html';
+                    return;
+                }
+
+                // Client-side authorization based on role for sidebar visibility
+                const sidebar = document.getElementById('sidebar');
+                const addProjectLink = sidebar.querySelector('[data-page="add-project"]');
+                const usersLink = sidebar.querySelector('[data-page="users"]');
+                const categoriesLink = sidebar.querySelector('[data-page="categories"]');
+                const addTreasuryLink = sidebar.querySelector('[data-page="add-treasury"]');
+                const treasuriesLink = sidebar.querySelector('[data-page="treasuries"]');
+                const contractorsLink = sidebar.querySelector('[data-page="contractors"]');
+                const clientsLink = sidebar.querySelector('[data-page="clients"]');
+                const generalExpensesLink = sidebar.querySelector('[data-page="general-expenses"]');
+
+                if (role === 'مهندس') {
+                    // Hide restricted elements for engineer
+                    if (addProjectLink) addProjectLink.style.display = 'none';
+                    if (usersLink) usersLink.style.display = 'none';
+                    if (addTreasuryLink) addTreasuryLink.style.display = 'none';
+                    if (contractorsLink) contractorsLink.style.display = 'none';
+                    if (clientsLink) clientsLink.style.display = 'none';
+                    if (generalExpensesLink) generalExpensesLink.style.display = 'none';
+                }
+
+                // Set active link in sidebar
+                const currentPageLink = document.querySelector(`.sidebar ul li a[data-page="general-expenses"]`);
+                if (currentPageLink) {
+                    currentPageLink.parentElement.classList.add('active');
+                }
+                
+                // Load initial data
+                loadTreasuries();
+                fetchExpenses();
+                
+            } catch (e) {
+                console.error("Failed to decode token:", e);
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            }
+        });
+
+        // Load treasuries for dropdown
+        const loadTreasuries = async () => {
+            try {
+                const response = await fetch(`${BASE_URL}/api/treasuries`, {
+                    headers: {
+                        'x-auth-token': localStorage.getItem('token')
+                    }
+                });
+                const treasuries = await response.json();
+                
+                expenseTreasurySelect.innerHTML = '<option value="">اختر الخزينة</option>';
+                treasuries.forEach(treasury => {
+                    const option = document.createElement('option');
+                    option.value = treasury._id;
+                    option.textContent = `${treasury.name} (${treasury.currentBalance.toFixed(2)} ج.م)`;
+                    expenseTreasurySelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading treasuries:', error);
+            }
+        };
+
+        // Fetch expenses with optional filtering
+        const fetchExpenses = async (filter = null, startDate = null, endDate = null) => {
+            expensesTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">جاري تحميل المصروفات...</td></tr>';
+            pageMessage.style.display = 'none';
+
+            try {
+                let url = `${BASE_URL}/api/general-expenses`;
+                const params = new URLSearchParams();
+                
+                if (filter) {
+                    params.append('filter', filter);
+                } else if (startDate && endDate) {
+                    params.append('startDate', startDate);
+                    params.append('endDate', endDate);
+                }
+                
+                if (params.toString()) {
+                    url += '?' + params.toString();
+                }
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'x-auth-token': localStorage.getItem('token')
+                    }
+                });
+                const expenses = await response.json();
+
+                if (response.ok) {
+                    expensesTableBody.innerHTML = '';
+                    if (expenses.length === 0) {
+                        expensesTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">لا توجد مصروفات لعرضها.</td></tr>';
+                        totalAmountSpan.textContent = '0.00';
+                        return;
+                    }
+
+                    expenses.forEach(expense => {
+                        const row = expensesTableBody.insertRow();
+                        row.innerHTML = `
+                            <td>${expense.amount.toFixed(2)} ج.م</td>
+                            <td>${expense.reason}</td>
+                            <td>${expense.treasury ? expense.treasury.name : '---'}</td>
+                            <td>${new Date(expense.date).toLocaleDateString('ar-EG')}</td>
+                            <td>${expense.createdBy ? expense.createdBy.username : '---'}</td>
+                        `;
+                    });
+                    
+                    // Fetch and display total
+                    await fetchTotal(filter, startDate, endDate);
+                } else {
+                    expensesTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">فشل في جلب المصروفات.</td></tr>';
+                    pageMessage.className = 'modal-message error';
+                    pageMessage.textContent = expenses.message || 'حدث خطأ أثناء جلب المصروفات.';
+                    pageMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error fetching expenses:', error);
+                expensesTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">خطأ في الاتصال بالخادم.</td></tr>';
+                pageMessage.className = 'modal-message error';
+                pageMessage.textContent = 'حدث خطأ في الاتصال بالخادم أثناء جلب المصروفات.';
+                pageMessage.style.display = 'block';
+            }
+        };
+
+        // Fetch total expenses
+        const fetchTotal = async (filter = null, startDate = null, endDate = null) => {
+            try {
+                let url = `${BASE_URL}/api/general-expenses/total`;
+                const params = new URLSearchParams();
+                
+                if (filter) {
+                    params.append('filter', filter);
+                } else if (startDate && endDate) {
+                    params.append('startDate', startDate);
+                    params.append('endDate', endDate);
+                }
+                
+                if (params.toString()) {
+                    url += '?' + params.toString();
+                }
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'x-auth-token': localStorage.getItem('token')
+                    }
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    totalAmountSpan.textContent = data.total.toFixed(2);
+                }
+            } catch (error) {
+                console.error('Error fetching total:', error);
+            }
+        };
+
+        // Modal functions
+        const openAddExpenseModal = () => {
+            addExpenseModal.style.display = 'flex';
+            addExpenseMessage.style.display = 'none';
+            addExpenseForm.reset();
+            expenseDateInput.value = new Date().toISOString().split('T')[0];
+        };
+
+        const closeAddExpenseModal = () => {
+            addExpenseModal.style.display = 'none';
+            addExpenseMessage.style.display = 'none';
+        };
+
+        // Event listeners
+        addExpenseBtn.addEventListener('click', openAddExpenseModal);
+        closeAddExpenseBtn.addEventListener('click', closeAddExpenseModal);
+        cancelAddExpenseBtn.addEventListener('click', closeAddExpenseModal);
+        
+        window.addEventListener('click', (event) => {
+            if (event.target == addExpenseModal) {
+                closeAddExpenseModal();
+            }
+        });
+
+        // Filter event listeners
+        filterTodayBtn.addEventListener('click', () => {
+            fetchExpenses('today');
+        });
+
+        filterMonthBtn.addEventListener('click', () => {
+            fetchExpenses('month');
+        });
+
+        filterDateRangeBtn.addEventListener('click', () => {
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+            
+            if (!startDate || !endDate) {
+                alert('يرجى تحديد تاريخ البداية والنهاية');
+                return;
+            }
+            
+            if (new Date(startDate) > new Date(endDate)) {
+                alert('تاريخ البداية يجب أن يكون قبل تاريخ النهاية');
+                return;
+            }
+            
+            fetchExpenses(null, startDate, endDate);
+        });
+
+        // Form submission
+        addExpenseForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const formData = {
+                amount: parseFloat(expenseAmountInput.value),
+                reason: expenseReasonTextarea.value,
+                treasuryId: expenseTreasurySelect.value,
+                date: expenseDateInput.value
+            };
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/general-expenses`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': localStorage.getItem('token')
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addExpenseMessage.className = 'modal-message success';
+                    addExpenseMessage.textContent = 'تم إضافة المصروف بنجاح';
+                    addExpenseMessage.style.display = 'block';
+                    
+                    closeAddExpenseModal();
+                    fetchExpenses(); // Refresh the list
+                    loadTreasuries(); // Refresh treasuries to update balances
+                    
+                    setTimeout(() => {
+                        addExpenseMessage.style.display = 'none';
+                    }, 3000);
+                } else {
+                    addExpenseMessage.className = 'modal-message error';
+                    addExpenseMessage.textContent = data.message || 'فشل في إضافة المصروف';
+                    addExpenseMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error adding expense:', error);
+                addExpenseMessage.className = 'modal-message error';
+                addExpenseMessage.textContent = 'خطأ في الاتصال بالخادم';
+                addExpenseMessage.style.display = 'block';
+            }
+        });
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        });
+
+        // Menu toggle functionality
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+
+        // Close sidebar when clicking outside
+        document.addEventListener('click', (event) => {
+            if (!sidebar.contains(event.target) && !menuToggle.contains(event.target)) {
+                sidebar.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html> 

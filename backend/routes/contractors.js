@@ -2,12 +2,12 @@
 const express = require('express');
 const router = express.Router();
 const Contractor = require('../models/Contractor');
-const { auth, authorizeRoles } = require('../middleware/authMiddleware');
+const { auth } = require('../middleware/authMiddleware');
 
 // @route   POST /api/contractors
 // @desc    Add a new contractor
 // @access  Private (Manager, Accountant Manager)
-router.post('/', auth, authorizeRoles('مدير', 'مدير حسابات'), async (req, res) => {
+router.post('/', auth, async (req, res) => {
     const { contractorName, phoneNumber, email, address } = req.body;
 
     try {
@@ -36,7 +36,7 @@ router.post('/', auth, authorizeRoles('مدير', 'مدير حسابات'), asyn
 // @route   GET /api/contractors
 // @desc    Get all contractors
 // @access  Private (Manager, Accountant Manager)
-router.get('/', auth, authorizeRoles('مدير', 'مدير حسابات'), async (req, res) => {
+router.get('/', auth, async (req, res) => {
     try {
         const contractors = await Contractor.find({}).sort({ contractorName: 1 });
         res.json(contractors);
@@ -49,7 +49,7 @@ router.get('/', auth, authorizeRoles('مدير', 'مدير حسابات'), async
 // @route   GET /api/contractors/:id
 // @desc    Get a single contractor by ID
 // @access  Private (Manager, Accountant Manager)
-router.get('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), async (req, res) => {
+router.get('/:id', auth, async (req, res) => {
     try {
         const contractor = await Contractor.findById(req.params.id);
         if (!contractor) {
@@ -68,7 +68,7 @@ router.get('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), as
 // @route   PUT /api/contractors/:id
 // @desc    Update a contractor
 // @access  Private (Manager, Accountant Manager)
-router.put('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), async (req, res) => {
+router.put('/:id', auth, async (req, res) => {
     const { contractorName, phoneNumber, email, address } = req.body;
 
     try {
@@ -104,7 +104,7 @@ router.put('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), as
 // @route   DELETE /api/contractors/:id
 // @desc    Delete a contractor
 // @access  Private (Manager, Accountant Manager)
-router.delete('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
     try {
         const contractor = await Contractor.findById(req.params.id);
         if (!contractor) {

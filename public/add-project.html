@@ -295,8 +295,6 @@
                 /* No margin when sidebar is hidden */
             }
 
-
-
             /* Overlay for when sidebar is open */
             .overlay {
                 display: none;
@@ -361,6 +359,7 @@
                 <li><a href="/add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i> إضافة
                         خزينة</a></li>
                 <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
+                <li><a href="/general-expenses.html" data-page="general-expenses"><i class="fas fa-money-bill-wave"></i> المصروفات العامة</a></li>
                 <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
                 <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a>
                 </li>
@@ -445,7 +444,7 @@
                 const decodedPayload = decodeURIComponent(escape(window.atob(base64)));
                 const payload = JSON.parse(decodedPayload);
 
-                const username = payload.user.username || 'مستخدم';
+                const username = payload.user.username || payload.user.id || 'مستخدم';
                 const role = payload.user.role || 'غير محدد';
 
                 document.getElementById('loggedInUser').textContent = `مرحباً، ${username} (${role})`;
@@ -454,32 +453,27 @@
                 const sidebar = document.getElementById('sidebar');
                 const addProjectLink = sidebar.querySelector('[data-page="add-project"]');
                 const usersLink = sidebar.querySelector('[data-page="users"]');
-                const categoriesLink = sidebar.querySelector('[data-page="categories"]'); // Added for categories
+                const categoriesLink = sidebar.querySelector('[data-page="categories"]');
                 const addTreasuryLink = sidebar.querySelector('[data-page="add-treasury"]');
                 const treasuriesLink = sidebar.querySelector('[data-page="treasuries"]');
-                const contractorsLink = sidebar.querySelector('[data-page="contractors"]'); // Added for contractors
-                const BASE_API_URL = '';
-
+                const contractorsLink = sidebar.querySelector('[data-page="contractors"]');
+                const clientsLink = sidebar.querySelector('[data-page="clients"]');
+                const generalExpensesLink = sidebar.querySelector('[data-page="general-expenses"]');
 
                 if (role === 'مهندس') {
-                    if (addProjectLink) addProjectLink.style.display = 'none'; // لا يمكن للمهندس إضافة مشروع
+                    // Hide restricted elements for engineer
+                    if (addProjectLink) addProjectLink.style.display = 'none';
                     if (usersLink) usersLink.style.display = 'none';
-                    if (categoriesLink) categoriesLink.style.display = 'none'; // Hide for engineer
                     if (addTreasuryLink) addTreasuryLink.style.display = 'none';
-                    if (treasuriesLink) treasuriesLink.style.display = 'none';
-                    if (contractorsLink) contractorsLink.style.display = 'none'; // Hide for engineer
-                } else if (role === 'مدير حسابات') {
-                    if (usersLink) usersLink.style.display = 'none';
+                    if (contractorsLink) contractorsLink.style.display = 'none';
+                    if (clientsLink) clientsLink.style.display = 'none';
+                    if (generalExpensesLink) generalExpensesLink.style.display = 'none';
                 }
+
                 // Set active link in sidebar (for this page)
                 const currentPageLink = document.querySelector(`.sidebar ul li a[data-page="add-project"]`);
                 if (currentPageLink) {
                     currentPageLink.parentElement.classList.add('active');
-                }
-                // Update sidebar links with fixed main treasury ID
-                const mainTreasuryLink = sidebar.querySelector('[data-page="main-treasury"]');
-                if (mainTreasuryLink) {
-                    mainTreasuryLink.href = '/treasury-details.html?id=6850dc69d55abdb99c06f0ad';
                 }
 
             } catch (e) {
@@ -525,15 +519,12 @@
                 }
             });
 
-
-
             /* --- Logic for Add Project Form --- */
             const addProjectForm = document.getElementById('addProjectForm');
             const addProjectMessage = document.getElementById('addProjectMessage');
             const projectEngineerSelect = document.getElementById('projectEngineer');
             const projectClientSelect = document.getElementById('projectClient');
             const cancelAddProjectBtn = document.getElementById('cancelAddProject');
-
 
             // Function to load dropdowns
             const loadFormDropdowns = async () => {
@@ -614,35 +605,30 @@
                 document.getElementById('projectStartDate').valueAsDate = new Date();
             }
 
-
-
             async function populateDropdown(selectElement, apiUrl, valueKey, textKey, defaultOptionText = 'اختر', customFilter = null, customTextFormatter = null) {
-        selectElement.innerHTML = `<option value="">${defaultOptionText}</option>`;
-        try {
-            const response = await fetch(apiUrl, {
-                headers: { 'x-auth-token': localStorage.getItem('token') }
-            });
-            if (response.ok) {
-                let items = await response.json();
-                if (customFilter && typeof customFilter === 'function') {
-                    items = items.filter(customFilter);
+                selectElement.innerHTML = `<option value="">${defaultOptionText}</option>`;
+                try {
+                    const response = await fetch(apiUrl, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    if (response.ok) {
+                        let items = await response.json();
+                        if (customFilter && typeof customFilter === 'function') {
+                            items = items.filter(customFilter);
+                        }
+                        items.forEach(item => {
+                            const option = document.createElement('option');
+                            option.value = item[valueKey];
+                            option.textContent = customTextFormatter ? customTextFormatter(item) : item[textKey];
+                            selectElement.appendChild(option);
+                        });
+                    } else {
+                        console.error(`Failed to fetch items from ${apiUrl}:`, await response.json());
+                    }
+                } catch (error) {
+                    console.error(`Error fetching items from ${apiUrl}:`, error);
                 }
-                items.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item[valueKey];
-                    option.textContent = customTextFormatter ? customTextFormatter(item) : item[textKey];
-                    selectElement.appendChild(option);
-                });
-            } else {
-                console.error(`Failed to fetch items from ${apiUrl}:`, await response.json());
             }
-        } catch (error) {
-            console.error(`Error fetching items from ${apiUrl}:`, error);
-        }
-    }
-
-
-
 
             async function fetchProjectDetailsForEdit(id) {
                 try {
@@ -688,7 +674,6 @@
                     addProjectMessage.style.display = 'block';
                 }
             }
-
 
             // Handle form submission
             addProjectForm.addEventListener('submit', async function (event) {
@@ -766,17 +751,7 @@
                     window.location.href = '/projects.html';
                 });
             }
-            // Set active link in sidebar (for this page)
-            const currentPageLink = document.querySelector(`.sidebar ul li a[data-page="add-project"]`);
-            if (currentPageLink) {
-                currentPageLink.parentElement.classList.add('active');
-            }
         });
-
-
-
-
-        
     </script>
 </body>
 

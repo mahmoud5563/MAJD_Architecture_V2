@@ -172,7 +172,7 @@ router.get('/', auth, async (req, res) => {
 
 // @route   GET /api/transactions/:id
 // @desc    Get a single transaction by ID
-// @access  Private (Manager, Accountant Manager, Engineer (if project/treasury related))
+// @access  Private (any authenticated user)
 router.get('/:id', auth, async (req, res) => {
     try {
         const transaction = await Transaction.findById(req.params.id)
@@ -183,26 +183,6 @@ router.get('/:id', auth, async (req, res) => {
 
         if (!transaction) {
             return res.status(404).json({ message: 'المعاملة غير موجودة.' });
-        }
-
-        // Authorization for Engineer
-        if (req.user.role === 'مهندس') {
-            let authorized = false;
-            if (transaction.project) {
-                const project = await Project.findById(transaction.project._id);
-                if (project && project.engineer && project.engineer.toString() === req.user.id) {
-                    authorized = true;
-                }
-            }
-            if (!authorized && transaction.treasury) { // Check if engineer is responsible for the treasury
-                const treasury = await Treasury.findById(transaction.treasury._id);
-                if (treasury && treasury.responsibleUser && treasury.responsibleUser.toString() === req.user.id) {
-                    authorized = true;
-                }
-            }
-            if (!authorized) {
-                return res.status(403).json({ message: 'ليس لديك صلاحية لعرض تفاصيل هذه المعاملة.' });
-            }
         }
         res.json(transaction);
     } catch (err) {
@@ -216,14 +196,8 @@ router.get('/:id', auth, async (req, res) => {
 
 // @route   PUT /api/transactions/:id
 // @desc    Update a transaction (complex: requires careful handling of old/new amounts/treasuries)
-// @access  Private (Manager, Accountant Manager)
-// For simplicity, we will not allow direct editing of transactions' amounts/types that affect balances.
-// Instead, users should reverse/add new transactions.
-// If direct editing is required, a more robust logic would be needed.
-router.put('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), async (req, res) => {
-    // هذه الوظيفة تتطلب منطقًا معقدًا لمعالجة التعديلات على المعاملات التي تؤثر على الأرصدة.
-    // لتجنب الأخطاء، حالياً لن نسمح بتعديل مباشر للمبلغ أو النوع أو الخزائن.
-    // يمكن تعديل الوصف أو التاريخ أو التصنيف.
+// @access  Private (any authenticated user)
+router.put('/:id', auth, async (req, res) => {
     const { description, date, category, vendor, paymentMethod } = req.body;
 
     try {
@@ -254,11 +228,10 @@ router.put('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), as
     }
 });
 
-
 // @route   DELETE /api/transactions/:id
 // @desc    Delete a transaction (and reverse its effect on treasury/project balances)
-// @access  Private (Manager, Accountant Manager)
-router.delete('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), async (req, res) => {
+// @access  Private (any authenticated user)
+router.delete('/:id', auth, async (req, res) => {
     try {
         const transaction = await Transaction.findById(req.params.id);
         if (!transaction) {

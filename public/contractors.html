@@ -478,7 +478,7 @@
                 <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a>
                 </li>
                 <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
-                <li class="active"><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i>
+                <li><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i>
                         المقاولون</a></li>
                 <li><a href="/add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i> إضافة
                         خزينة</a></li>
@@ -562,50 +562,34 @@
                 return;
             }
 
-            let currentUserRole = '';
-
             try {
                 const base64Url = token.split('.')[1];
                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
                 const decodedPayload = decodeURIComponent(escape(window.atob(base64)));
                 const payload = JSON.parse(decodedPayload);
 
-                const username = payload.user.username || 'مستخدم';
+                const username = payload.user.username || payload.user.id || 'مستخدم';
                 const role = payload.user.role || 'غير محدد';
-                currentUserRole = role;
 
                 document.getElementById('loggedInUser').textContent = `مرحباً، ${username} (${role})`;
 
-                // Client-side authorization for sidebar visibility (adjust as needed)
+                // Client-side authorization based on role for sidebar visibility
                 const sidebar = document.getElementById('sidebar');
                 const addProjectLink = sidebar.querySelector('[data-page="add-project"]');
                 const usersLink = sidebar.querySelector('[data-page="users"]');
                 const categoriesLink = sidebar.querySelector('[data-page="categories"]');
                 const addTreasuryLink = sidebar.querySelector('[data-page="add-treasury"]');
                 const treasuriesLink = sidebar.querySelector('[data-page="treasuries"]');
-                const contractorsLink = sidebar.querySelector('[data-page="contractors"]'); // Already active here
-                const mainTreasuryLink = sidebar.querySelector('[data-page="main-treasury"]');
+                const contractorsLink = sidebar.querySelector('[data-page="contractors"]');
+                const clientsLink = sidebar.querySelector('[data-page="clients"]');
 
-
-                // Update sidebar links with fixed main treasury ID
-                if (mainTreasuryLink) {
-                    mainTreasuryLink.href = '/treasury-details.html?id=6850dc69d55abdb99c06f0ad';
-                }
-
-                // Adjust roles for visibility based on your final requirements
                 if (role === 'مهندس') {
-                    // Hide sensitive links for 'مهندس'
+                    // Hide restricted elements for engineer
                     if (addProjectLink) addProjectLink.style.display = 'none';
                     if (usersLink) usersLink.style.display = 'none';
-                    if (categoriesLink) categoriesLink.style.display = 'none';
                     if (addTreasuryLink) addTreasuryLink.style.display = 'none';
-                    if (treasuriesLink) treasuriesLink.style.display = 'none';
-                    // Hide add/edit/delete buttons for Engineer
-                    document.getElementById('addContractorBtn').style.display = 'none';
-                    // We will also hide individual edit/delete buttons later
-                } else if (role === 'مدير حسابات') {
-                    // مدير حسابات لا يمكنه إضافة/تعديل/حذف المستخدمين
-                    if (usersLink) usersLink.style.display = 'none';
+                    if (contractorsLink) contractorsLink.style.display = 'none';
+                    if (clientsLink) clientsLink.style.display = 'none';
                 }
 
                 // Set active link in sidebar (for this page)
@@ -706,10 +690,6 @@
                                     <button class="delete" data-id="${contractor._id}"><i class="fas fa-trash-alt"></i> حذف</button>
                                 </td>
                             `;
-                            // Hide buttons if user is Engineer
-                            if (currentUserRole === 'مهندس') {
-                                row.querySelector('.action-buttons').innerHTML = '<span>(لا توجد صلاحيات)</span>';
-                            }
                         });
                     } else {
                         contractorsTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">فشل في جلب المقاولين.</td></tr>';
@@ -731,13 +711,6 @@
 
             // Open Add Contractor Modal
             addContractorBtn.addEventListener('click', () => {
-                if (currentUserRole !== 'مدير' && currentUserRole !== 'مدير حسابات') {
-                    contractorsPageMessage.className = 'modal-message error';
-                    contractorsPageMessage.textContent = 'ليس لديك صلاحية لإضافة مقاولين.';
-                    contractorsPageMessage.style.display = 'block';
-                    setTimeout(() => contractorsPageMessage.style.display = 'none', 3000);
-                    return;
-                }
                 modalTitle.textContent = 'إضافة مقاول جديد';
                 contractorIdInput.value = '';
                 contractorForm.reset();
@@ -813,14 +786,6 @@
 
                 const contractorId = target.dataset.id;
                 const action = target.classList[0]; // 'edit', 'delete'
-
-                if (currentUserRole !== 'مدير' && currentUserRole !== 'مدير حسابات') {
-                    contractorsPageMessage.className = 'modal-message error';
-                    contractorsPageMessage.textContent = 'ليس لديك صلاحية لتعديل أو حذف المقاولين.';
-                    contractorsPageMessage.style.display = 'block';
-                    setTimeout(() => contractorsPageMessage.style.display = 'none', 3000);
-                    return;
-                }
 
                 if (action === 'edit') {
                     modalTitle.textContent = 'تعديل بيانات المقاول';

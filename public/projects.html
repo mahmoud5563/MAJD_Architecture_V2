@@ -531,12 +531,12 @@
                 <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a>
                 </li>
                 <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
-                <li><a href="contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a>
-                </li>
+                <li><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a></li>
                 <li><a href="/add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i> إضافة
                         خزينة</a></li>
                 <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
-                <li><a href="users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
+                <li><a href="/general-expenses.html" data-page="general-expenses"><i class="fas fa-money-bill-wave"></i> المصروفات العامة</a></li>
+                <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
                 <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a>
                 </li>
                 <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
@@ -653,6 +653,11 @@
 
     <script>
         const BASE_URL = "http://localhost:3000";
+        
+        // Global variables for user info
+        let currentUserRole = '';
+        let currentUserPayload = null;
+        
         // Client-side authentication check and redirection
         document.addEventListener('DOMContentLoaded', function () {
             const token = localStorage.getItem('token');
@@ -661,18 +666,18 @@
                 return;
             }
 
-            // Global user data based on token
-            let currentUserRole = '';
-
             try {
                 const base64Url = token.split('.')[1];
                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
                 const decodedPayload = decodeURIComponent(escape(window.atob(base64)));
                 const payload = JSON.parse(decodedPayload);
 
-                const username = payload.user.username || 'مستخدم';
+                const username = payload.user.username || payload.user.id || 'مستخدم';
                 const role = payload.user.role || 'غير محدد';
-                currentUserRole = role; // Set global role
+                
+                // Store in global variables
+                currentUserRole = role;
+                currentUserPayload = payload;
 
                 document.getElementById('loggedInUser').textContent = `مرحباً، ${username} (${role})`;
 
@@ -680,20 +685,27 @@
                 const sidebar = document.getElementById('sidebar');
                 const addProjectLink = sidebar.querySelector('[data-page="add-project"]');
                 const usersLink = sidebar.querySelector('[data-page="users"]');
-                const settingsLink = sidebar.querySelector('[data-page="settings"]');
+                const categoriesLink = sidebar.querySelector('[data-page="categories"]');
                 const addTreasuryLink = sidebar.querySelector('[data-page="add-treasury"]');
                 const treasuriesLink = sidebar.querySelector('[data-page="treasuries"]');
-
+                const contractorsLink = sidebar.querySelector('[data-page="contractors"]');
+                const clientsLink = sidebar.querySelector('[data-page="clients"]');
+                const generalExpensesLink = sidebar.querySelector('[data-page="general-expenses"]');
 
                 if (role === 'مهندس') {
+                    // Hide restricted elements for engineer
                     if (addProjectLink) addProjectLink.style.display = 'none';
                     if (usersLink) usersLink.style.display = 'none';
-                    if (settingsLink) settingsLink.style.display = 'none';
                     if (addTreasuryLink) addTreasuryLink.style.display = 'none';
-                    if (treasuriesLink) treasuriesLink.style.display = 'none';
-                } else if (role === 'مدير حسابات') {
-                    if (usersLink) usersLink.style.display = 'none';
-                    if (settingsLink) settingsLink.style.display = 'none';
+                    if (contractorsLink) contractorsLink.style.display = 'none';
+                    if (clientsLink) clientsLink.style.display = 'none';
+                    if (generalExpensesLink) generalExpensesLink.style.display = 'none';
+                }
+
+                // Set active link in sidebar (for this page)
+                const currentPageLink = document.querySelector(`.sidebar ul li a[data-page="projects"]`);
+                if (currentPageLink) {
+                    currentPageLink.parentElement.classList.add('active');
                 }
             } catch (e) {
                 console.error("Failed to decode token:", e);
@@ -726,31 +738,16 @@
                 document.body.classList.remove('sidebar-open');
             });
 
-            // تنقل مباشر لما المستخدم يضغط على لينك
+            // Simple navigation - let links work normally
             sidebar.addEventListener('click', (event) => {
                 const link = event.target.closest('a');
-                if (link && link.href && link.id !== 'sidebarLogoutButton') {
+                if (link && link.id !== 'sidebarLogoutButton') {
+                    // Close sidebar on mobile
                     sidebar.classList.remove('active');
                     sidebarOverlay.classList.remove('active');
                     document.body.classList.remove('sidebar-open');
-                    // مفيش preventDefault، وسيب التنقل يشتغل عادي
                 }
             });
-
-            // بعد انتهاء transition، يتم التوجيه إذا كان فيه رابط محفوظ
-            sidebar.addEventListener('transitionend', (event) => {
-                if (
-                    event.propertyName === 'transform' &&
-                    !sidebar.classList.contains('active') &&
-                    targetLinkHref
-                ) {
-                    window.location.href = targetLinkHref;
-                    targetLinkHref = null;
-                    sidebar.style.pointerEvents = 'auto';
-                    sidebarOverlay.style.pointerEvents = 'auto';
-                }
-            });
-
 
             /* --- Projects Page Logic --- */
             const projectsTableBody = document.getElementById('projectsTableBody');
@@ -793,7 +790,14 @@
                 }
 
                 try {
-                    const response = await fetch(`${BASE_URL}/api/projects${query ? '?' + query : ''}`, {
+                    // Use different API endpoint based on user role
+                    let apiUrl = `${BASE_URL}/api/projects`;
+                    if (currentUserRole === 'مهندس') {
+                        // Engineer can only see their own projects
+                        apiUrl = `${BASE_URL}/api/projects/engineer/${currentUserPayload.user.id}`;
+                    }
+                    
+                    const response = await fetch(`${apiUrl}${query ? '?' + query : ''}`, {
                         headers: {
                             'x-auth-token': localStorage.getItem('token')
                         }
@@ -818,9 +822,10 @@
                                 <td>${project.status}</td>
                                 <td class="action-buttons">
                                     <button class="view" data-id="${project._id}"><i class="fas fa-eye"></i> عرض</button>
-                                    ${(currentUserRole === 'مدير' || currentUserRole === 'مدير حسابات') ?
-                                    `<button class="edit" data-id="${project._id}"><i class="fas fa-edit"></i> تعديل</button>
-                                        <button class="delete" data-id="${project._id}"><i class="fas fa-trash-alt"></i> حذف</button>` : ''}
+                                    ${currentUserRole !== 'مهندس' ? 
+                                        `<button class="edit" data-id="${project._id}"><i class="fas fa-edit"></i> تعديل</button>
+                                         <button class="delete" data-id="${project._id}"><i class="fas fa-trash-alt"></i> حذف</button>` : 
+                                        ''}
                                 </td>
                             `;
                         });
@@ -912,14 +917,6 @@
                 const action = target.classList[0]; // 'view', 'edit', 'delete'
 
                 if (action === 'edit') {
-                    if (currentUserRole !== 'مدير' && currentUserRole !== 'مدير حسابات') {
-                        projectsPageMessage.className = 'modal-message error';
-                        projectsPageMessage.textContent = 'ليس لديك صلاحية لتعديل المشاريع.';
-                        projectsPageMessage.style.display = 'block';
-                        setTimeout(() => projectsPageMessage.style.display = 'none', 3000);
-                        return;
-                    }
-
                     editProjectMessage.style.display = 'none'; // Hide previous messages
 
                     await loadProjectFormDropdowns(editProjectEngineerSelect, editProjectClientSelect);
@@ -957,14 +954,6 @@
                         setTimeout(() => projectsPageMessage.style.display = 'none', 3000);
                     }
                 } else if (action === 'delete') {
-                    if (currentUserRole !== 'مدير' && currentUserRole !== 'مدير حسابات') {
-                        projectsPageMessage.className = 'modal-message error';
-                        projectsPageMessage.textContent = 'ليس لديك صلاحية لحذف المشاريع.';
-                        projectsPageMessage.style.display = 'block';
-                        setTimeout(() => projectsPageMessage.style.display = 'none', 3000);
-                        return;
-                    }
-
                     if (confirm('هل أنت متأكد أنك تريد حذف هذا المشروع؟ لا يمكن التراجع عن هذا الإجراء.')) {
                         try {
                             const response = await fetch(`${BASE_URL}/api/projects/${projectId}`, {

@@ -2,12 +2,12 @@
 const express = require('express');
 const router = express.Router();
 const Client = require('../models/Client'); // استيراد موديل العميل
-const { auth, authorizeRoles } = require('../middleware/authMiddleware'); // استيراد الـ middleware للتحقق من الصلاحيات
+const { auth } = require('../middleware/authMiddleware'); // استيراد الـ middleware للتحقق من الصلاحيات
 
 // @route   POST /api/clients
 // @desc    Add a new client
 // @access  Private (Manager, Accountant Manager)
-router.post('/', auth, authorizeRoles('مدير', 'مدير حسابات'), async (req, res) => {
+router.post('/', auth, async (req, res) => {
     const { clientName, phoneNumber, email } = req.body;
 
     try {
@@ -75,7 +75,7 @@ router.get('/:id', auth, async (req, res) => {
 // @route   PUT /api/clients/:id
 // @desc    Update a client
 // @access  Private (Manager, Accountant Manager)
-router.put('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), async (req, res) => {
+router.put('/:id', auth, async (req, res) => {
     const { clientName, phoneNumber, email } = req.body;
 
     try {
@@ -110,7 +110,7 @@ router.put('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), as
 // @route   DELETE /api/clients/:id
 // @desc    Delete a client
 // @access  Private (Manager, Accountant Manager)
-router.delete('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
     try {
         const client = await Client.findById(req.params.id);
 

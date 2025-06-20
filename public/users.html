@@ -481,8 +481,7 @@
                 <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a>
                 </li>
                 <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
-                <li><a href="contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a>
-                </li>
+                <li><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a></li>
                 <li><a href="/add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i> إضافة
                         خزينة</a></li>
                 <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
@@ -555,9 +554,6 @@
     </div>
 
     <script>
-
-
-
         const BASE_URL = "http://localhost:3000";
 
         // Client-side authentication check and redirection
@@ -568,19 +564,14 @@
                 return;
             }
 
-            let currentUserRole = '';
-            let currentUserId = ''; // Store current logged-in user's ID
-
             try {
                 const base64Url = token.split('.')[1];
                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
                 const decodedPayload = decodeURIComponent(escape(window.atob(base64)));
                 const payload = JSON.parse(decodedPayload);
 
-                const username = payload.user.username || 'مستخدم';
+                const username = payload.user.username || payload.user.id || 'مستخدم';
                 const role = payload.user.role || 'غير محدد';
-                currentUserRole = role;
-                currentUserId = payload.user.id; // Get logged-in user's ID
 
                 document.getElementById('loggedInUser').textContent = `مرحباً، ${username} (${role})`;
 
@@ -588,34 +579,19 @@
                 const sidebar = document.getElementById('sidebar');
                 const addProjectLink = sidebar.querySelector('[data-page="add-project"]');
                 const usersLink = sidebar.querySelector('[data-page="users"]');
-                const settingsLink = sidebar.querySelector('[data-page="settings"]'); // This link might be removed
+                const categoriesLink = sidebar.querySelector('[data-page="categories"]');
                 const addTreasuryLink = sidebar.querySelector('[data-page="add-treasury"]');
                 const treasuriesLink = sidebar.querySelector('[data-page="treasuries"]');
-                const categoriesLink = sidebar.querySelector('[data-page="categories"]');
-                const mainTreasuryLink = sidebar.querySelector('[data-page="main-treasury"]'); // Assuming main treasury link is still present
+                const contractorsLink = sidebar.querySelector('[data-page="contractors"]');
+                const clientsLink = sidebar.querySelector('[data-page="clients"]');
 
-                
-
-                // Remove settings link if no longer in use, or hide if it's meant to be managed elsewhere
-                if (settingsLink) {
-                    settingsLink.remove(); // Or settingsLink.style.display = 'none';
-                }
-
-                // Adjust roles for visibility based on your final requirements
-                if (role === 'مدير') {
-                    // All links are visible by default for 'مدير'
-                } else if (role === 'مدير حسابات') {
-                    if (usersLink) usersLink.style.display = 'block'; // Ensure it's visible for Accountant Manager
-                    if (addProjectLink) addProjectLink.style.display = 'block'; // Make sure it's visible if needed
-                } else if (role === 'مهندس') {
-                    // Hide sensitive links for 'مهندس'
+                if (role === 'مهندس') {
+                    // Hide restricted elements for engineer
                     if (addProjectLink) addProjectLink.style.display = 'none';
                     if (usersLink) usersLink.style.display = 'none';
                     if (addTreasuryLink) addTreasuryLink.style.display = 'none';
-                    if (treasuriesLink) treasuriesLink.style.display = 'none';
-                    if (categoriesLink) categoriesLink.style.display = 'none';
-                    if (sidebar.querySelector('[data-page="contractors"]')) sidebar.querySelector('[data-page="contractors"]').style.display = 'none';
-                    if (sidebar.querySelector('[data-page="main-treasury"]')) sidebar.querySelector('[data-page="main-treasury"]').style.display = 'none';
+                    if (contractorsLink) contractorsLink.style.display = 'none';
+                    if (clientsLink) clientsLink.style.display = 'none';
                 }
 
                 // Set active link in sidebar (for this page)
@@ -654,31 +630,16 @@
                 document.body.classList.remove('sidebar-open');
             });
 
-            // تنقل مباشر لما المستخدم يضغط على لينك
+            // Simple navigation - let links work normally
             sidebar.addEventListener('click', (event) => {
                 const link = event.target.closest('a');
-                if (link && link.href && link.id !== 'sidebarLogoutButton') {
+                if (link && link.id !== 'sidebarLogoutButton') {
+                    // Close sidebar on mobile
                     sidebar.classList.remove('active');
                     sidebarOverlay.classList.remove('active');
                     document.body.classList.remove('sidebar-open');
-                    // مفيش preventDefault، وسيب التنقل يشتغل عادي
                 }
             });
-
-            // بعد انتهاء transition، يتم التوجيه إذا كان فيه رابط محفوظ
-            sidebar.addEventListener('transitionend', (event) => {
-                if (
-                    event.propertyName === 'transform' &&
-                    !sidebar.classList.contains('active') &&
-                    targetLinkHref
-                ) {
-                    window.location.href = targetLinkHref;
-                    targetLinkHref = null;
-                    sidebar.style.pointerEvents = 'auto';
-                    sidebarOverlay.style.pointerEvents = 'auto';
-                }
-            });
-
 
             /* --- Users Page Logic --- */
             const usersTableBody = document.getElementById('usersTableBody');
@@ -720,9 +681,10 @@
                                 <td>${user.username}</td>
                                 <td>${user.role}</td>
                                 <td class="action-buttons">
-                                    ${(currentUserRole === 'مدير' || currentUserRole === 'مدير حسابات') ?
-                                    `<button class="edit" data-id="${user._id}"><i class="fas fa-edit"></i> تعديل</button>
-                                        <button class="delete" data-id="${user._id}" ${user._id === currentUserId ? 'disabled' : ''}><i class="fas fa-trash-alt"></i> حذف</button>` : ''}
+                                    ${role !== 'مهندس' ? 
+                                        `<button class="edit" data-id="${user._id}"><i class="fas fa-edit"></i> تعديل</button>
+                                         <button class="delete" data-id="${user._id}"><i class="fas fa-trash-alt"></i> حذف</button>` : 
+                                        ''}
                                 </td>
                             `;
                         });
@@ -746,14 +708,6 @@
 
             // Open Add User Modal
             addUserBtn.addEventListener('click', () => {
-                if (currentUserRole !== 'مدير' && currentUserRole !== 'مدير حسابات') {
-                    usersPageMessage.className = 'modal-message error';
-                    usersPageMessage.textContent = 'ليس لديك صلاحية لإضافة مستخدمين.';
-                    usersPageMessage.style.display = 'block';
-                    setTimeout(() => usersPageMessage.style.display = 'none', 3000);
-                    return;
-                }
-
                 userModalTitle.textContent = 'إضافة مستخدم جديد';
                 userForm.reset();
                 userIdInput.value = ''; // Clear ID for new entry
@@ -788,14 +742,6 @@
                 const action = target.classList[0]; // 'edit', 'delete'
 
                 if (action === 'edit') {
-                    if (currentUserRole !== 'مدير' && currentUserRole !== 'مدير حسابات') {
-                        usersPageMessage.className = 'modal-message error';
-                        usersPageMessage.textContent = 'ليس لديك صلاحية لتعديل المستخدمين.';
-                        usersPageMessage.style.display = 'block';
-                        setTimeout(() => usersPageMessage.style.display = 'none', 3000);
-                        return;
-                    }
-
                     userModalMessage.style.display = 'none'; // Hide previous messages
 
                     try {
@@ -830,23 +776,6 @@
                     }
 
                 } else if (action === 'delete') {
-                    if (currentUserRole !== 'مدير' && currentUserRole !== 'مدير حسابات') {
-                        usersPageMessage.className = 'modal-message error';
-                        usersPageMessage.textContent = 'ليس لديك صلاحية لحذف المستخدمين.';
-                        usersPageMessage.style.display = 'block';
-                        setTimeout(() => usersPageMessage.style.display = 'none', 3000);
-                        return;
-                    }
-
-                    // Prevent deleting self
-                    if (userId === currentUserId) {
-                        usersPageMessage.className = 'modal-message error';
-                        usersPageMessage.textContent = 'لا يمكنك حذف حسابك الخاص!';
-                        usersPageMessage.style.display = 'block';
-                        setTimeout(() => usersPageMessage.style.display = 'none', 3000);
-                        return;
-                    }
-
                     if (confirm('هل أنت متأكد أنك تريد حذف هذا المستخدم؟')) {
                         try {
                             const response = await fetch(`${BASE_URL}/api/users/${userId}`, {

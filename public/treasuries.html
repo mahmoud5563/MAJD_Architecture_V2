@@ -477,23 +477,21 @@
         <div class="overlay" id="sidebarOverlay"></div>
 
         <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3>نظام إدارة المشاريع</h3>
+            </div>
             <ul>
-                <li class="active"><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>
-                        الرئيسية</a></li>
-                <li><a href="/add-project.html" data-page="add-project"><i class="fas fa-plus-circle"></i> إضافة
-                        مشروع</a></li>
-                <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a>
-                </li>
-                <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
-                <li><a href="contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a>
-                </li>
-                <li><a href="/add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i> إضافة
-                        خزينة</a></li>
-                <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
-                <li><a href="users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
-                <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a>
-                </li>
-                <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
+                <li><a href="dashboard.html" data-page="dashboard"><i class="fas fa-tachometer-alt"></i> لوحة التحكم</a></li>
+                <li><a href="projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a></li>
+                <li><a href="add-project.html" data-page="add-project"><i class="fas fa-plus-circle"></i> إضافة مشروع</a></li>
+                <li><a href="treasuries.html" data-page="treasuries"><i class="fas fa-vault"></i> الخزائن</a></li>
+                <li><a href="add-treasury.html" data-page="add-treasury"><i class="fas fa-plus-circle"></i> إضافة خزينة</a></li>
+                <li><a href="general-expenses.html" data-page="general-expenses"><i class="fas fa-money-bill-wave"></i> المصروفات العامة</a></li>
+                <li><a href="users.html" data-page="users"><i class="fas fa-users"></i> المستخدمين</a></li>
+                <li><a href="categories.html" data-page="categories"><i class="fas fa-tags"></i> التصنيفات</a></li>
+                <li><a href="contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولين</a></li>
+                <li><a href="clients.html" data-page="clients"><i class="fas fa-user-tie"></i> العملاء</a></li>
+                <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
             </ul>
         </div>
 
@@ -588,6 +586,11 @@
 
     <script>
         const BASE_URL = "http://localhost:3000";
+        
+        // Global variables for user info
+        let currentUserRole = '';
+        let currentUserPayload = null;
+        
         // Client-side authentication check and redirection
         document.addEventListener('DOMContentLoaded', function () {
             const token = localStorage.getItem('token');
@@ -596,17 +599,18 @@
                 return;
             }
 
-            let currentUserRole = '';
-
             try {
                 const base64Url = token.split('.')[1];
                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
                 const decodedPayload = decodeURIComponent(escape(window.atob(base64)));
                 const payload = JSON.parse(decodedPayload);
 
-                const username = payload.user.username || 'مستخدم';
+                const username = payload.user.username || payload.user.id || 'مستخدم';
                 const role = payload.user.role || 'غير محدد';
+                
+                // Store in global variables
                 currentUserRole = role;
+                currentUserPayload = payload;
 
                 document.getElementById('loggedInUser').textContent = `مرحباً، ${username} (${role})`;
 
@@ -614,21 +618,27 @@
                 const sidebar = document.getElementById('sidebar');
                 const addProjectLink = sidebar.querySelector('[data-page="add-project"]');
                 const usersLink = sidebar.querySelector('[data-page="users"]');
-                const settingsLink = sidebar.querySelector('[data-page="settings"]');
+                const categoriesLink = sidebar.querySelector('[data-page="categories"]');
                 const addTreasuryLink = sidebar.querySelector('[data-page="add-treasury"]');
                 const treasuriesLink = sidebar.querySelector('[data-page="treasuries"]');
-                const BASE_API_URL = '';
-
+                const contractorsLink = sidebar.querySelector('[data-page="contractors"]');
+                const clientsLink = sidebar.querySelector('[data-page="clients"]');
+                const generalExpensesLink = sidebar.querySelector('[data-page="general-expenses"]');
 
                 if (role === 'مهندس') {
+                    // Hide restricted elements for engineer
                     if (addProjectLink) addProjectLink.style.display = 'none';
                     if (usersLink) usersLink.style.display = 'none';
-                    if (settingsLink) settingsLink.style.display = 'none';
                     if (addTreasuryLink) addTreasuryLink.style.display = 'none';
-                    if (treasuriesLink) treasuriesLink.style.display = 'none';
-                } else if (role === 'مدير حسابات') {
-                    if (usersLink) usersLink.style.display = 'none';
-                    if (settingsLink) settingsLink.style.display = 'none';
+                    if (contractorsLink) contractorsLink.style.display = 'none';
+                    if (clientsLink) clientsLink.style.display = 'none';
+                    if (generalExpensesLink) generalExpensesLink.style.display = 'none';
+                }
+
+                // Set active link in sidebar (for this page)
+                const currentPageLink = document.querySelector(`.sidebar ul li a[data-page="treasuries"]`);
+                if (currentPageLink) {
+                    currentPageLink.parentElement.classList.add('active');
                 }
             } catch (e) {
                 console.error("Failed to decode token:", e);
@@ -642,7 +652,7 @@
                 window.location.href = '/';
             };
             document.getElementById('logoutButton').addEventListener('click', logout);
-            document.getElementById('sidebarLogoutButton').addEventListener('click', logout);
+            document.getElementById('logoutBtn').addEventListener('click', logout);
 
             // Responsive Sidebar Toggle
             const sidebar = document.getElementById('sidebar');
@@ -664,7 +674,7 @@
             // تنقل مباشر لما المستخدم يضغط على لينك
             sidebar.addEventListener('click', (event) => {
                 const link = event.target.closest('a');
-                if (link && link.href && link.id !== 'sidebarLogoutButton') {
+                if (link && link.href && link.id !== 'logoutBtn') {
                     sidebar.classList.remove('active');
                     sidebarOverlay.classList.remove('active');
                     document.body.classList.remove('sidebar-open');
@@ -727,7 +737,14 @@
                 treasuriesPageMessage.style.display = 'none';
 
                 try {
-                    const response = await fetch(`${BASE_URL}/api/treasuries`, {
+                    // Use different API endpoint based on user role
+                    let apiUrl = `${BASE_URL}/api/treasuries`;
+                    if (currentUserRole === 'مهندس') {
+                        // Engineer can only see their own custodies
+                        apiUrl = `${BASE_URL}/api/treasuries/engineer/${currentUserPayload.user.id}`;
+                    }
+                    
+                    const response = await fetch(apiUrl, {
                         headers: {
                             'x-auth-token': localStorage.getItem('token')
                         }
@@ -754,15 +771,12 @@
                                 <td>${treasury.project ? treasury.project.projectName : '---'}</td>
                                 <td class="action-buttons">
                                     <button class="view" data-id="${treasury._id}"><i class="fas fa-eye"></i> عرض</button>
-                                    ${(currentUserRole === 'مدير' || currentUserRole === 'مدير حسابات') ?
+                                    ${currentUserRole !== 'مهندس' ? 
                                     `<button class="edit" data-id="${treasury._id}"><i class="fas fa-edit"></i> تعديل</button>
-                                        <button class="delete" data-id="${treasury._id}"><i class="fas fa-trash-alt"></i> حذف</button>` : ''}
+                                         <button class="delete" data-id="${treasury._id}"><i class="fas fa-trash-alt"></i> حذف</button>` : 
+                                        ''}
                                 </td>
                             `;
-                            // Disable delete button for 'رئيسية' if that type is introduced later
-                            // if (treasury.type === 'رئيسية') {
-                            //     row.querySelector('.delete').disabled = true;
-                            // }
                         });
                     } else {
                         treasuriesTableBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">فشل في جلب الخزائن.</td></tr>';
@@ -829,14 +843,6 @@
                 const action = target.classList[0]; // 'view', 'edit', 'delete'
 
                 if (action === 'edit') {
-                    if (currentUserRole !== 'مدير' && currentUserRole !== 'مدير حسابات') {
-                        treasuriesPageMessage.className = 'modal-message error';
-                        treasuriesPageMessage.textContent = 'ليس لديك صلاحية لتعديل الخزائن.';
-                        treasuriesPageMessage.style.display = 'block';
-                        setTimeout(() => treasuriesPageMessage.style.display = 'none', 3000);
-                        return;
-                    }
-
                     editTreasuryMessage.style.display = 'none'; // Hide previous messages
 
                     try {
@@ -878,14 +884,6 @@
                     }
 
                 } else if (action === 'delete') {
-                    if (currentUserRole !== 'مدير' && currentUserRole !== 'مدير حسابات') {
-                        treasuriesPageMessage.className = 'modal-message error';
-                        treasuriesPageMessage.textContent = 'ليس لديك صلاحية لحذف الخزائن.';
-                        treasuriesPageMessage.style.display = 'block';
-                        setTimeout(() => treasuriesPageMessage.style.display = 'none', 3000);
-                        return;
-                    }
-
                     if (confirm('هل أنت متأكد أنك تريد حذف هذه الخزينة؟ لا يمكن التراجع عن هذا الإجراء وقد تكون مرتبطة بمعاملات مالية.')) {
                         try {
                             const response = await fetch(`${BASE_URL}/api/treasuries/${treasuryId}`, {

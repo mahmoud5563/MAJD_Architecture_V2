@@ -15,11 +15,12 @@ const contractAgreementsRoutes = require('./routes/contractAgreements'); // اس
 const contractPaymentsRoutes = require('./routes/contractPayments'); // استيراد مسار دفعات المقاولين
 const categoriesRoutes = require('./routes/categories'); // تم إضافة هذا المسار
 const usersRoutes = require('./routes/users');         // تم إضافة هذا المسار
+const generalExpensesRoutes = require('./routes/generalExpenses'); // استيراد مسار المصروفات العامة
 
 const { auth, authorizeRoles } = require('./middleware/authMiddleware');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json()); // لتمكين الخادم من فهم الـ JSON في الطلبات
@@ -40,19 +41,12 @@ app.use('/api/contract-agreements', contractAgreementsRoutes); // استخدام
 app.use('/api/contract-payments', contractPaymentsRoutes); // استخدام مسار دفعات المقاولين
 app.use('/api/categories', categoriesRoutes); // استخدام مسار التصنيفات
 app.use('/api/users', usersRoutes);         // استخدام مسار المستخدمين
+app.use('/api/general-expenses', generalExpensesRoutes); // استخدام مسار المصروفات العامة
 
 // ******* أمثلة لمسارات API محمية (يمكن إزالتها لاحقًا) *******
 app.get('/api/protected', auth, (req, res) => {
     res.json({
         message: `مرحباً ${req.user.username || 'مستخدم'}، لقد وصلت إلى مسار محمي!`,
-        userId: req.user.id,
-        userRole: req.user.role
-    });
-});
-
-app.get('/api/admin-only', auth, authorizeRoles('مدير'), (req, res) => {
-    res.json({
-        message: `مرحباً أيها المدير ${req.user.username || 'مستخدم'}، أنت في منطقة المدراء!`,
         userId: req.user.id,
         userRole: req.user.role
     });

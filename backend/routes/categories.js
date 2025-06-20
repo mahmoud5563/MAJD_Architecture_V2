@@ -2,12 +2,12 @@
 const express = require('express');
 const router = express.Router();
 const Category = require('../models/Category'); // استيراد موديل Category
-const { auth, authorizeRoles } = require('../middleware/authMiddleware');
+const { auth } = require('../middleware/authMiddleware');
 
 // @route   POST /api/categories
 // @desc    Add a new category with name and optional description
 // @access  Private (Manager, Accountant Manager)
-router.post('/', auth, authorizeRoles('مدير', 'مدير حسابات'), async (req, res) => {
+router.post('/', auth, async (req, res) => {
     const { name, description } = req.body; // فقط الاسم والوصف
 
     try {
@@ -61,7 +61,7 @@ router.get('/:id', auth, async (req, res) => {
 // @route   PUT /api/categories/:id
 // @desc    Update a category (name and optional description)
 // @access  Private (Manager, Accountant Manager)
-router.put('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), async (req, res) => {
+router.put('/:id', auth, async (req, res) => {
     const { name, description } = req.body; // فقط الاسم والوصف
 
     try {
@@ -93,7 +93,7 @@ router.put('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), as
 // @route   DELETE /api/categories/:id
 // @desc    Delete a category
 // @access  Private (Manager, Accountant Manager)
-router.delete('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
     try {
         const category = await Category.findById(req.params.id);
         if (!category) {

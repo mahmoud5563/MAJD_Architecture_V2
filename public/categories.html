@@ -481,12 +481,11 @@
                 <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a>
                 </li>
                 <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
-                <li><a href="contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a>
-                </li>
+                <li><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a></li>
                 <li><a href="/add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i> إضافة
                         خزينة</a></li>
                 <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
-                <li><a href="users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
+                <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
                 <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a>
                 </li>
                 <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
@@ -556,17 +555,14 @@
                 return;
             }
 
-            let currentUserRole = '';
-
             try {
                 const base64Url = token.split('.')[1];
                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
                 const decodedPayload = decodeURIComponent(escape(window.atob(base64)));
                 const payload = JSON.parse(decodedPayload);
 
-                const username = payload.user.username || 'مستخدم';
+                const username = payload.user.username || payload.user.id || 'مستخدم';
                 const role = payload.user.role || 'غير محدد';
-                currentUserRole = role;
 
                 document.getElementById('loggedInUser').textContent = `مرحباً، ${username} (${role})`;
 
@@ -574,22 +570,25 @@
                 const sidebar = document.getElementById('sidebar');
                 const addProjectLink = sidebar.querySelector('[data-page="add-project"]');
                 const usersLink = sidebar.querySelector('[data-page="users"]');
-                const settingsLink = sidebar.querySelector('[data-page="settings"]');
+                const categoriesLink = sidebar.querySelector('[data-page="categories"]');
                 const addTreasuryLink = sidebar.querySelector('[data-page="add-treasury"]');
                 const treasuriesLink = sidebar.querySelector('[data-page="treasuries"]');
-                const categoriesLink = sidebar.querySelector('[data-page="categories"]');
-
+                const contractorsLink = sidebar.querySelector('[data-page="contractors"]');
+                const clientsLink = sidebar.querySelector('[data-page="clients"]');
 
                 if (role === 'مهندس') {
+                    // Hide restricted elements for engineer
                     if (addProjectLink) addProjectLink.style.display = 'none';
                     if (usersLink) usersLink.style.display = 'none';
-                    if (settingsLink) settingsLink.style.display = 'none';
                     if (addTreasuryLink) addTreasuryLink.style.display = 'none';
-                    if (treasuriesLink) treasuriesLink.style.display = 'none';
-                    if (categoriesLink) categoriesLink.style.display = 'none'; // Hide for 'مهندس'
-                } else if (role === 'مدير حسابات') {
-                    if (usersLink) usersLink.style.display = 'none';
-                    if (settingsLink) settingsLink.style.display = 'none';
+                    if (contractorsLink) contractorsLink.style.display = 'none';
+                    if (clientsLink) clientsLink.style.display = 'none';
+                }
+
+                // Set active link in sidebar (for this page)
+                const currentPageLink = document.querySelector(`.sidebar ul li a[data-page="categories"]`);
+                if (currentPageLink) {
+                    currentPageLink.parentElement.classList.add('active');
                 }
             } catch (e) {
                 console.error("Failed to decode token:", e);
@@ -678,9 +677,8 @@
                                 <td>${category.name}</td>
                                 <td>${category.description || 'لا يوجد وصف'}</td> <!-- Removed category.type -->
                                 <td class="action-buttons">
-                                    ${(currentUserRole === 'مدير' || currentUserRole === 'مدير حسابات') ?
-                                    `<button class="edit" data-id="${category._id}"><i class="fas fa-edit"></i> تعديل</button>
-                                        <button class="delete" data-id="${category._id}"><i class="fas fa-trash-alt"></i> حذف</button>` : ''}
+                                    <button class="edit" data-id="${category._id}"><i class="fas fa-edit"></i> تعديل</button>
+                                    <button class="delete" data-id="${category._id}"><i class="fas fa-trash-alt"></i> حذف</button>
                                 </td>
                             `;
                         });
@@ -736,14 +734,6 @@
                 const action = target.classList[0]; // 'edit', 'delete'
 
                 if (action === 'edit') {
-                    if (currentUserRole !== 'مدير' && currentUserRole !== 'مدير حسابات') {
-                        categoriesPageMessage.className = 'modal-message error';
-                        categoriesPageMessage.textContent = 'ليس لديك صلاحية لتعديل التصنيفات.';
-                        categoriesPageMessage.style.display = 'block';
-                        setTimeout(() => categoriesPageMessage.style.display = 'none', 3000);
-                        return;
-                    }
-
                     categoryModalMessage.style.display = 'none'; // Hide previous messages
 
                     try {
@@ -777,14 +767,6 @@
                     }
 
                 } else if (action === 'delete') {
-                    if (currentUserRole !== 'مدير' && currentUserRole !== 'مدير حسابات') {
-                        categoriesPageMessage.className = 'modal-message error';
-                        categoriesPageMessage.textContent = 'ليس لديك صلاحية لحذف التصنيفات.';
-                        categoriesPageMessage.style.display = 'block';
-                        setTimeout(() => categoriesPageMessage.style.display = 'none', 3000);
-                        return;
-                    }
-
                     if (confirm('هل أنت متأكد أنك تريد حذف هذا التصنيف؟ قد يكون مرتبطًا بمعاملات مالية.')) {
                         try {
                             const response = await fetch(`${BASE_URL}/api/categories/${categoryId}`, {

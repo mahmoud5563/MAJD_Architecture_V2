@@ -104,7 +104,7 @@ router.get('/:id', auth, async (req, res) => {
 // @route   GET /api/treasuries/:id/details
 // @desc    Get full treasury details including all transactions
 // @access  Private (Manager, Accountant Manager)
-router.get('/:id/details', auth, authorizeRoles('مدير', 'مدير حسابات'), async (req, res) => {
+router.get('/:id/details', auth, async (req, res) => {
     try {
         const treasuryId = req.params.id;
         const treasury = await Treasury.findById(treasuryId)
@@ -125,6 +125,7 @@ router.get('/:id/details', auth, authorizeRoles('مدير', 'مدير حسابا
         .populate('treasury', 'name')
         .populate('targetTreasury', 'name')
         .populate('recordedBy', 'username')
+        .populate('category', 'name')
         .sort({ date: 1, createdAt: 1 }); // فرز حسب التاريخ ثم تاريخ الإنشاء
 
         // حساب الملخصات المالية من المعاملات
@@ -283,6 +284,30 @@ router.delete('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'),
             return res.status(400).json({ message: 'معرف الخزينة غير صالح.' });
         }
         res.status(500).json({  message : 'حدث خطأ في الخادم أثناء حذف الخزينة.'});
+    }
+});
+
+// @route   GET /api/treasuries/engineer/:engineerId
+// @desc    Get treasuries (custodies) for a specific engineer
+// @access  Private (Engineer can only see their own custodies)
+router.get('/engineer/:engineerId', auth, async (req, res) => {
+    try {
+        // Check if the requesting user is the engineer or has higher privileges
+        if (req.user.role === 'مهندس' && req.user.id !== req.params.engineerId) {
+            return res.status(403).json({ message: 'ليس لديك صلاحية لعرض عهد مهندس آخر.' });
+        }
+
+        const treasuries = await Treasury.find({ 
+            responsibleUser: req.params.engineerId,
+            type: 'عهدة'
+        })
+        .populate('responsibleUser', 'username')
+        .populate('project', 'projectName');
+
+        res.json(treasuries);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ message: 'حدث خطأ في الخادم أثناء جلب عهد المهندس.' });
     }
 });
 

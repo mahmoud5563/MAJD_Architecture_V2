@@ -517,12 +517,11 @@
                 <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a>
                 </li>
                 <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
-                <li><a href="contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a>
-                </li>
+                <li><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a></li>
                 <li><a href="/add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i> إضافة
                         خزينة</a></li>
                 <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
-                <li><a href="users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
+                <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
                 <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a>
                 </li>
                 <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
@@ -570,8 +569,8 @@
                     <div style="margin-bottom: 15px;">
                         <button class="action-button" id="addDepositBtn"><i class="fas fa-plus"></i> إضافة
                             إيداع</button>
-                        <button class="action-button" id="addExpenseBtn"><i class="fas fa-minus"></i> إضافة
-                            مصروف</button>
+                        <!--<button class="action-button" id="addExpenseBtn"><i class="fas fa-minus"></i> إضافة
+                            مصروف</button>-->
                         <button class="action-button" id="addTransferBtn"><i class="fas fa-exchange-alt"></i>
                             تحويل</button>
                     </div>
@@ -584,14 +583,54 @@
                                 <th>الوصف/السبب</th>
                                 <th>التصنيف</th>
                                 <th>خزينة الهدف</th>
-                                <th>مسجل بواسطة</th>
                             </tr>
                         </thead>
                         <tbody id="transactionsTableBody">
                             <tr>
-                                <td colspan="7" style="text-align: center;">لا توجد معاملات حالياً لهذه الخزينة.</td>
+                                <td colspan="6" style="text-align: center;">لا توجد معاملات حالياً لهذه الخزينة.</td>
                             </tr>
                         </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="2"><strong>إجمالي الإيداعات:</strong></td>
+                                <td id="totalDepositsCell">0.00 ج.م</td>
+                                <td colspan="3"></td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><strong>إجمالي المصروفات والتحويلات الصادرة:</strong></td>
+                                <td id="totalWithdrawalsCell">0.00 ج.م</td>
+                                <td colspan="3"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="details-section">
+                    <h4>المصروفات العامة</h4>
+                    <div style="margin-bottom: 15px;">
+                        <button class="action-button" id="addGeneralExpenseBtn"><i class="fas fa-plus"></i> إضافة مصروف عام</button>
+                    </div>
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>التاريخ</th>
+                                <th>المبلغ</th>
+                                <th>الوصف</th>
+                                <th>تم الإضافة بواسطة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="generalExpensesTableBody">
+                            <tr>
+                                <td colspan="4" style="text-align: center;">لا توجد مصروفات عامة حالياً لهذه الخزينة.</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="1"><strong>إجمالي المصروفات العامة:</strong></td>
+                                <td id="totalGeneralExpensesCell">0.00 ج.م</td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
 
@@ -613,7 +652,7 @@
                 <input type="hidden" id="transactionTreasuryId">
                 <div class="modal-form-group">
                     <label for="transactionType">نوع المعاملة:</label>
-                    <select id="transactionType" name="type" required>
+                    <select id="transactionType" name="type" required style="display:none">
                         <option value="إيداع">إيداع</option>
                         <option value="مصروف">مصروف</option>
                         <option value="تحويل">تحويل</option>
@@ -654,6 +693,33 @@
         </div>
     </div>
 
+    <!-- Add General Expense Modal -->
+    <div id="generalExpenseModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3>إضافة مصروف عام</h3>
+            <form id="generalExpenseForm">
+                <input type="hidden" id="generalExpenseTreasuryId">
+                <div class="modal-form-group">
+                    <label for="generalExpenseAmount">المبلغ:</label>
+                    <input type="number" id="generalExpenseAmount" name="amount" step="0.01" required>
+                </div>
+                <div class="modal-form-group">
+                    <label for="generalExpenseDate">التاريخ:</label>
+                    <input type="date" id="generalExpenseDate" name="date" required>
+                </div>
+                <div class="modal-form-group">
+                    <label for="generalExpenseDescription">الوصف:</label>
+                    <textarea id="generalExpenseDescription" name="description" rows="3" required></textarea>
+                </div>
+                <div class="modal-message" id="generalExpenseModalMessage"></div>
+                <div class="modal-buttons">
+                    <button type="submit" class="modal-button">حفظ المصروف</button>
+                    <button type="button" class="modal-button cancel" id="cancelGeneralExpenseButton">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script> <!-- For Excel export -->
     <script>
@@ -675,7 +741,7 @@
                 const decodedPayload = decodeURIComponent(escape(window.atob(base64)));
                 const payload = JSON.parse(decodedPayload);
 
-                const username = payload.user.username || 'مستخدم';
+                const username = payload.user.username || payload.user.id || 'مستخدم';
                 const role = payload.user.role || 'غير محدد';
                 currentUserRole = role;
 
@@ -685,21 +751,38 @@
                 const sidebar = document.getElementById('sidebar');
                 const addProjectLink = sidebar.querySelector('[data-page="add-project"]');
                 const usersLink = sidebar.querySelector('[data-page="users"]');
-                const settingsLink = sidebar.querySelector('[data-page="settings"]');
+                const categoriesLink = sidebar.querySelector('[data-page="categories"]');
                 const addTreasuryLink = sidebar.querySelector('[data-page="add-treasury"]');
                 const treasuriesLink = sidebar.querySelector('[data-page="treasuries"]');
-                const BASE_API_URL = '';
-
+                const contractorsLink = sidebar.querySelector('[data-page="contractors"]');
+                const clientsLink = sidebar.querySelector('[data-page="clients"]');
 
                 if (role === 'مهندس') {
+                    // Hide restricted elements for engineer
                     if (addProjectLink) addProjectLink.style.display = 'none';
                     if (usersLink) usersLink.style.display = 'none';
-                    if (settingsLink) settingsLink.style.display = 'none';
                     if (addTreasuryLink) addTreasuryLink.style.display = 'none';
-                    if (treasuriesLink) treasuriesLink.style.display = 'none';
-                } else if (role === 'مدير حسابات') {
-                    if (usersLink) usersLink.style.display = 'none';
-                    if (settingsLink) settingsLink.style.display = 'none';
+                    if (contractorsLink) contractorsLink.style.display = 'none';
+                    if (clientsLink) clientsLink.style.display = 'none';
+                    
+                    // Hide add general expense button for engineers
+                    const addGeneralExpenseBtn = document.getElementById('addGeneralExpenseBtn');
+                    if (addGeneralExpenseBtn) addGeneralExpenseBtn.style.display = 'none';
+                    
+                    // Hide general expenses section for engineers (they can only see their own custodies)
+                    const generalExpensesSections = document.querySelectorAll('.details-section');
+                    generalExpensesSections.forEach(section => {
+                        const h4 = section.querySelector('h4');
+                        if (h4 && h4.textContent === 'المصروفات العامة') {
+                            section.style.display = 'none';
+                        }
+                    });
+                }
+
+                // Set active link in sidebar (for this page)
+                const currentPageLink = document.querySelector(`.sidebar ul li a[data-page="treasuries"]`);
+                if (currentPageLink) {
+                    currentPageLink.parentElement.classList.add('active');
                 }
             } catch (e) {
                 console.error("Failed to decode token:", e);
@@ -795,9 +878,20 @@
             const transactionModalMessage = document.getElementById('transactionModalMessage');
             const cancelTransactionButton = document.getElementById('cancelTransactionButton');
 
+            // General Expense Modal Elements
+            const generalExpenseModal = document.getElementById('generalExpenseModal');
+            const generalExpenseForm = document.getElementById('generalExpenseForm');
+            const generalExpenseTreasuryIdInput = document.getElementById('generalExpenseTreasuryId');
+            const generalExpenseAmountInput = document.getElementById('generalExpenseAmount');
+            const generalExpenseDateInput = document.getElementById('generalExpenseDate');
+            const generalExpenseDescriptionInput = document.getElementById('generalExpenseDescription');
+            const generalExpenseModalMessage = document.getElementById('generalExpenseModalMessage');
+            const cancelGeneralExpenseButton = document.getElementById('cancelGeneralExpenseButton');
+            const addGeneralExpenseBtn = document.getElementById('addGeneralExpenseBtn');
+
             // Set current date as default for transactionDateInput
             transactionDateInput.valueAsDate = new Date();
-
+            generalExpenseDateInput.valueAsDate = new Date();
 
             // Function to fetch and display treasury details
             const fetchTreasuryDetails = async () => {
@@ -835,6 +929,8 @@
 
                         // Populate transactions table
                         transactionsTableBody.innerHTML = '';
+                        let totalDeposits = 0;
+                        let totalWithdrawals = 0;
                         if (data.transactions && data.transactions.length > 0) {
                             data.transactions.forEach(trans => {
                                 const row = transactionsTableBody.insertRow();
@@ -848,17 +944,31 @@
                                     <td style="color: ${trans.type === 'إيداع' ? 'green' : (trans.type === 'مصروف' ? 'red' : 'orange')};">${trans.type}</td>
                                     <td style="font-weight: bold;">${(trans.amount || 0).toFixed(2)} ج.م</td>
                                     <td>${trans.description || 'لا يوجد وصف'}</td>
-                                    <td>${trans.category || 'لا يوجد'}</td>
+                                    <td>${trans.category && trans.category.name ? trans.category.name : 'لا يوجد'}</td>
                                     <td>${targetTreasuryName}</td>
-                                    <td>${trans.recordedBy ? trans.recordedBy.username : 'غير محدد'}</td>
                                 `;
+                                let amount = parseFloat(trans.amount);
+                                if (!isNaN(amount)) {
+                                    if (trans.type === 'إيداع') {
+                                        totalDeposits += amount;
+                                    } else if (trans.type === 'مصروف' || trans.type === 'تحويل') {
+                                        totalWithdrawals += amount;
+                                    }
+                                }
                             });
                         } else {
-                            transactionsTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">لا توجد معاملات حالياً لهذه الخزينة.</td></tr>';
+                            transactionsTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">لا توجد معاملات حالياً لهذه الخزينة.</td></tr>';
                         }
+                        document.getElementById('totalDepositsCell').textContent = totalDeposits.toFixed(2) + ' ج.م';
+                        document.getElementById('totalWithdrawalsCell').textContent = totalWithdrawals.toFixed(2) + ' ج.م';
 
                         // Set treasury ID for transaction modal
                         transactionTreasuryIdInput.value = currentTreasuryId;
+
+                        // Fetch and display general expenses (only for managers and accountant managers)
+                        if (currentUserRole !== 'مهندس') {
+                            await fetchGeneralExpenses();
+                        }
 
                     } else {
                         pageMessage.className = 'modal-message error';
@@ -870,6 +980,43 @@
                     pageMessage.className = 'modal-message error';
                     pageMessage.textContent = 'خطأ في الاتصال بالخادم لجلب تفاصيل الخزينة.';
                     pageMessage.style.display = 'block';
+                }
+            };
+
+            // Function to fetch and display general expenses
+            const fetchGeneralExpenses = async () => {
+                try {
+                    const response = await fetch(`${BASE_URL}/api/general-expenses/treasury/${currentTreasuryId}`, {
+                        headers: {
+                            'x-auth-token': localStorage.getItem('token')
+                        }
+                    });
+                    const expenses = await response.json();
+
+                    const generalExpensesTableBody = document.getElementById('generalExpensesTableBody');
+                    const totalGeneralExpensesCell = document.getElementById('totalGeneralExpensesCell');
+                    
+                    generalExpensesTableBody.innerHTML = '';
+                    let totalGeneralExpenses = 0;
+
+                    if (expenses && expenses.length > 0) {
+                        expenses.forEach(expense => {
+                            const row = generalExpensesTableBody.insertRow();
+                            row.innerHTML = `
+                                <td>${new Date(expense.date).toLocaleDateString('ar-EG')}</td>
+                                <td style="font-weight: bold; color: red;">${(expense.amount || 0).toFixed(2)} ج.م</td>
+                                <td>${expense.reason || 'لا يوجد وصف'}</td>
+                                <td>${expense.createdBy ? expense.createdBy.username : 'غير محدد'}</td>
+                            `;
+                            totalGeneralExpenses += parseFloat(expense.amount || 0);
+                        });
+                    } else {
+                        generalExpensesTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">لا توجد مصروفات عامة حالياً لهذه الخزينة.</td></tr>';
+                    }
+
+                    totalGeneralExpensesCell.textContent = totalGeneralExpenses.toFixed(2) + ' ج.م';
+                } catch (error) {
+                    console.error('Error fetching general expenses:', error);
                 }
             };
 
@@ -919,54 +1066,59 @@
             addDepositBtn.addEventListener('click', () => {
                 transactionModalTitle.textContent = 'إضافة إيداع';
                 transactionTypeSelect.value = 'إيداع';
-                toggleTransactionFields();
+                transactionAmountInput.parentElement.style.display = 'block';
+                transactionDateInput.parentElement.style.display = 'block';
+                transactionDescriptionInput.parentElement.style.display = 'block';
+                transactionTargetTreasuryGroup.style.display = 'none';
+                transactionCategoryGroup.style.display = 'none';
                 transactionModal.style.display = 'flex';
             });
 
-            addExpenseBtn.addEventListener('click', async () => { // Async to await populateDropdown
-                transactionModalTitle.textContent = 'إضافة مصروف';
-                transactionTypeSelect.value = 'مصروف';
-                await populateDropdown(transactionCategorySelect, '/api/categories', '_id', 'name', 'اختر تصنيف'); // Populate categories
-                toggleTransactionFields();
-                transactionModal.style.display = 'flex';
-            });
+            
 
             addTransferBtn.addEventListener('click', async () => {
                 transactionModalTitle.textContent = 'تحويل بين الخزائن';
                 transactionTypeSelect.value = 'تحويل';
+                transactionAmountInput.parentElement.style.display = 'block';
+                transactionDateInput.parentElement.style.display = 'block';
+                transactionDescriptionInput.parentElement.style.display = 'block';
                 await populateDropdown(transactionTargetTreasurySelect, '/api/treasuries', '_id', 'name', 'اختر خزينة مستهدفة');
-                // Remove the current treasury from the target list
                 for (let i = 0; i < transactionTargetTreasurySelect.options.length; i++) {
                     if (transactionTargetTreasurySelect.options[i].value === currentTreasuryId) {
                         transactionTargetTreasurySelect.options[i].remove();
                         break;
                     }
                 }
-                toggleTransactionFields();
+                transactionTargetTreasuryGroup.style.display = 'block';
+                transactionCategoryGroup.style.display = 'none';
                 transactionModal.style.display = 'flex';
             });
 
-            transactionTypeSelect.addEventListener('change', toggleTransactionFields);
-
+            // عند فتح المودال، إخفاء أو إظهار الحقول حسب النوع
             function toggleTransactionFields() {
                 const type = transactionTypeSelect.value;
                 if (type === 'تحويل') {
                     transactionTargetTreasuryGroup.style.display = 'block';
-                    transactionTargetTreasurySelect.setAttribute('required', 'required');
-                    transactionCategoryGroup.style.display = 'none'; // Hide category for transfers
-                    transactionCategorySelect.removeAttribute('required'); // Remove required
-                } else if (type === 'مصروف') {
+                    transactionAmountInput.parentElement.style.display = 'block';
+                    transactionDateInput.parentElement.style.display = 'block';
+                    transactionDescriptionInput.parentElement.style.display = 'block';
+                    transactionCategoryGroup.style.display = 'none';
+                } else if (type === 'إيداع') {
                     transactionTargetTreasuryGroup.style.display = 'none';
-                    transactionTargetTreasurySelect.removeAttribute('required');
-                    transactionCategoryGroup.style.display = 'block'; // Show category for expenses
-                    // transactionCategorySelect.setAttribute('required', 'required'); // Optional: make category required
-                } else { // 'إيداع'
+                    transactionAmountInput.parentElement.style.display = 'block';
+                    transactionDateInput.parentElement.style.display = 'block';
+                    transactionDescriptionInput.parentElement.style.display = 'block';
+                    transactionCategoryGroup.style.display = 'none';
+                } else {
                     transactionTargetTreasuryGroup.style.display = 'none';
-                    transactionTargetTreasurySelect.removeAttribute('required');
-                    transactionCategoryGroup.style.display = 'block'; // Show category for deposits
+                    transactionAmountInput.parentElement.style.display = 'none';
+                    transactionDateInput.parentElement.style.display = 'none';
+                    transactionDescriptionInput.parentElement.style.display = 'none';
+                    transactionCategoryGroup.style.display = 'none';
                 }
             }
             toggleTransactionFields(); // Initial call
+            transactionTypeSelect.addEventListener('change', toggleTransactionFields);
 
             transactionForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -1088,15 +1240,14 @@
                     // Sheet 2: Transactions Log
                     const transactions = treasuryDetails.transactions || [];
                     const transactionsData = [
-                        ['التاريخ', 'النوع', 'المبلغ', 'الوصف/السبب', 'التصنيف', 'خزينة الهدف', 'مسجل بواسطة'],
+                        ['التاريخ', 'النوع', 'المبلغ', 'الوصف/السبب', 'التصنيف', 'خزينة الهدف'],
                         ...transactions.map(t => [
                             new Date(t.date).toLocaleDateString('ar-EG'),
                             t.type,
                             t.amount.toFixed(2),
                             t.description || '',
-                            t.category || '',
-                            t.targetTreasury ? t.targetTreasury.name : '',
-                            t.recordedBy ? t.recordedBy.username : ''
+                            t.category && t.category.name ? t.category.name : 'لا يوجد',
+                            t.targetTreasury ? t.targetTreasury.name : ''
                         ])
                     ];
                     transactionsData.push([]); // Empty row
@@ -1105,6 +1256,30 @@
 
                     const ws_transactions = XLSX.utils.aoa_to_sheet(transactionsData);
                     XLSX.utils.book_append_sheet(wb, ws_transactions, "سجل المعاملات");
+
+                    // Sheet 3: General Expenses (only for managers and accountant managers)
+                    if (currentUserRole !== 'مهندس') {
+                        const generalExpensesResponse = await fetch(`${BASE_URL}/api/general-expenses/treasury/${currentTreasuryId}`, {
+                            headers: { 'x-auth-token': localStorage.getItem('token') }
+                        });
+                        const generalExpenses = await generalExpensesResponse.json();
+                        
+                        const generalExpensesData = [
+                            ['التاريخ', 'المبلغ', 'الوصف', 'تم الإضافة بواسطة'],
+                            ...generalExpenses.map(e => [
+                                new Date(e.date).toLocaleDateString('ar-EG'),
+                                e.amount.toFixed(2),
+                                e.reason || '',
+                                e.createdBy ? e.createdBy.username : 'غير محدد'
+                            ])
+                        ];
+                        generalExpensesData.push([]); // Empty row
+                        const totalGeneralExpenses = generalExpenses.reduce((sum, e) => sum + e.amount, 0);
+                        generalExpensesData.push(['إجمالي المصروفات العامة:', totalGeneralExpenses.toFixed(2)]);
+
+                        const ws_generalExpenses = XLSX.utils.aoa_to_sheet(generalExpensesData);
+                        XLSX.utils.book_append_sheet(wb, ws_generalExpenses, "المصروفات العامة");
+                    }
 
                     // Generate and download
                     XLSX.writeFile(wb, `${treasuryDetails.name}_سجل_الخزينة.xlsx`);
@@ -1117,6 +1292,62 @@
                     pageMessage.textContent = 'فشل في تصدير ملف Excel.';
                 } finally {
                     setTimeout(() => pageMessage.style.display = 'none', 3000);
+                }
+            });
+
+            // --- General Expense Modal Logic ---
+            const closeGeneralExpenseModal = () => {
+                generalExpenseModal.style.display = 'none';
+                generalExpenseModalMessage.style.display = 'none';
+                generalExpenseForm.reset();
+                generalExpenseDateInput.valueAsDate = new Date();
+            };
+
+            setupModalCloseListeners(generalExpenseModal, cancelGeneralExpenseButton, generalExpenseModalMessage);
+
+            addGeneralExpenseBtn.addEventListener('click', () => {
+                generalExpenseTreasuryIdInput.value = currentTreasuryId;
+                generalExpenseModal.style.display = 'flex';
+            });
+
+            generalExpenseForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const expenseData = {
+                    treasury: generalExpenseTreasuryIdInput.value,
+                    amount: parseFloat(generalExpenseAmountInput.value),
+                    date: generalExpenseDateInput.value,
+                    description: generalExpenseDescriptionInput.value
+                };
+
+                try {
+                    const response = await fetch(`${BASE_URL}/api/general-expenses`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-auth-token': localStorage.getItem('token')
+                        },
+                        body: JSON.stringify(expenseData)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        generalExpenseModalMessage.className = 'modal-message success';
+                        generalExpenseModalMessage.textContent = data.message || 'تم حفظ المصروف العام بنجاح.';
+                        generalExpenseModalMessage.style.display = 'block';
+                        fetchTreasuryDetails(); // Refresh details and general expenses table
+                        setTimeout(closeGeneralExpenseModal, 1500);
+                    } else {
+                        generalExpenseModalMessage.className = 'modal-message error';
+                        generalExpenseModalMessage.textContent = data.message || 'فشل في حفظ المصروف العام. الرجاء التحقق من البيانات.';
+                        generalExpenseModalMessage.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error saving general expense:', error);
+                    generalExpenseModalMessage.className = 'modal-message error';
+                    generalExpenseModalMessage.textContent = 'حدث خطأ أثناء الاتصال بالخادم. الرجاء المحاولة لاحقاً.';
+                    generalExpenseModalMessage.style.display = 'block';
                 }
             });
         });

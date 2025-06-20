@@ -83,13 +83,17 @@ router.get('/', auth, async (req, res) => {
         }
 
         // منطق تصفية المشاريع بناءً على دور المستخدم
+        // المدير ومدير الحسابات يرون جميع المشاريع
+        // المهندس يرى مشاريعه فقط
         if (req.user.role === 'مهندس') {
             filter.engineer = req.user.id; // فلترة المشاريع بناءً على ID المهندس المسجل دخوله
         }
+        // إذا كان المدير أو مدير الحسابات، لا نضيف فلتر للمهندس (يرون جميع المشاريع)
 
         const projects = await Project.find(filter)
             .populate('engineer', 'username') // جلب اسم المستخدم للمهندس
-            .populate('client', 'clientName'); // جلب اسم العميل للعميل
+            .populate('client', 'clientName') // جلب اسم العميل للعميل
+            .sort({ createdAt: -1 }); // ترتيب من الأحدث للأقدم
 
         res.json(projects);
     } catch (err) {
@@ -273,6 +277,30 @@ router.delete('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'),
             return res.status(400).json({ message: 'معرف المشروع غير صالح.' });
         }
         res.status(500).send('حدث خطأ في الخادم أثناء حذف المشروع.');
+    }
+});
+
+// @route   GET /api/projects/engineer/:engineerId
+// @desc    Get projects for a specific engineer
+// @access  Private (Engineer can only see their own projects)
+router.get('/engineer/:engineerId', auth, async (req, res) => {
+    try {
+        // Check if the requesting user is the engineer or has higher privileges
+        if (req.user.role === 'مهندس' && req.user.id !== req.params.engineerId) {
+            return res.status(403).json({ message: 'ليس لديك صلاحية لعرض مشاريع مهندس آخر.' });
+        }
+
+        const projects = await Project.find({ 
+            engineer: req.params.engineerId 
+        })
+        .populate('engineer', 'username')
+        .populate('client', 'clientName')
+        .sort({ createdAt: -1 });
+
+        res.json(projects);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ message: 'حدث خطأ في الخادم أثناء جلب مشاريع المهندس.' });
     }
 });
 
