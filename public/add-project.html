@@ -234,27 +234,6 @@
             background-color: #5a6268;
         }
 
-        .form-message {
-            margin-top: 25px;
-            padding: 15px;
-            border-radius: 8px;
-            display: none;
-            text-align: center;
-            font-size: 16px;
-        }
-
-        .form-message.error {
-            background-color: #ffe6e6;
-            color: #cc0000;
-            border: 1px solid #cc0000;
-        }
-
-        .form-message.success {
-            background-color: #e6ffe6;
-            color: #008000;
-            border: 1px solid #008000;
-        }
-
         /* Responsive Adjustments */
         @media (max-width: 768px) {
             .header .user-info span {
@@ -326,10 +305,51 @@
                 font-size: 16px;
             }
         }
+
+        #dashboardMessage {
+            position: fixed;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            min-width: 260px;
+            max-width: 90vw;
+            padding: 18px 36px 18px 18px;
+            border-radius: 12px;
+            font-size: 18px;
+            text-align: right;
+            font-weight: bold;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        #dashboardMessage.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #dashboardMessage.success {
+            background: #e6fff0;
+            color: #137a3a;
+            border: 1.5px solid #b2f2d7;
+        }
+        #dashboardMessage.error {
+            background: #fff0f0;
+            color: #b02a37;
+            border: 1.5px solid #f5b2b2;
+        }
+        #dashboardMessage .msg-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 
 <body>
+    <div id="dashboardMessage" style="display:none;"></div>
     <div class="header">
         <button class="menu-toggle" id="menuToggle">
             <i class="fas fa-bars"></i>
@@ -418,7 +438,6 @@
                             <option value="ملغى">ملغى</option>
                         </select>
                     </div>
-                    <div class="form-message" id="addProjectMessage"></div>
                     <div class="form-buttons">
                         <button type="submit" class="form-button">إضافة المشروع</button>
                         <button type="button" class="form-button cancel" id="cancelAddProject">إلغاء</button>
@@ -521,7 +540,6 @@
 
             /* --- Logic for Add Project Form --- */
             const addProjectForm = document.getElementById('addProjectForm');
-            const addProjectMessage = document.getElementById('addProjectMessage');
             const projectEngineerSelect = document.getElementById('projectEngineer');
             const projectClientSelect = document.getElementById('projectClient');
             const cancelAddProjectBtn = document.getElementById('cancelAddProject');
@@ -545,15 +563,11 @@
                         });
                     } else {
                         console.error('Failed to fetch engineers:', await engineersResponse.json());
-                        addProjectMessage.className = 'form-message error';
-                        addProjectMessage.textContent = 'فشل في جلب قائمة المهندسين.';
-                        addProjectMessage.style.display = 'block';
+                        showDashboardMessage('فشل في جلب قائمة المهندسين.', 'error', 2500);
                     }
                 } catch (error) {
                     console.error('Error fetching engineers:', error);
-                    addProjectMessage.className = 'form-message error';
-                    addProjectMessage.textContent = 'خطأ في الاتصال بالخادم لجلب المهندسين.';
-                    addProjectMessage.style.display = 'block';
+                    showDashboardMessage('خطأ في الاتصال بالخادم لجلب المهندسين.', 'error', 2500);
                 }
 
                 // Fetch clients for dropdown (now that /api/clients exists)
@@ -573,15 +587,11 @@
                         });
                     } else {
                         console.error('Failed to fetch clients:', await clientsResponse.json());
-                        addProjectMessage.className = 'form-message error';
-                        addProjectMessage.textContent = 'فشل في جلب قائمة العملاء.';
-                        addProjectMessage.style.display = 'block';
+                        showDashboardMessage('فشل في جلب قائمة العملاء.', 'error', 2500);
                     }
                 } catch (error) {
                     console.error('Error fetching clients:', error);
-                    addProjectMessage.className = 'form-message error';
-                    addProjectMessage.textContent = 'خطأ في الاتصال بالخادم لجلب العملاء.';
-                    addProjectMessage.style.display = 'block';
+                    showDashboardMessage('خطأ في الاتصال بالخادم لجلب العملاء.', 'error', 2500);
                 }
             };
 
@@ -663,15 +673,11 @@
                             projectClientSelect.value = '';
                         }
                     } else {
-                        addProjectMessage.className = 'form-message error';
-                        addProjectMessage.textContent = project.message || 'فشل في جلب بيانات المشروع للتعديل.';
-                        addProjectMessage.style.display = 'block';
+                        showDashboardMessage(project.message || 'فشل في جلب بيانات المشروع للتعديل.', 'error', 2500);
                     }
                 } catch (error) {
                     console.error('Error fetching project for edit:', error);
-                    addProjectMessage.className = 'form-message error';
-                    addProjectMessage.textContent = 'خطأ في الاتصال بالخادم لجلب بيانات المشروع.';
-                    addProjectMessage.style.display = 'block';
+                    showDashboardMessage('خطأ في الاتصال بالخادم لجلب بيانات المشروع.', 'error', 2500);
                 }
             }
 
@@ -709,38 +715,26 @@
                         },
                         body: JSON.stringify(projectData)
                     });
-
                     const data = await response.json();
-
                     if (response.ok) {
-                        addProjectMessage.className = 'form-message success';
-                        addProjectMessage.textContent = data.message || 'تم حفظ المشروع بنجاح.';
-                        addProjectMessage.style.display = 'block';
-
-                        // If it's an edit, reload project details page
+                        showDashboardMessage(data.message || 'تم حفظ المشروع بنجاح.', 'success', 2000);
                         if (projectId) {
                             setTimeout(() => {
                                 window.location.href = `/project-details.html?id=${projectId}`;
                             }, 1500);
                         } else {
-                            // If it's a new project, clear form and reload dropdowns
                             addProjectForm.reset();
-                            document.getElementById('projectStartDate').valueAsDate = new Date(); // Reset start date
+                            document.getElementById('projectStartDate').valueAsDate = new Date();
                             projectEngineerSelect.innerHTML = '<option value="">(اختياري) - اختر مهندس</option>';
                             projectClientSelect.innerHTML = '<option value="">(اختياري) - اختر عميل</option>';
                             loadFormDropdowns();
-                            setTimeout(() => { addProjectMessage.style.display = 'none'; }, 3000); // Hide message
                         }
                     } else {
-                        addProjectMessage.className = 'form-message error';
-                        addProjectMessage.textContent = data.message || 'فشل في حفظ المشروع. الرجاء التحقق من البيانات.';
-                        addProjectMessage.style.display = 'block';
+                        showDashboardMessage(data.message || 'فشل في حفظ المشروع. الرجاء التحقق من البيانات.', 'error', 2500);
                     }
                 } catch (error) {
                     console.error('Error saving project:', error);
-                    addProjectMessage.className = 'form-message error';
-                    addProjectMessage.textContent = 'حدث خطأ أثناء الاتصال بالخادم. الرجاء المحاولة لاحقاً.';
-                    addProjectMessage.style.display = 'block';
+                    showDashboardMessage('حدث خطأ أثناء الاتصال بالخادم. الرجاء المحاولة لاحقاً.', 'error', 2500);
                 }
             });
 
@@ -752,6 +746,20 @@
                 });
             }
         });
+
+        function showDashboardMessage(message, type = 'success', duration = 2000) {
+            const msgDiv = document.getElementById('dashboardMessage');
+            let icon = type === 'success'
+                ? '<span class="msg-icon">✅</span>'
+                : '<span class="msg-icon">❌</span>';
+            msgDiv.innerHTML = icon + '<span>' + message + '</span>';
+            msgDiv.className = type + ' active';
+            msgDiv.style.display = 'flex';
+            setTimeout(() => {
+                msgDiv.classList.remove('active');
+                setTimeout(() => { msgDiv.style.display = 'none'; }, 400);
+            }, duration);
+        }
     </script>
 </body>
 

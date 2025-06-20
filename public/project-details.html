@@ -497,10 +497,71 @@
                 font-size: 14px;
             }
         }
+
+        #dashboardMessage {
+            position: fixed;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3000 !important;
+            min-width: 260px;
+            max-width: 90vw;
+            padding: 18px 36px 18px 18px;
+            border-radius: 12px;
+            font-size: 18px;
+            text-align: right;
+            font-weight: bold;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        #dashboardMessage.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #dashboardMessage.success {
+            background: #e6fff0;
+            color: #137a3a;
+            border: 1.5px solid #b2f2d7;
+        }
+        #dashboardMessage.error {
+            background: #fff0f0;
+            color: #b02a37;
+            border: 1.5px solid #f5b2b2;
+        }
+        #dashboardMessage .msg-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 
 <body>
+    <div id="dashboardMessage" style="display:none;"></div>
+    <script>
+    function showDashboardMessage(message, type = 'success', duration = 2000) {
+        let msgDiv = document.getElementById('dashboardMessage');
+        if (!msgDiv) {
+            msgDiv = document.createElement('div');
+            msgDiv.id = 'dashboardMessage';
+            document.body.appendChild(msgDiv);
+        }
+        let icon = type === 'success'
+            ? '<span class="msg-icon">✅</span>'
+            : '<span class="msg-icon">❌</span>';
+        msgDiv.innerHTML = icon + '<span>' + message + '</span>';
+        msgDiv.className = type + ' active';
+        msgDiv.style.display = 'flex';
+        setTimeout(() => {
+            msgDiv.classList.remove('active');
+            setTimeout(() => { msgDiv.style.display = 'none'; }, 400);
+        }, duration);
+    }
+    </script>
     <div class="header">
         <button class="menu-toggle" id="menuToggle">
             <i class="fas fa-bars"></i>
@@ -817,6 +878,7 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
     // 🟦 7- حفظ الملف
     const fileName = `${document.getElementById('detailProjectName').textContent.trim().replace(/[:\\/?*[\]]/g, '-')}-تفاصيل.xlsx`;
     XLSX.writeFile(wb, fileName);
+    showDashboardMessage('تم تصدير تفاصيل المشروع بنجاح!', 'success', 2000);
 });
 </script>
 
@@ -1265,31 +1327,36 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                     tableContainer.innerHTML = html;
                     // كود التصدير
                     document.getElementById('exportContractorStatementExcelBtn').onclick = function() {
-                        const wb = XLSX.utils.book_new();
-                        contractorAgreements.forEach((ag, idx) => {
-                            const agPayments = contractorPayments.filter(pay => pay.contractAgreementId === ag._id);
-                            const sheetData = [];
-                            sheetData.push([`الاتفاقية: ${(ag.description || 'اتفاقية بدون وصف')} (${idx+1})`]);
-                            sheetData.push(['المبلغ المتفق عليه', ag.agreedAmount.toFixed(2) + ' ج.م']);
-                            sheetData.push(['المتبقي من الاتفاقية', (ag.agreedAmount - (ag.paidAmount || 0)).toFixed(2) + ' ج.م']);
-                            sheetData.push([]);
-                            sheetData.push(['التاريخ', 'المبلغ', 'الخزينة', 'الوصف']);
-                            if (agPayments.length > 0) {
-                                agPayments.forEach(pay => {
-                                    sheetData.push([
-                                        formatDate(pay.date),
-                                        pay.amount.toFixed(2) + ' ج.م',
-                                        pay.treasury || '-',
-                                        pay.description || '-'
-                                    ]);
-                                });
-                            } else {
-                                sheetData.push(['لا توجد دفعات لهذه الاتفاقية']);
-                            }
-                            const sheet = XLSX.utils.aoa_to_sheet(sheetData);
-                            XLSX.utils.book_append_sheet(wb, sheet, `اتفاقية${idx+1}`);
-                        });
-                        XLSX.writeFile(wb, 'كشف_حساب_مقاول.xlsx');
+                        try {
+                            const wb = XLSX.utils.book_new();
+                            contractorAgreements.forEach((ag, idx) => {
+                                const agPayments = contractorPayments.filter(pay => pay.contractAgreementId === ag._id);
+                                const sheetData = [];
+                                sheetData.push([`الاتفاقية: ${(ag.description || 'اتفاقية بدون وصف')} (${idx+1})`]);
+                                sheetData.push(['المبلغ المتفق عليه', ag.agreedAmount.toFixed(2) + ' ج.م']);
+                                sheetData.push(['المتبقي من الاتفاقية', (ag.agreedAmount - (ag.paidAmount || 0)).toFixed(2) + ' ج.م']);
+                                sheetData.push([]);
+                                sheetData.push(['التاريخ', 'المبلغ', 'الخزينة', 'الوصف']);
+                                if (agPayments.length > 0) {
+                                    agPayments.forEach(pay => {
+                                        sheetData.push([
+                                            formatDate(pay.date),
+                                            pay.amount.toFixed(2) + ' ج.م',
+                                            pay.treasury || '-',
+                                            pay.description || '-'
+                                        ]);
+                                    });
+                                } else {
+                                    sheetData.push(['لا توجد دفعات لهذه الاتفاقية']);
+                                }
+                                const sheet = XLSX.utils.aoa_to_sheet(sheetData);
+                                XLSX.utils.book_append_sheet(wb, sheet, `اتفاقية${idx+1}`);
+                            });
+                            XLSX.writeFile(wb, 'كشف_حساب_مقاول.xlsx');
+                            showDashboardMessage('تم تصدير كشف الحساب بنجاح!', 'success', 2000);
+                        } catch (err) {
+                            showDashboardMessage('فشل في تصدير كشف الحساب: ' + (err.message || ''), 'error', 2500);
+                        }
                     };
                 } catch (error) {
                     tableContainer.innerHTML = '<div style="text-align:center; color:red; margin:20px;">حدث خطأ أثناء جلب كشف الحساب.</div>';
@@ -1627,6 +1694,9 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                 expenseDateInput.valueAsDate = new Date(); // Set current date
                 await populateDropdown(expenseCategorySelect, '/api/categories', '_id', 'name', 'اختر تصنيف');
                 await populateDropdown(expenseTreasurySelect, '/api/treasuries', '_id', 'name', 'اختر خزينة');
+                // إخفاء رسالة المصروف القديمة
+                expenseModalMessage.style.display = 'none';
+                expenseModalMessage.textContent = '';
             });
 
             // Open Revenue Modal
@@ -1636,6 +1706,9 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                 revenueProjectIdInput.value = currentProjectId;
                 revenueDateInput.valueAsDate = new Date(); // Set current date
                 await populateDropdown(revenueTreasurySelect, '/api/treasuries', '_id', 'name', 'اختر خزينة'); // Populate treasury
+                // إخفاء رسالة الإيراد القديمة
+                revenueModalMessage.style.display = 'none';
+                revenueModalMessage.textContent = '';
             });
 
             // Open Contract Agreement Modal
@@ -1644,6 +1717,9 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                 contractAgreementForm.reset();
                 agreementProjectIdInput.value = currentProjectId;
                 await populateDropdown(agreementContractorSelect, '/api/contractors', '_id', 'contractorName', 'اختر المقاول');
+                // إخفاء رسالة الاتفاق القديمة
+                contractAgreementMessage.style.display = 'none';
+                contractAgreementMessage.textContent = '';
             });
 
             // Open Contract Payment Modal
@@ -1665,6 +1741,9 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                 );
 
                 await populateDropdown(paymentTreasurySelect, '/api/treasuries', '_id', 'name', 'اختر خزينة');
+                // إخفاء رسالة دفعة المقاول القديمة
+                contractPaymentMessage.style.display = 'none';
+                contractPaymentMessage.textContent = '';
             });
 
             // Handle Expense Form Submission
@@ -1967,27 +2046,32 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
             expensesExportBtn.innerHTML = '<i class="fas fa-file-excel"></i> تصدير المصروفات Excel';
             expensesTable.parentElement.parentElement.insertBefore(expensesExportBtn, expensesTable.parentElement.nextSibling);
             expensesExportBtn.addEventListener('click', function () {
-                const expensesData = [['المبلغ', 'الوصف', 'التصنيف', 'التاريخ', 'البائع', 'الخزينة']];
-                let total = 0;
-                for (let row of expensesTable.rows) {
-                    if (row.cells.length >= 6) {
-                        const amount = parseFloat(row.cells[0].textContent.trim()) || 0;
-                        total += amount;
-                        expensesData.push([
-                            row.cells[0].textContent.trim(),
-                            row.cells[1].textContent.trim(),
-                            row.cells[2].textContent.trim(),
-                            row.cells[3].textContent.trim(),
-                            row.cells[4].textContent.trim(),
-                            row.cells[5].textContent.trim()
-                        ]);
+                try {
+                    const expensesData = [['المبلغ', 'الوصف', 'التصنيف', 'التاريخ', 'البائع', 'الخزينة']];
+                    let total = 0;
+                    for (let row of expensesTable.rows) {
+                        if (row.cells.length >= 6) {
+                            const amount = parseFloat(row.cells[0].textContent.trim()) || 0;
+                            total += amount;
+                            expensesData.push([
+                                row.cells[0].textContent.trim(),
+                                row.cells[1].textContent.trim(),
+                                row.cells[2].textContent.trim(),
+                                row.cells[3].textContent.trim(),
+                                row.cells[4].textContent.trim(),
+                                row.cells[5].textContent.trim()
+                            ]);
+                        }
                     }
+                    expensesData.push(['', '', '', '', 'الإجمالي:', total.toFixed(2) + ' ج.م']);
+                    const wb = XLSX.utils.book_new();
+                    const sheet = XLSX.utils.aoa_to_sheet(expensesData);
+                    XLSX.utils.book_append_sheet(wb, sheet, 'Expenses');
+                    XLSX.writeFile(wb, 'مصروفات_المشروع.xlsx');
+                    showDashboardMessage('تم تصدير المصروفات بنجاح!', 'success', 2000);
+                } catch (err) {
+                    showDashboardMessage('فشل في تصدير المصروفات: ' + (err.message || ''), 'error', 2500);
                 }
-                expensesData.push(['', '', '', '', 'الإجمالي:', total.toFixed(2) + ' ج.م']);
-                const wb = XLSX.utils.book_new();
-                const sheet = XLSX.utils.aoa_to_sheet(expensesData);
-                XLSX.utils.book_append_sheet(wb, sheet, 'Expenses');
-                XLSX.writeFile(wb, 'مصروفات_المشروع.xlsx');
             });
             // زر تصدير الإيرادات Excel
             const revenueTable = document.getElementById('projectRevenuesTableBody');
@@ -1997,26 +2081,31 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
             revenuesExportBtn.innerHTML = '<i class="fas fa-file-excel"></i> تصدير الإيرادات Excel';
             revenueTable.parentElement.parentElement.insertBefore(revenuesExportBtn, revenueTable.parentElement.nextSibling);
             revenuesExportBtn.addEventListener('click', function () {
-                const revenueData = [['المبلغ', 'الوصف', 'التاريخ', 'طريقة التحويل', 'الخزينة']];
-                let total = 0;
-                for (let row of revenueTable.rows) {
-                    if (row.cells.length >= 5) {
-                        const amount = parseFloat(row.cells[0].textContent.trim()) || 0;
-                        total += amount;
-                        revenueData.push([
-                            row.cells[0].textContent.trim(),
-                            row.cells[1].textContent.trim(),
-                            row.cells[2].textContent.trim(),
-                            row.cells[3].textContent.trim(),
-                            row.cells[4].textContent.trim()
-                        ]);
+                try {
+                    const revenueData = [['المبلغ', 'الوصف', 'التاريخ', 'طريقة التحويل', 'الخزينة']];
+                    let total = 0;
+                    for (let row of revenueTable.rows) {
+                        if (row.cells.length >= 5) {
+                            const amount = parseFloat(row.cells[0].textContent.trim()) || 0;
+                            total += amount;
+                            revenueData.push([
+                                row.cells[0].textContent.trim(),
+                                row.cells[1].textContent.trim(),
+                                row.cells[2].textContent.trim(),
+                                row.cells[3].textContent.trim(),
+                                row.cells[4].textContent.trim()
+                            ]);
+                        }
                     }
+                    revenueData.push(['', '', '', 'الإجمالي:', total.toFixed(2) + ' ج.م']);
+                    const wb = XLSX.utils.book_new();
+                    const sheet = XLSX.utils.aoa_to_sheet(revenueData);
+                    XLSX.utils.book_append_sheet(wb, sheet, 'Revenues');
+                    XLSX.writeFile(wb, 'ايرادات_المشروع.xlsx');
+                    showDashboardMessage('تم تصدير الإيرادات بنجاح!', 'success', 2000);
+                } catch (err) {
+                    showDashboardMessage('فشل في تصدير الإيرادات: ' + (err.message || ''), 'error', 2500);
                 }
-                revenueData.push(['', '', '', 'الإجمالي:', total.toFixed(2) + ' ج.م']);
-                const wb = XLSX.utils.book_new();
-                const sheet = XLSX.utils.aoa_to_sheet(revenueData);
-                XLSX.utils.book_append_sheet(wb, sheet, 'Revenues');
-                XLSX.writeFile(wb, 'ايرادات_المشروع.xlsx');
             });
 
             // في جافاسكريبت بعد تحديد الدور
