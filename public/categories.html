@@ -452,10 +452,51 @@
                 font-size: 12px;
             }
         }
+
+        #dashboardMessage {
+            position: fixed;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            min-width: 260px;
+            max-width: 90vw;
+            padding: 18px 36px 18px 18px;
+            border-radius: 12px;
+            font-size: 18px;
+            text-align: right;
+            font-weight: bold;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        #dashboardMessage.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #dashboardMessage.success {
+            background: #e6fff0;
+            color: #137a3a;
+            border: 1.5px solid #b2f2d7;
+        }
+        #dashboardMessage.error {
+            background: #fff0f0;
+            color: #b02a37;
+            border: 1.5px solid #f5b2b2;
+        }
+        #dashboardMessage .msg-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 
 <body>
+    <div id="dashboardMessage" style="display:none;"></div>
     <div class="header">
         <button class="menu-toggle" id="menuToggle">
             <i class="fas fa-bars"></i>
@@ -779,23 +820,14 @@
                             const data = await response.json();
 
                             if (response.ok) {
-                                categoriesPageMessage.className = 'modal-message success';
-                                categoriesPageMessage.textContent = data.message;
-                                categoriesPageMessage.style.display = 'block';
+                                showDashboardMessage(data.message || 'تم حذف التصنيف بنجاح', 'success');
                                 fetchCategories(); // Refresh list after deletion
-                                setTimeout(() => categoriesPageMessage.style.display = 'none', 3000);
                             } else {
-                                categoriesPageMessage.className = 'modal-message error';
-                                categoriesPageMessage.textContent = data.message || 'فشل في حذف التصنيف.';
-                                categoriesPageMessage.style.display = 'block';
-                                setTimeout(() => categoriesPageMessage.style.display = 'none', 3000);
+                                showDashboardMessage(data.message || 'فشل في حذف التصنيف.', 'error');
                             }
                         } catch (error) {
                             console.error('Error deleting category:', error);
-                            categoriesPageMessage.className = 'modal-message error';
-                            categoriesPageMessage.textContent = 'خطأ في الاتصال بالخادم أثناء حذف التصنيف.';
-                            categoriesPageMessage.style.display = 'block';
-                            setTimeout(() => categoriesPageMessage.style.display = 'none', 3000);
+                            showDashboardMessage('خطأ في الاتصال بالخادم أثناء حذف التصنيف.', 'error');
                         }
                     }
                 }
@@ -851,6 +883,20 @@
                 }
             });
         });
+
+        function showDashboardMessage(message, type = 'success', duration = 2000) {
+            let msgDiv = document.getElementById('dashboardMessage');
+            let icon = type === 'success'
+                ? '<span class="msg-icon">✅</span>'
+                : '<span class="msg-icon">❌</span>';
+            msgDiv.innerHTML = icon + '<span>' + message + '</span>';
+            msgDiv.className = type + ' active';
+            msgDiv.style.display = 'flex';
+            setTimeout(() => {
+                msgDiv.classList.remove('active');
+                setTimeout(() => { msgDiv.style.display = 'none'; }, 400);
+            }, duration);
+        }
     </script>
 </body>
 
