@@ -930,23 +930,14 @@
                             const data = await response.json();
 
                             if (response.ok) {
-                                treasuriesPageMessage.className = 'modal-message success';
-                                treasuriesPageMessage.textContent = data.message;
-                                treasuriesPageMessage.style.display = 'block';
+                                showDashboardMessage(data.message || 'تم حذف الخزينة بنجاح.', 'success', 2000);
                                 fetchTreasuries(); // Refresh list after deletion
-                                setTimeout(() => treasuriesPageMessage.style.display = 'none', 3000);
                             } else {
-                                treasuriesPageMessage.className = 'modal-message error';
-                                treasuriesPageMessage.textContent = data.message || 'فشل في حذف الخزينة.';
-                                treasuriesPageMessage.style.display = 'block';
-                                setTimeout(() => treasuriesPageMessage.style.display = 'none', 3000);
+                                showDashboardMessage(data.message || 'فشل في حذف الخزينة.', 'error', 2500);
                             }
                         } catch (error) {
                             console.error('Error deleting treasury:', error);
-                            treasuriesPageMessage.className = 'modal-message error';
-                            treasuriesPageMessage.textContent = 'خطأ في الاتصال بالخادم أثناء حذف الخزينة.';
-                            treasuriesPageMessage.style.display = 'block';
-                            setTimeout(() => treasuriesPageMessage.style.display = 'none', 3000);
+                            showDashboardMessage('خطأ في الاتصال بالخادم أثناء حذف الخزينة.', 'error', 2500);
                         }
                     }
                 } else if (action === 'view') {
@@ -1020,7 +1011,10 @@
 
         function showDashboardMessage(message, type = 'success', duration = 2000) {
             const msgDiv = document.getElementById('dashboardMessage');
-            msgDiv.textContent = message;
+            let icon = type === 'success'
+                ? '<span class="msg-icon">✅</span>'
+                : '<span class="msg-icon">❌</span>';
+            msgDiv.innerHTML = icon + '<span>' + message + '</span>';
             msgDiv.className = type;
             msgDiv.style.display = 'block';
             msgDiv.style.opacity = '1';

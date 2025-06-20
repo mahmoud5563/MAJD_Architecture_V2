@@ -1631,7 +1631,7 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                             pageMessage.className = 'modal-message success';
                             pageMessage.textContent = data.message;
                             pageMessage.style.display = 'block';
-                            setTimeout(() => {
+        setTimeout(() => {
                                 window.location.href = '/projects.html'; // Redirect after successful deletion
                             }, 1500);
                         } else {

@@ -242,6 +242,7 @@
             color: #008000;
             border: 1px solid #008000;
         }
+        
 
         /* Responsive Adjustments */
         @media (max-width: 768px) {
@@ -607,6 +608,7 @@
                 if (response.ok) {
                     addTreasuryMessage.className = 'form-message success';
                     addTreasuryMessage.textContent = data.message || 'تم إضافة الخزينة بنجاح.';
+                    addTreasuryMessage.style.display = 'block';
                     addTreasuryForm.reset(); // Clear form after successful submission
                     treasuryDateInput.valueAsDate = new Date(); // Reset date to current
                     toggleConditionalFields(); // Reset conditional fields visibility
