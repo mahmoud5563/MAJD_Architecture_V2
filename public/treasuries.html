@@ -481,17 +481,22 @@
                 <h3>نظام إدارة المشاريع</h3>
             </div>
             <ul>
-                <li><a href="dashboard.html" data-page="dashboard"><i class="fas fa-tachometer-alt"></i> لوحة التحكم</a></li>
-                <li><a href="projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a></li>
-                <li><a href="add-project.html" data-page="add-project"><i class="fas fa-plus-circle"></i> إضافة مشروع</a></li>
-                <li><a href="treasuries.html" data-page="treasuries"><i class="fas fa-vault"></i> الخزائن</a></li>
-                <li><a href="add-treasury.html" data-page="add-treasury"><i class="fas fa-plus-circle"></i> إضافة خزينة</a></li>
-                <li><a href="general-expenses.html" data-page="general-expenses"><i class="fas fa-money-bill-wave"></i> المصروفات العامة</a></li>
-                <li><a href="users.html" data-page="users"><i class="fas fa-users"></i> المستخدمين</a></li>
-                <li><a href="categories.html" data-page="categories"><i class="fas fa-tags"></i> التصنيفات</a></li>
-                <li><a href="contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولين</a></li>
-                <li><a href="clients.html" data-page="clients"><i class="fas fa-user-tie"></i> العملاء</a></li>
-                <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
+                <li class="active"><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>
+                        الرئيسية</a></li>
+                <li><a href="/add-project.html" data-page="add-project"><i class="fas fa-plus-circle"></i> إضافة
+                        مشروع</a></li>
+                <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a>
+                </li>
+                <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
+                <li><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a></li>
+                <li><a href="/add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i> إضافة
+                        خزينة</a></li>
+                <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
+                <li><a href="/general-expenses.html" data-page="general-expenses"><i class="fas fa-money-bill-wave"></i> المصروفات العامة</a></li>
+                <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
+                <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a>
+                </li>
+                <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
             </ul>
         </div>
 
@@ -651,8 +656,10 @@
                 localStorage.removeItem('token');
                 window.location.href = '/';
             };
-            document.getElementById('logoutButton').addEventListener('click', logout);
-            document.getElementById('logoutBtn').addEventListener('click', logout);
+            const logoutButton = document.getElementById('logoutButton');
+            if (logoutButton) logoutButton.addEventListener('click', logout);
+            const sidebarLogoutButton = document.getElementById('sidebarLogoutButton');
+            if (sidebarLogoutButton) sidebarLogoutButton.addEventListener('click', logout);
 
             // Responsive Sidebar Toggle
             const sidebar = document.getElementById('sidebar');
