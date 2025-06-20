@@ -579,9 +579,8 @@
 
                 <div class="details-section">
                     <h4>دفعات المقاولين</h4>
-                    <div class="details-grid">
-                        <p><strong>المبلغ المتفق عليه الكلي:</strong> <span id="contractorAgreedAmount">0.00</span> ج.م
-                        </p>
+                    <div class="details-grid" style="margin-bottom: 15px;">
+                        <p><strong>المبلغ المتفق عليه الكلي:</strong> <span id="contractorAgreedAmount">0.00</span> ج.م</p>
                         <p><strong>المدفوع الكلي:</strong> <span id="contractorPaidAmount">0.00</span> ج.م</p>
                         <p><strong>المتبقي الكلي:</strong> <span id="contractorRemainingAmount">0.00</span> ج.م</p>
                     </div>
@@ -662,6 +661,16 @@
 
                 <div class="details-section">
                     <h4>الإيرادات</h4>
+                    <div class="revenue-filters-bar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 15px; background: #f8f8f8; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee;">
+                        <input type="text" id="revenueSearchInput" placeholder="ابحث في الإيرادات..." style="padding:7px 12px; border:1px solid #ccc; border-radius:5px; width: 200px; font-size:15px;">
+                        <select id="revenueTreasuryFilter" style="padding:7px 12px; border:1px solid #ccc; border-radius:5px; font-size:15px; min-width:120px;">
+                            <option value="">كل الخزائن</option>
+                        </select>
+                        <input type="date" id="revenueDateFrom" style="padding:7px 12px; border:1px solid #ccc; border-radius:5px; font-size:15px;" title="من تاريخ">
+                        <span style="font-size:18px; color:#888;">-</span>
+                        <input type="date" id="revenueDateTo" style="padding:7px 12px; border:1px solid #ccc; border-radius:5px; font-size:15px;" title="إلى تاريخ">
+                        <button id="clearRevenueFilters" style="padding:7px 15px; background:#eee; color:#333; border:none; border-radius:5px; font-size:15px; cursor:pointer; transition:background 0.2s;">مسح الفلاتر</button>
+                    </div>
                     <button class="action-button" id="addRevenueBtn"><i class="fas fa-plus"></i> إضافة إيراد</button>
                     <table class="details-table">
                         <thead>
@@ -1129,6 +1138,12 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
 
 
 
+
+               
+
+
+
+            
             const summaryTotalRevenueSpan = document.getElementById('summaryTotalRevenue');
             const summaryTotalExpensesSpan = document.getElementById('summaryTotalExpenses');
             const summaryNetProfitLossSpan = document.getElementById('summaryNetProfitLoss');
@@ -1305,6 +1320,14 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                 return new Date(dateString).toLocaleDateString('ar-EG');
             };
 
+
+
+
+
+
+
+
+
             // Helper function to populate dropdowns
             async function populateDropdown(selectElement, apiUrl, valueKey, textKey, defaultOptionText = 'اختر', customFilter = null, customTextFormatter = null) {
                 selectElement.innerHTML = `<option value="">${defaultOptionText}</option>`;
@@ -1348,6 +1371,23 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
 
 
                     if (projectResponse.ok) {
+                        if (projectTitleSpan) projectTitleSpan.textContent = projectData.projectName;
+                        if (detailProjectNameSpan) detailProjectNameSpan.textContent = projectData.projectName;
+                        if (detailProjectAddressSpan) detailProjectAddressSpan.textContent = projectData.address;
+                        if (detailProjectDescriptionSpan) detailProjectDescriptionSpan.textContent = projectData.description || 'لا يوجد وصف.';
+                        if (detailProjectEngineerSpan) detailProjectEngineerSpan.textContent = projectData.engineer ? projectData.engineer.username : 'غير محدد';
+                        if (detailProjectClientSpan) detailProjectClientSpan.textContent = projectData.client ? projectData.client.clientName : 'غير محدد';
+                        if (detailProjectStartDateSpan) detailProjectStartDateSpan.textContent = formatDate(projectData.startDate);
+                        if (detailProjectEndDateSpan) detailProjectEndDateSpan.textContent = formatDate(projectData.endDate);
+                        if (detailProjectStatusSpan) detailProjectStatusSpan.textContent = projectData.status;
+                        if (detailProjectNotesSpan) detailProjectNotesSpan.textContent = projectData.notes || 'لا توجد ملاحظات.';
+
+                        if (summaryTotalRevenueSpan) summaryTotalRevenueSpan.textContent = (projectData.totalRevenue || 0).toFixed(2) + ' ج.م';
+                        if (summaryTotalExpensesSpan) summaryTotalExpensesSpan.textContent = (projectData.totalExpenses || 0).toFixed(2) + ' ج.م';
+                        if (summaryNetProfitLossSpan) summaryNetProfitLossSpan.textContent = (projectData.netProfitLoss || 0).toFixed(2) + ' ج.م';
+
+                        if (contractorAgreedAmountSpan) contractorAgreedAmountSpan.textContent = (projectData.totalAgreedContractorAmount || 0).toFixed(2) + ' ج.م';
+                        if (contractorPaidAmountSpan) contractorPaidAmountSpan.textContent = (projectData.totalPaidContractorAmount || 0).toFixed(2) + ' ج.م';
                         projectTitleSpan.textContent = projectData.projectName;
                         detailProjectNameSpan.textContent = projectData.projectName;
                         detailProjectAddressSpan.textContent = projectData.address;
@@ -1416,6 +1456,7 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                         projectExpensesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">لا توجد مصروفات حالياً لهذا المشروع.</td></tr>';
                         document.getElementById('expensesTotal').textContent = '0.00 ج.م';
                     }
+                    if (typeof filterExpensesTable === 'function') filterExpensesTable();
                 } catch (error) {
                     console.error('Error fetching project expenses:', error);
                     projectExpensesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">فشل في تحميل المصروفات.</td></tr>';
@@ -1454,6 +1495,7 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                         projectRevenuesTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">لا توجد إيرادات حالياً لهذا المشروع.</td></tr>';
                         document.getElementById('revenuesTotal').textContent = '0.00 ج.م';
                     }
+                    if (typeof filterRevenuesTable === 'function') filterRevenuesTable();
                 } catch (error) {
                     console.error('Error fetching project revenues:', error);
                     projectRevenuesTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">فشل في تحميل الإيرادات.</td></tr>';
@@ -1495,6 +1537,7 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                         contractorPaymentsTableBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">لا توجد دفعات مقاولين حالياً لهذا المشروع.</td></tr>';
                         document.getElementById('contractorPaymentsTotal').textContent = '0.00 ج.م';
                     }
+                    if (typeof filterContractorPaymentsTable === 'function') filterContractorPaymentsTable();
                 } catch (error) {
                     console.error('Error fetching contractor payments:', error);
                     contractorPaymentsTableBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">فشل في تحميل دفعات المقاولين.</td></tr>';
@@ -1986,8 +2029,9 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
             });
 
             // في جافاسكريبت بعد تحديد الدور
-            const pettyExpensesLink = document.getElementById('sidebarPettyExpensesLink');
-            pettyExpensesLink.style.display = 'block';
+            // احذف أو علق السطرين التاليين:
+            // const pettyExpensesLink = document.getElementById('sidebarPettyExpensesLink');
+            // pettyExpensesLink.style.display = 'block';
 
             // --- Live Search for Expenses Table ---
             const expenseSearchInput = document.getElementById('expenseSearchInput');
@@ -2010,6 +2054,10 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                     }
                 });
             }
+
+            
+            
+          
         }) 
     </script>
 
