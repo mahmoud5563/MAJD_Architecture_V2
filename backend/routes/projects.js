@@ -7,6 +7,7 @@ const Client = require('./../models/Client'); // لاستيراد موديل ا�
 const Transaction = require('./../models/Transaction'); // افتراض وجود هذا الموديل للمصروفات والإيرادات
 const ContractAgreement = require('./../models/ContractAgreement'); // افتراض وجود هذا الموديل لاتفاقيات المقاولين
 const ContractPayment = require('./../models/ContractPayment'); // افتراض وجود هذا الموديل لدفعات المقاولين
+const Treasury = require('./../models/Treasury'); // إضافة موديل الخزينة/العهدة
 
 const { auth, authorizeRoles } = require('../middleware/authMiddleware'); // استيراد الـ middleware للتحقق من الصلاحيات
 
@@ -83,18 +84,46 @@ router.get('/', auth, async (req, res) => {
         }
 
         // منطق تصفية المشاريع بناءً على دور المستخدم
-        // المدير ومدير الحسابات يرون جميع المشاريع
-        // المهندس يرى مشاريعه فقط
         if (req.user.role === 'مهندس') {
-            filter.engineer = req.user.id; // فلترة المشاريع بناءً على ID المهندس المسجل دخوله
+            console.log('User ID:', req.user.id);
+            console.log('User Role:', req.user.role);
+            
+            // جلب المشاريع التي هو مهندسها
+            const assignedProjects = await Project.find({ engineer: req.user.id }).select('_id');
+            const assignedProjectIds = assignedProjects.map(p => p._id);
+            console.log('Assigned Projects:', assignedProjectIds);
+
+            // جلب المشاريع التي فيها عهدات مخصصة له
+            const treasuriesWithProjects = await Treasury.find({ 
+                responsibleUser: req.user.id,
+                type: 'عهدة',
+                project: { $exists: true, $ne: null }
+            }).select('project');
+            const treasuryProjectIds = treasuriesWithProjects.map(t => t.project);
+            console.log('Treasury Projects:', treasuryProjectIds);
+
+            // دمج معرفات المشاريع (إزالة التكرار)
+            const allProjectIds = [...new Set([...assignedProjectIds, ...treasuryProjectIds])];
+            console.log('All Project IDs:', allProjectIds);
+
+            // إذا كان هناك مشاريع، أضف فلتر للمشاريع
+            if (allProjectIds.length > 0) {
+                filter._id = { $in: allProjectIds };
+            } else {
+                // إذا لم يكن له أي مشاريع، أعد مصفوفة فارغة
+                console.log('No projects found, returning empty array');
+                return res.json([]);
+            }
         }
         // إذا كان المدير أو مدير الحسابات، لا نضيف فلتر للمهندس (يرون جميع المشاريع)
 
+        console.log('Final Filter:', filter);
         const projects = await Project.find(filter)
             .populate('engineer', 'username') // جلب اسم المستخدم للمهندس
             .populate('client', 'clientName') // جلب اسم العميل للعميل
             .sort({ createdAt: -1 }); // ترتيب من الأحدث للأقدم
 
+        console.log('Found Projects:', projects.length);
         res.json(projects);
     } catch (err) {
         console.error(err.message);
@@ -128,9 +157,20 @@ router.get('/:id', auth, async (req, res) => {
             return res.status(404).json({ message: 'المشروع غير موجود.' });
         }
 
-        // إذا كان المستخدم مهندسًا، تأكد من أنه المهندس المسؤول عن المشروع
-        if (req.user.role === 'مهندس' && project.engineer && project.engineer._id.toString() !== req.user.id) {
-            return res.status(403).json({ message: 'ليس لديك صلاحية لعرض تفاصيل هذا المشروع.' });
+        // إذا كان المستخدم مهندسًا، تأكد من أنه المهندس المسؤول عن المشروع أو له عهدة في المشروع
+        if (req.user.role === 'مهندس') {
+            const isAssignedEngineer = project.engineer && project.engineer._id.toString() === req.user.id;
+            
+            // التحقق من وجود عهدة للمهندس في هذا المشروع
+            const hasTreasury = await Treasury.findOne({
+                responsibleUser: req.user.id,
+                type: 'عهدة',
+                project: req.params.id
+            });
+
+            if (!isAssignedEngineer && !hasTreasury) {
+                return res.status(403).json({ message: 'ليس لديك صلاحية لعرض تفاصيل هذا المشروع.' });
+            }
         }
 
         res.json(project);
@@ -157,9 +197,20 @@ router.get('/:id/details', auth, async (req, res) => {
             return res.status(404).json({ message: 'المشروع غير موجود.' });
         }
 
-        // إذا كان المستخدم مهندسًا، تأكد من أنه المهندس المسؤول عن المشروع
-        if (req.user.role === 'مهندس' && project.engineer && project.engineer._id.toString() !== req.user.id) {
-            return res.status(403).json({ message: 'ليس لديك صلاحية لعرض تفاصيل هذا المشروع.' });
+        // إذا كان المستخدم مهندسًا، تأكد من أنه المهندس المسؤول عن المشروع أو له عهدة في المشروع
+        if (req.user.role === 'مهندس') {
+            const isAssignedEngineer = project.engineer && project.engineer._id.toString() === req.user.id;
+            
+            // التحقق من وجود عهدة للمهندس في هذا المشروع
+            const hasTreasury = await Treasury.findOne({
+                responsibleUser: req.user.id,
+                type: 'عهدة',
+                project: projectId
+            });
+
+            if (!isAssignedEngineer && !hasTreasury) {
+                return res.status(403).json({ message: 'ليس لديك صلاحية لعرض تفاصيل هذا المشروع.' });
+            }
         }
 
         // جلب المصروفات والإيرادات المرتبطة بالمشروع
@@ -203,7 +254,7 @@ router.get('/:id/details', auth, async (req, res) => {
         if (err.kind === 'ObjectId') {
             return res.status(400).json({ message: 'معرف المشروع غير صالح.' });
         }
-        res.status(500).send('حدث خطأ في الخادم أثناء جلب تفاصيل المشروع الكاملة.');
+        res.status(500).send('حدث خطأ في الخادم أثناء جلب تفاصيل المشروع.');
     }
 });
 

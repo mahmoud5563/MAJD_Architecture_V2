@@ -806,12 +806,8 @@
                 }
 
                 try {
-                    // Use different API endpoint based on user role
-                    let apiUrl = `${BASE_URL}/api/projects`;
-                    if (currentUserRole === 'مهندس') {
-                        // Engineer can only see their own projects
-                        apiUrl = `${BASE_URL}/api/projects/engineer/${currentUserPayload.user.id}`;
-                    }
+                    // Use the same API endpoint for all users
+                    const apiUrl = `${BASE_URL}/api/projects`;
                     
                     const response = await fetch(`${apiUrl}${query ? '?' + query : ''}`, {
                         headers: {
