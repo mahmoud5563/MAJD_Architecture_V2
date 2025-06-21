@@ -26,7 +26,33 @@ const contractPaymentSchema = new mongoose.Schema({
         type: String,
         required: false,
         trim: true
-    }
+    },
+    attachments: [{
+        filename: {
+            type: String,
+            required: true
+        },
+        originalName: {
+            type: String,
+            required: true
+        },
+        mimeType: {
+            type: String,
+            required: true
+        },
+        size: {
+            type: Number,
+            required: true
+        },
+        path: {
+            type: String,
+            required: true
+        },
+        uploadedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }]
 }, { timestamps: true });
 
 const ContractPayment = mongoose.model('ContractPayment', contractPaymentSchema);

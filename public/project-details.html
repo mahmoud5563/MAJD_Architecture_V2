@@ -364,6 +364,28 @@
             background-color: #f9f9f9;
         }
 
+        .modal-form-group input[type="file"] {
+            width: calc(100% - 20px);
+            padding: 8px;
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        .modal-form-group input[type="file"]:hover {
+            border-color: var(--primary-color);
+        }
+
+        .modal-form-group input[type="file"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(1, 76, 71, 0.2);
+        }
+
         .modal-form-group textarea {
             resize: vertical;
             min-height: 80px;
@@ -710,18 +732,19 @@
                                 <th>مبلغ الدفعة</th>
                                 <th>الخزينة</th>
                                 <th>الوصف</th>
+                                <th>المرفقات</th>
                                 <th>إجراءات</th>
                             </tr>
                         </thead>
                         <tbody id="contractorPaymentsTableBody">
                             <tr>
-                                <td colspan="9" style="text-align: center;">لا توجد دفعات مقاولين حالياً.</td>
+                                <td colspan="10" style="text-align: center;">لا توجد دفعات مقاولين حالياً.</td>
                             </tr>
                         </tbody>
                          <tfoot>
     <tr>
       <td><strong>اجمالي المدفوع</strong></td>
-      <td id="contractorPaymentsTotal" colspan="3">0.00</td>
+      <td id="contractorPaymentsTotal" colspan="4">0.00</td>
     </tr>
   </tfoot>
                     </table>
@@ -732,7 +755,7 @@
                   <div class="accordion-header" onclick="toggleAccordion(this)">
                     <span>المصروفات</span>
                     <span class="accordion-icon">+</span>
-                  </div>
+                    </div>
                   <div class="accordion-content">
                     <!-- المصروفات الأصلية هنا -->
                     <button class="action-button" id="addExpenseBtn"><i class="fas fa-plus"></i> إضافة مصروف</button>
@@ -767,7 +790,7 @@
                   <div class="accordion-header" onclick="toggleAccordion(this)">
                     <span>الإيرادات</span>
                     <span class="accordion-icon">+</span>
-                  </div>
+                    </div>
                   <div class="accordion-content">
                     <!-- الإيرادات الأصلية هنا -->
                     <button class="action-button" id="addRevenueBtn"><i class="fas fa-plus"></i> إضافة إيراد</button>
@@ -794,7 +817,7 @@
     </tr>
   </tfoot>
                     </table>
-                  </div>
+                </div>
                 </div>
 
                 <div class="accordion-section">
@@ -1128,6 +1151,13 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                         <!-- Treasuries/Accounts will be loaded here -->
                     </select>
                 </div>
+                <div class="modal-form-group">
+                    <label for="paymentAttachment">المرفقات (اختياري):</label>
+                    <input type="file" id="paymentAttachment" name="attachment" accept="image/*,.pdf" multiple>
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        يمكنك رفع صور أو ملفات PDF. الحد الأقصى: 5 ميجابايت لكل ملف.
+                    </small>
+                </div>
                 <div class="modal-message" id="contractPaymentMessage"></div>
                 <div class="modal-buttons">
                     <button type="submit" class="modal-button">إضافة الدفعة</button>
@@ -1154,6 +1184,23 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
             </div>
             <div class="modal-buttons">
                 <button type="button" class="modal-button cancel" id="closeContractorStatementBtn">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attachment Viewer Modal -->
+    <div id="attachmentViewerModal" class="modal">
+        <div class="modal-content" style="max-width: 90%; max-height: 90%; overflow: auto;">
+            <span class="close-button">&times;</span>
+            <h3 id="attachmentViewerTitle">عرض المرفق</h3>
+            <div id="attachmentViewerContent">
+                <!-- سيتم عرض المرفق هنا -->
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-button" id="downloadAttachmentBtn">
+                    <i class="fas fa-download"></i> تحميل
+                </button>
+                <button type="button" class="modal-button cancel" id="closeAttachmentViewerBtn">إغلاق</button>
             </div>
         </div>
     </div>
@@ -1354,6 +1401,91 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
             const contractorStatementModal = document.getElementById('contractorStatementModal');
             const closeContractorStatementBtn = document.getElementById('closeContractorStatementBtn');
             const statementContractorSelect = document.getElementById('statementContractorSelect');
+
+            // مودال عرض المرفقات
+            const attachmentViewerModal = document.getElementById('attachmentViewerModal');
+            const attachmentViewerTitle = document.getElementById('attachmentViewerTitle');
+            const attachmentViewerContent = document.getElementById('attachmentViewerContent');
+            const downloadAttachmentBtn = document.getElementById('downloadAttachmentBtn');
+            const closeAttachmentViewerBtn = document.getElementById('closeAttachmentViewerBtn');
+            let currentAttachmentUrl = '';
+
+            // دالة عرض المرفق
+            function showAttachment(filename, mimetype, originalName) {
+                const token = localStorage.getItem('token');
+                currentAttachmentUrl = `${BASE_URL}/api/files/${filename}`;
+                console.log('Opening attachment:', currentAttachmentUrl);
+                attachmentViewerTitle.textContent = `عرض المرفق: ${originalName || filename}`;
+                
+                const isImage = mimetype && mimetype.startsWith('image/');
+                const isPdf = mimetype && mimetype === 'application/pdf';
+                
+                if (isImage) {
+                    attachmentViewerContent.innerHTML = `
+                        <div style="text-align: center;">
+                            <img src="${currentAttachmentUrl}" style="max-width: 100%; max-height: 70vh; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" alt="صورة المرفق" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <div style="display: none; padding: 20px; color: #666;">
+                                <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ffc107; margin-bottom: 10px;"></i>
+                                <p>لا يمكن تحميل الصورة</p>
+                                <p>يمكنك استخدام زر التحميل أدناه</p>
+                            </div>
+                        </div>
+                    `;
+                } else if (isPdf) {
+                    attachmentViewerContent.innerHTML = `
+                        <div style="text-align: center;">
+                            <iframe src="${currentAttachmentUrl}" style="width: 100%; height: 70vh; border: none; border-radius: 8px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"></iframe>
+                            <div style="display: none; padding: 20px; color: #666;">
+                                <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ffc107; margin-bottom: 10px;"></i>
+                                <p>لا يمكن عرض PDF</p>
+                                <p>يمكنك استخدام زر التحميل أدناه</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    attachmentViewerContent.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <i class="fas fa-file" style="font-size: 64px; color: #6c757d; margin-bottom: 20px;"></i>
+                            <p style="font-size: 18px; color: #666;">لا يمكن عرض هذا النوع من الملفات</p>
+                            <p style="font-size: 14px; color: #999;">يمكنك تحميل الملف لعرضه</p>
+                        </div>
+                    `;
+                }
+                
+                attachmentViewerModal.style.display = 'flex';
+            }
+
+            // زر تحميل المرفق
+            downloadAttachmentBtn.addEventListener('click', () => {
+                if (currentAttachmentUrl) {
+                    const token = localStorage.getItem('token');
+                    const link = document.createElement('a');
+                    link.href = currentAttachmentUrl;
+                    link.download = '';
+                    
+                    // إضافة token للرابط إذا كان مطلوباً
+                    if (token) {
+                        link.href += `?token=${token}`;
+                    }
+                    
+                    link.click();
+                }
+            });
+
+            // إغلاق مودال المرفقات
+            closeAttachmentViewerBtn.addEventListener('click', () => {
+                attachmentViewerModal.style.display = 'none';
+            });
+
+            attachmentViewerModal.querySelector('.close-button').addEventListener('click', () => {
+                attachmentViewerModal.style.display = 'none';
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target === attachmentViewerModal) {
+                    attachmentViewerModal.style.display = 'none';
+                }
+            });
 
             // عند اختيار مقاول من القائمة، جلب وعرض كشف الحساب
             statementContractorSelect.addEventListener('change', async function() {
@@ -1600,7 +1732,7 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                 } catch (error) {
                     console.error('Error fetching project expenses:', error);
                     projectExpensesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">فشل في تحميل المصروفات.</td></tr>';
-                } 
+                }
 
                 // Fetch Revenues for this project
                 try {
@@ -1654,6 +1786,36 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                         let totalContractorPayments = 0;
                         payments.forEach(pay => {
                             const row = contractorPaymentsTableBody.insertRow();
+                            
+                            // Create attachments display
+                            let attachmentsHtml = '';
+                            console.log('Payment data:', pay);
+                            console.log('Attachments:', pay.attachments);
+                            
+                            if (pay.attachments && pay.attachments.length > 0) {
+                                pay.attachments.forEach(attachment => {
+                                    console.log('Processing attachment:', attachment);
+                                    const isImage = attachment.mimeType && attachment.mimeType.startsWith('image/');
+                                    const isPdf = attachment.mimeType && attachment.mimeType === 'application/pdf';
+                                    
+                                    if (isImage) {
+                                        attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                            <i class="fas fa-image" style="color: #007bff; font-size: 16px;" title="صورة"></i>
+                                        </button>`;
+                                    } else if (isPdf) {
+                                        attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                            <i class="fas fa-file-pdf" style="color: #dc3545; font-size: 16px;" title="PDF"></i>
+                                        </button>`;
+                                    } else {
+                                        attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                            <i class="fas fa-file" style="color: #6c757d; font-size: 16px;" title="ملف"></i>
+                                        </button>`;
+                                    }
+                                });
+                            } else {
+                                attachmentsHtml = '<span style="color: #999;">لا توجد مرفقات</span>';
+                            }
+                            
                             row.innerHTML = `
                                 <td>${pay.contractorName || '-'}</td>
                                 <td>${pay.agreedAmount.toFixed(2)}</td>
@@ -1663,6 +1825,7 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                                 <td>${pay.amount.toFixed(2)}</td>
                                 <td>${pay.treasury || '-'}</td>
                                 <td>${pay.description || '-'}</td>
+                                <td>${attachmentsHtml}</td>
                                 <td class="action-buttons">
                                     <button class="delete-contract-payment" data-id="${pay._id}"><i class="fas fa-trash-alt"></i> حذف</button>
                                 </td>
@@ -1674,13 +1837,13 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                         });
                         document.getElementById('contractorPaymentsTotal').textContent = totalContractorPayments.toFixed(2) + ' ج.م';
                     } else {
-                        contractorPaymentsTableBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">لا توجد دفعات مقاولين حالياً لهذا المشروع.</td></tr>';
+                        contractorPaymentsTableBody.innerHTML = '<tr><td colspan="10" style="text-align: center;">لا توجد دفعات مقاولين حالياً لهذا المشروع.</td></tr>';
                         document.getElementById('contractorPaymentsTotal').textContent = '0.00 ج.م';
                     }
                     if (typeof filterContractorPaymentsTable === 'function') filterContractorPaymentsTable();
                 } catch (error) {
                     console.error('Error fetching contractor payments:', error);
-                    contractorPaymentsTableBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">فشل في تحميل دفعات المقاولين.</td></tr>';
+                    contractorPaymentsTableBody.innerHTML = '<tr><td colspan="10" style="text-align: center;">فشل في تحميل دفعات المقاولين.</td></tr>';
                 }
 
                 // Fetch Financial Movement for this project
@@ -2091,32 +2254,57 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
             // Handle Contract Payment Form Submission
             contractPaymentForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const paymentData = {
-                    contractAgreementId: paymentContractAgreementSelect.value,
-                    amount: parseFloat(paymentAmountInput.value),
-                    date: paymentDateInput.value,
-                    treasuryId: paymentTreasurySelect.value,
-                    description: paymentDescriptionInput.value || undefined // Include description
-                };
+                
+                // Create FormData for file upload
+                const formData = new FormData();
+                formData.append('contractAgreementId', paymentContractAgreementSelect.value);
+                formData.append('amount', paymentAmountInput.value);
+                formData.append('date', paymentDateInput.value);
+                formData.append('treasuryId', paymentTreasurySelect.value);
+                if (paymentDescriptionInput.value) {
+                    formData.append('description', paymentDescriptionInput.value);
+                }
 
-                Object.keys(paymentData).forEach(key => {
-                    if (paymentData[key] === undefined) {
-                        delete paymentData[key];
-                    }
-                });
+                // Add attachments if any
+                const attachmentFiles = document.getElementById('paymentAttachment').files;
+                console.log('=== Frontend File Upload ===');
+                console.log('Attachment files:', attachmentFiles);
+                console.log('File count:', attachmentFiles.length);
+                
+                for (let i = 0; i < attachmentFiles.length; i++) {
+                    console.log(`File ${i}:`, attachmentFiles[i]);
+                    formData.append('attachments', attachmentFiles[i]);
+                }
+
+                // Log FormData contents
+                for (let [key, value] of formData.entries()) {
+                    console.log(`${key}:`, value);
+                }
 
                 try {
+                    console.log('=== Sending Request ===');
+                    console.log('URL:', `${BASE_URL}/api/contract-payments`);
+                    console.log('Token:', localStorage.getItem('token') ? 'Token exists' : 'No token');
+                    console.log('FormData entries:');
+                    for (let [key, value] of formData.entries()) {
+                        console.log(`${key}:`, value);
+                    }
+                    
                     const response = await fetch(`${BASE_URL}/api/contract-payments`, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
                             'x-auth-token': localStorage.getItem('token')
                         },
-                        body: JSON.stringify(paymentData)
+                        body: formData // Use FormData instead of JSON
                     });
+                    
+                    console.log('=== Response Received ===');
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+                    
                     const data = await response.json();
+                    console.log('Response data:', data);
                     document.getElementById('exportProjectExcelBtn').style.display = 'inline-block';
-
 
                     if (response.ok) {
                         contractPaymentMessage.className = 'modal-message success';
@@ -2381,6 +2569,128 @@ window.toggleAccordion = function(header) {
   const icon = header.querySelector('.accordion-icon');
   icon.textContent = section.classList.contains('open') ? '-' : '+';
 }
+
+// دالة عرض المرفقات - متاحة عالمياً
+window.showAttachment = function(filename, mimetype, originalName) {
+    const BASE_URL = window.location.origin;
+    const currentAttachmentUrl = `${BASE_URL}/api/files/${filename}`;
+    
+    // إنشاء مودال ديناميكي لعرض المرفق
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.style.position = 'fixed';
+    modal.style.zIndex = '1002';
+    modal.style.left = '0';
+    modal.style.top = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
+    modal.style.justifyContent = 'center';
+    modal.style.alignItems = 'center';
+    
+    const modalContent = document.createElement('div');
+    modalContent.className = 'modal-content';
+    modalContent.style.maxWidth = '90%';
+    modalContent.style.maxHeight = '90%';
+    modalContent.style.overflow = 'auto';
+    modalContent.style.position = 'relative';
+    
+    const closeButton = document.createElement('span');
+    closeButton.className = 'close-button';
+    closeButton.innerHTML = '&times;';
+    closeButton.style.position = 'absolute';
+    closeButton.style.right = '15px';
+    closeButton.style.top = '10px';
+    closeButton.style.fontSize = '28px';
+    closeButton.style.fontWeight = 'bold';
+    closeButton.style.cursor = 'pointer';
+    closeButton.style.color = '#aaa';
+    
+    const title = document.createElement('h3');
+    title.textContent = `عرض المرفق: ${originalName || filename}`;
+    title.style.textAlign = 'center';
+    title.style.marginBottom = '20px';
+    title.style.color = 'var(--primary-color)';
+    
+    const content = document.createElement('div');
+    content.style.textAlign = 'center';
+    
+    const isImage = mimetype && mimetype.startsWith('image/');
+    const isPdf = mimetype && mimetype === 'application/pdf';
+    
+    if (isImage) {
+        const img = document.createElement('img');
+        img.src = currentAttachmentUrl;
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '70vh';
+        img.style.borderRadius = '8px';
+        img.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+        img.alt = 'صورة المرفق';
+        content.appendChild(img);
+    } else if (isPdf) {
+        const iframe = document.createElement('iframe');
+        iframe.src = currentAttachmentUrl;
+        iframe.style.width = '100%';
+        iframe.style.height = '70vh';
+        iframe.style.border = 'none';
+        iframe.style.borderRadius = '8px';
+        content.appendChild(iframe);
+    } else {
+        content.innerHTML = `
+            <div style="padding: 40px;">
+                <i class="fas fa-file" style="font-size: 64px; color: #6c757d; margin-bottom: 20px;"></i>
+                <p style="font-size: 18px; color: #666;">لا يمكن عرض هذا النوع من الملفات</p>
+                <p style="font-size: 14px; color: #999;">يمكنك تحميل الملف لعرضه</p>
+            </div>
+        `;
+    }
+    
+    const buttonsDiv = document.createElement('div');
+    buttonsDiv.className = 'modal-buttons';
+    buttonsDiv.style.display = 'flex';
+    buttonsDiv.style.justifyContent = 'center';
+    buttonsDiv.style.gap = '15px';
+    buttonsDiv.style.marginTop = '20px';
+    
+    const downloadBtn = document.createElement('button');
+    downloadBtn.className = 'modal-button';
+    downloadBtn.innerHTML = '<i class="fas fa-download"></i> تحميل';
+    downloadBtn.onclick = () => {
+        const link = document.createElement('a');
+        link.href = currentAttachmentUrl;
+        link.download = '';
+        link.click();
+    };
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-button cancel';
+    closeBtn.textContent = 'إغلاق';
+    closeBtn.onclick = () => {
+        document.body.removeChild(modal);
+    };
+    
+    buttonsDiv.appendChild(downloadBtn);
+    buttonsDiv.appendChild(closeBtn);
+    
+    closeButton.onclick = () => {
+        document.body.removeChild(modal);
+    };
+    
+    modal.onclick = (event) => {
+        if (event.target === modal) {
+            document.body.removeChild(modal);
+        }
+    };
+    
+    modalContent.appendChild(closeButton);
+    modalContent.appendChild(title);
+    modalContent.appendChild(content);
+    modalContent.appendChild(buttonsDiv);
+    modal.appendChild(modalContent);
+    
+    document.body.appendChild(modal);
+};
 </script>
 
 

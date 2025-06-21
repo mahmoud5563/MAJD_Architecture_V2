@@ -60,7 +60,34 @@ const transactionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'ContractPayment',
         required: function() { return this.type === 'دفعة مقاول'; } // مطلوب فقط إذا كان النوع 'دفعة مقاول'
-    }
+    },
+    // حقل المرفقات
+    attachments: [{
+        filename: {
+            type: String,
+            required: true
+        },
+        originalName: {
+            type: String,
+            required: true
+        },
+        mimeType: {
+            type: String,
+            required: true
+        },
+        size: {
+            type: Number,
+            required: true
+        },
+        path: {
+            type: String,
+            required: true
+        },
+        uploadedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }]
 }, { timestamps: true });
 
 const Transaction = mongoose.model('Transaction', transactionSchema);

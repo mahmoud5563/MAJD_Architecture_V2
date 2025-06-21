@@ -9,11 +9,12 @@ const ContractPayment = require('../models/ContractPayment'); // لاستيرا�
 const ContractAgreement = require('../models/ContractAgreement'); // لاستيراد موديل اتفاقيات المقاول
 
 const { auth, authorizeRoles } = require('../middleware/authMiddleware');
+const { upload, handleUploadError } = require('../middleware/uploadMiddleware');
 
 // @route   POST /api/transactions
 // @desc    Add a new transaction (deposit, withdrawal, transfer, contractor payment)
 // @access  Private (Manager, Accountant Manager)
-router.post('/', auth, authorizeRoles('مدير', 'مدير حسابات'), async (req, res) => {
+router.post('/', auth, authorizeRoles('مدير', 'مدير حسابات'), upload.array('attachments', 5), handleUploadError, async (req, res) => {
     const { treasury, project, type, amount, description, date, category, vendor, paymentMethod, targetTreasury } = req.body;
 
     try {
@@ -34,8 +35,20 @@ router.post('/', auth, authorizeRoles('مدير', 'مدير حسابات'), asyn
             category: category || undefined, // Category is for 'مصروف'
             vendor: vendor || undefined, // Vendor is for 'مصروف'
             paymentMethod: paymentMethod || undefined, // Payment method for 'إيداع'
-            targetTreasury: targetTreasury || undefined // Target treasury for 'تحويل'
+            targetTreasury: targetTreasury || undefined, // Target treasury for 'تحويل'
+            recordedBy: req.user.id
         });
+
+        // إضافة المرفقات إذا وجدت
+        if (req.files && req.files.length > 0) {
+            newTransaction.attachments = req.files.map(file => ({
+                filename: file.filename,
+                originalName: file.originalname,
+                mimeType: file.mimetype,
+                size: file.size,
+                path: file.path
+            }));
+        }
 
         // تحديث أرصدة الخزائن والمشاريع بناءً على نوع المعاملة
         if (type === 'إيداع') { // إيراد
@@ -59,38 +72,54 @@ router.post('/', auth, authorizeRoles('مدير', 'مدير حسابات'), asyn
                     await associatedProject.save();
                 }
             }
-        } else if (type === 'تحويل') { // تحويل بين الخزائن
-            if (!targetTreasury) {
-                return res.status(400).json({ message: 'الخزينة المستهدفة مطلوبة لعملية التحويل.' });
+        } else if (type === 'تحويل') {
+            if (sourceTreasury.currentBalance < newTransaction.amount) {
+                return res.status(400).json({ message: 'الرصيد في الخزينة غير كافٍ لإجراء هذا التحويل.' });
             }
             const destinationTreasury = await Treasury.findById(targetTreasury);
             if (!destinationTreasury) {
-                return res.status(404).json({ message: 'الخزينة المستهدفة غير موجودة.' });
+                return res.status(404).json({ message: 'الخزينة الهدف غير موجودة.' });
             }
-            if (sourceTreasury.currentBalance < newTransaction.amount) {
-                return res.status(400).json({ message: 'الرصيد في الخزينة المصدر غير كافٍ لإجراء هذا التحويل.' });
-            }
-
             sourceTreasury.currentBalance -= newTransaction.amount;
             destinationTreasury.currentBalance += newTransaction.amount;
             await destinationTreasury.save();
         } else if (type === 'دفعة مقاول') {
-            // هذا النوع من المعاملات سيتم إدارته عبر مسار ContractorPayments
-            // لذا، لا ينبغي أن يصل الطلب هنا بهذا النوع.
-            return res.status(400).json({ message: 'الرجاء استخدام مسار دفعات المقاولين لإضافة دفعات المقاول.' });
+            if (sourceTreasury.currentBalance < newTransaction.amount) {
+                return res.status(400).json({ message: 'الرصيد في الخزينة غير كافٍ لإجراء هذه الدفعة.' });
+            }
+            sourceTreasury.currentBalance -= newTransaction.amount;
+            // تحديث إجمالي المدفوع للمقاولين في المشروع
+            if (newTransaction.project) {
+                const associatedProject = await Project.findById(newTransaction.project);
+                if (associatedProject) {
+                    associatedProject.totalPaidContractorAmount = (associatedProject.totalPaidContractorAmount || 0) + newTransaction.amount;
+                    await associatedProject.save();
+                }
+            }
         }
 
         await sourceTreasury.save();
         await newTransaction.save();
 
-        res.status(201).json({ message: 'تم إضافة المعاملة بنجاح.', transaction: newTransaction });
+        // Populate and return the created transaction
+        const populatedTransaction = await Transaction.findById(newTransaction._id)
+            .populate('treasury', 'name')
+            .populate('project', 'projectName')
+            .populate('category', 'name')
+            .populate('targetTreasury', 'name')
+            .populate('recordedBy', 'username');
+
+        res.status(201).json({
+            message: 'تم إضافة المعاملة بنجاح.',
+            transaction: populatedTransaction
+        });
 
     } catch (err) {
         console.error(err.message);
         if (err.kind === 'ObjectId') {
             return res.status(400).json({ message: 'معرف غير صالح في بيانات المعاملة.' });
         }
-        res.status(500).json({  message : 'حدث خطأ في الخادم أثناء إضافة المعاملة.'});
+        res.status(500).json({ message: 'حدث خطأ في الخادم أثناء إضافة المعاملة.' });
     }
 });
 
@@ -301,6 +330,11 @@ router.delete('/:id', auth, async (req, res) => {
         }
         res.status(500).json({  message : 'حدث خطأ في الخادم أثناء حذف المعاملة.'});
     }
+});
+
+// إضافة route لتحميل المرفقات
+router.get('/:id/attachments/:filename', auth, async (req, res) => {
+    // كود تحميل الملف
 });
 
 module.exports = router;

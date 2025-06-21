@@ -544,6 +544,12 @@
                     <label for="contractorAddress">العنوان:</label>
                     <input type="text" id="contractorAddress" name="address">
                 </div>
+                <div class="modal-form-group">
+                    <label for="contractorAttachments">المرفقات:</label>
+                    <input type="file" id="contractorAttachments" name="attachments" multiple 
+                           accept="image/*,.pdf" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <small style="color: #666; font-size: 12px;">يسمح بالصور و PDF فقط. الحد الأقصى 5 ملفات، كل ملف 5MB</small>
+                </div>
                 <div class="modal-message" id="contractorModalMessage"></div>
                 <div class="modal-buttons">
                     <button type="submit" class="modal-button" id="saveContractorButton">حفظ المقاول</button>
@@ -738,12 +744,26 @@
                 event.preventDefault();
 
                 const contractorId = contractorIdInput.value;
-                const contractorData = {
-                    contractorName: contractorNameInput.value,
-                    phoneNumber: contractorPhoneInput.value || undefined,
-                    email: contractorEmailInput.value || undefined,
-                    address: contractorAddressInput.value || undefined
-                };
+                
+                // Create FormData for file upload
+                const formData = new FormData();
+                formData.append('contractorName', contractorNameInput.value);
+                
+                if (contractorPhoneInput.value) {
+                    formData.append('phoneNumber', contractorPhoneInput.value);
+                }
+                if (contractorEmailInput.value) {
+                    formData.append('email', contractorEmailInput.value);
+                }
+                if (contractorAddressInput.value) {
+                    formData.append('address', contractorAddressInput.value);
+                }
+                
+                // Add attachments if any
+                const attachmentFiles = document.getElementById('contractorAttachments').files;
+                for (let i = 0; i < attachmentFiles.length; i++) {
+                    formData.append('attachments', attachmentFiles[i]);
+                }
 
                 const method = contractorId ? 'PUT' : 'POST';
                 const url = contractorId ? `/api/contractors/${contractorId}` : '/api/contractors';
@@ -752,10 +772,9 @@
                     const response = await fetch(url, {
                         method: method,
                         headers: {
-                            'Content-Type': 'application/json',
                             'x-auth-token': localStorage.getItem('token')
                         },
-                        body: JSON.stringify(contractorData)
+                        body: formData
                     });
 
                     const data = await response.json();
