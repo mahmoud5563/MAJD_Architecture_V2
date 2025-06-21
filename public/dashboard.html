@@ -407,7 +407,27 @@
                     <div class="icon"><i class="fas fa-users"></i></div>
                     <h2>العملاء</h2>
                     <p>إجمالي العملاء: <span id="totalClients">0</span></p>
-                    <p>عملاء نشطون: <span id="activeClients">0</span></p>
+                </div>
+
+                <!-- Treasury Balance Card -->
+                <div class="card" id="treasuryBalanceCard">
+                    <div class="icon"><i class="fas fa-cash-register"></i></div>
+                    <h2>رصيد الخزائن</h2>
+                    <p>إجمالي الرصيد: <span id="totalTreasuryBalance">0.00</span> ج.م</p>
+                </div>
+
+                <!-- Expenses Card -->
+                <div class="card" id="expensesCard">
+                    <div class="icon"><i class="fas fa-money-bill-wave"></i></div>
+                    <h2>المصروفات</h2>
+                    <p>إجمالي المصروفات: <span id="totalExpenses">0.00</span> ج.م</p>
+                </div>
+
+                <!-- Revenue Card -->
+                <div class="card" id="revenueCard">
+                    <div class="icon"><i class="fas fa-chart-line"></i></div>
+                    <h2>الإيرادات</h2>
+                    <p>إجمالي الإيرادات: <span id="totalRevenue">0.00</span> ج.م</p>
                 </div>
 
             </div>
@@ -415,7 +435,7 @@
     </div>
 
     <script>
-        const BASE_URL = "https://f65a-156-203-153-92.ngrok-free.app";
+        const BASE_URL = "http://localhost:3000";
 
         // Client-side authentication check and redirection
         document.addEventListener('DOMContentLoaded', function () {
@@ -579,11 +599,10 @@
                 }
             };
 
-
-            // Function to fetch treasuries summary
-            const fetchTreasuriesSummary = async () => {
-                const treasuriesSummaryCard = document.getElementById('treasuriesSummaryCard');
-                treasuriesSummaryCard.classList.add('loading');
+            // Function to fetch treasury balance
+            const fetchTreasuryBalance = async () => {
+                const treasuryBalanceCard = document.getElementById('treasuryBalanceCard');
+                treasuryBalanceCard.classList.add('loading');
                 try {
                     const response = await fetch(`${BASE_URL}/api/treasuries`, {
                         headers: {
@@ -591,29 +610,81 @@
                         }
                     });
                     const treasuries = await response.json();
-
                     if (response.ok) {
-                        const total = treasuries.length;
-                        const totalBalance = treasuries.reduce((sum, t) => sum + t.currentBalance, 0);
-
-                        document.getElementById('totalTreasuries').textContent = total;
+                        const totalBalance = treasuries.reduce((sum, t) => sum + (t.currentBalance || 0), 0);
                         document.getElementById('totalTreasuryBalance').textContent = totalBalance.toFixed(2);
                     } else {
-                        console.error('Failed to fetch treasuries summary:', treasuries.message);
-                        document.getElementById('totalTreasuries').textContent = 'خطأ';
+                        document.getElementById('totalTreasuryBalance').textContent = 'خطأ';
                     }
                 } catch (error) {
-                    console.error('Error fetching treasuries summary:', error);
-                    document.getElementById('totalTreasuries').textContent = 'خطأ';
+                    document.getElementById('totalTreasuryBalance').textContent = 'خطأ';
                 } finally {
-                    treasuriesSummaryCard.classList.remove('loading');
+                    treasuryBalanceCard.classList.remove('loading');
                 }
             };
 
+            // Function to fetch total expenses (project + general)
+            const fetchTotalExpenses = async () => {
+                const expensesCard = document.getElementById('expensesCard');
+                expensesCard.classList.add('loading');
+                try {
+                    // 1. Get project expenses (transactions of type 'مصروف')
+                    const transRes = await fetch(`${BASE_URL}/api/transactions?type=مصروف`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    const transactions = await transRes.json();
+                    let projectExpenses = 0;
+                    if (transRes.ok && Array.isArray(transactions)) {
+                        projectExpenses = transactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+                    }
+                    // 2. Get general expenses
+                    const genRes = await fetch(`${BASE_URL}/api/general-expenses/total`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    const genData = await genRes.json();
+                    let generalExpenses = 0;
+                    if (genRes.ok && genData && typeof genData.total === 'number') {
+                        generalExpenses = genData.total;
+                    }
+                    // 3. Sum and display
+                    const total = projectExpenses + generalExpenses;
+                    document.getElementById('totalExpenses').textContent = total.toFixed(2);
+                } catch (error) {
+                    document.getElementById('totalExpenses').textContent = 'خطأ';
+                } finally {
+                    expensesCard.classList.remove('loading');
+                }
+            };
+
+            // Function to fetch total revenue
+            const fetchTotalRevenue = async () => {
+                const revenueCard = document.getElementById('revenueCard');
+                revenueCard.classList.add('loading');
+                try {
+                    // Get revenue from transactions of type 'إيداع'
+                    const response = await fetch(`${BASE_URL}/api/transactions?type=إيداع`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    const transactions = await response.json();
+                    if (response.ok && Array.isArray(transactions)) {
+                        const totalRevenue = transactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+                        document.getElementById('totalRevenue').textContent = totalRevenue.toFixed(2);
+                    } else {
+                        document.getElementById('totalRevenue').textContent = 'خطأ';
+                    }
+                } catch (error) {
+                    document.getElementById('totalRevenue').textContent = 'خطأ';
+                } finally {
+                    revenueCard.classList.remove('loading');
+                }
+            };
 
             // Call all summary functions on page load
             fetchProjectSummary();
             fetchClientSummary();
+            fetchTreasuryBalance();
+            fetchTotalExpenses();
+            fetchTotalRevenue();
             
             // زر تصدير النسخة الاحتياطية
             const exportBackupBtn = document.getElementById('exportBackupBtn');

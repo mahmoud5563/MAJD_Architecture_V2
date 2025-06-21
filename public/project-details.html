@@ -796,6 +796,49 @@
                     </table>
                   </div>
                 </div>
+
+                <div class="accordion-section">
+                  <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>الحركة المالية للمشروع</span>
+                    <span class="accordion-icon">+</span>
+                  </div>
+                  <div class="accordion-content">
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>التاريخ</th>
+                                <th>النوع</th>
+                                <th>الوصف</th>
+                                <th>المبلغ</th>
+                                <th>الرصيد بعد العملية</th>
+                            </tr>
+                        </thead>
+                        <tbody id="financialMovementTableBody">
+                            <tr>
+                                <td colspan="5" style="text-align: center;">لا توجد حركة مالية حالياً.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="financial-summary" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 8px;">
+                        <h4 style="margin-bottom: 15px; color: var(--primary-color);">ملخص الحركة المالية</h4>
+                        <div class="summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div class="summary-item">
+                                <strong>إجمالي الإيرادات:</strong>
+                                <span id="movementTotalRevenue" style="color: #28a745; font-weight: bold;">0.00 ج.م</span>
+                            </div>
+                            <div class="summary-item">
+                                <strong>إجمالي المصروفات:</strong>
+                                <span id="movementTotalExpenses" style="color: #dc3545; font-weight: bold;">0.00 ج.م</span>
+                            </div>
+                            <div class="summary-item">
+                                <strong>صافي الربح/الخسارة:</strong>
+                                <span id="movementNetProfitLoss" style="font-weight: bold;">0.00 ج.م</span>
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+                </div>
                 <!-- Accordion End -->
                 <div class="modal-message" id="pageMessage" style="display: none;"></div>
 
@@ -1116,7 +1159,7 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
     </div>
 
     <script>
-        const BASE_URL = "https://f65a-156-203-153-92.ngrok-free.app";
+        const BASE_URL = "http://localhost:3000";
         // Client-side authentication check and redirection
         document.addEventListener('DOMContentLoaded', function () {
             const token = localStorage.getItem('token');
@@ -1639,7 +1682,120 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                     console.error('Error fetching contractor payments:', error);
                     contractorPaymentsTableBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">فشل في تحميل دفعات المقاولين.</td></tr>';
                 }
+
+                // Fetch Financial Movement for this project
+                await fetchFinancialMovement();
                 
+            };
+
+            // Function to fetch and display financial movement
+            const fetchFinancialMovement = async () => {
+                try {
+                    // Get all transactions for this project
+                    const transactionsResponse = await fetch(`${BASE_URL}/api/transactions?project=${currentProjectId}`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    const transactions = await transactionsResponse.json();
+
+                    // Get contractor payments for this project
+                    const contractorPaymentsResponse = await fetch(`${BASE_URL}/api/contract-payments/${currentProjectId}`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    const contractorPayments = await contractorPaymentsResponse.json();
+
+                    // Combine and sort all financial activities
+                    let allActivities = [];
+
+                    // Add transactions
+                    transactions.forEach(trans => {
+                        allActivities.push({
+                            date: new Date(trans.date),
+                            type: trans.type,
+                            description: trans.description || 'معاملة مالية',
+                            amount: trans.amount,
+                            isTransaction: true,
+                            originalData: trans
+                        });
+                    });
+
+                    // Add contractor payments
+                    contractorPayments.forEach(pay => {
+                        allActivities.push({
+                            date: new Date(pay.date),
+                            type: 'دفعة مقاول',
+                            description: `دفعة مقاول: ${pay.description || 'دفعة للمقاول'}`,
+                            amount: pay.amount,
+                            isTransaction: false,
+                            originalData: pay
+                        });
+                    });
+
+                    // Sort by date (oldest first)
+                    allActivities.sort((a, b) => a.date - b.date);
+
+                    // Calculate running balance and display
+                    let runningBalance = 0;
+                    let totalRevenue = 0;
+                    let totalExpenses = 0;
+
+                    const tableBody = document.getElementById('financialMovementTableBody');
+                    tableBody.innerHTML = '';
+
+                    if (allActivities.length > 0) {
+                        allActivities.forEach(activity => {
+                            const row = tableBody.insertRow();
+                            
+                            // Calculate running balance
+                            if (activity.type === 'إيداع') {
+                                runningBalance += activity.amount;
+                                totalRevenue += activity.amount;
+                            } else {
+                                runningBalance -= activity.amount;
+                                totalExpenses += activity.amount;
+                            }
+
+                            // Determine type display and color
+                            let typeDisplay = activity.type;
+                            let typeColor = '#333';
+                            if (activity.type === 'إيداع') {
+                                typeDisplay = 'إيراد';
+                                typeColor = '#28a745';
+                            } else if (activity.type === 'مصروف') {
+                                typeDisplay = 'مصروف';
+                                typeColor = '#dc3545';
+                            } else if (activity.type === 'دفعة مقاول') {
+                                typeDisplay = 'دفعة مقاول';
+                                typeColor = '#fd7e14';
+                            }
+
+                            row.innerHTML = `
+                                <td>${formatDate(activity.date)}</td>
+                                <td style="color: ${typeColor}; font-weight: bold;">${typeDisplay}</td>
+                                <td>${activity.description}</td>
+                                <td style="color: ${activity.type === 'إيداع' ? '#28a745' : '#dc3545'}; font-weight: bold;">
+                                    ${activity.type === 'إيداع' ? '+' : '-'}${activity.amount.toFixed(2)} ج.م
+                                </td>
+                                <td style="font-weight: bold; color: ${runningBalance >= 0 ? '#28a745' : '#dc3545'}">
+                                    ${runningBalance.toFixed(2)} ج.م
+                                </td>
+                            `;
+                        });
+                    } else {
+                        tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">لا توجد حركة مالية حالياً لهذا المشروع.</td></tr>';
+                    }
+
+                    // Update summary
+                    const netProfitLoss = totalRevenue - totalExpenses;
+                    document.getElementById('movementTotalRevenue').textContent = totalRevenue.toFixed(2) + ' ج.م';
+                    document.getElementById('movementTotalExpenses').textContent = totalExpenses.toFixed(2) + ' ج.م';
+                    document.getElementById('movementNetProfitLoss').textContent = netProfitLoss.toFixed(2) + ' ج.م';
+                    document.getElementById('movementNetProfitLoss').style.color = netProfitLoss >= 0 ? '#28a745' : '#dc3545';
+
+                } catch (error) {
+                    console.error('Error fetching financial movement:', error);
+                    document.getElementById('financialMovementTableBody').innerHTML = 
+                        '<tr><td colspan="5" style="text-align: center;">فشل في تحميل الحركة المالية.</td></tr>';
+                }
             };
 
             // Initial fetch on page load
