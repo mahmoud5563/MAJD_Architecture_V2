@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تفاصيل المشروع - MAJD Architecture</title>
    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -677,6 +678,11 @@
                     </div>
                 </div>
 
+                <div style="margin: 30px 0;">
+                    <h3 style="text-align:center;">بنود المصروفات</h3>
+                    <canvas id="expensesByCategoryChart" height="120"></canvas>
+                  </div>
+
                 <!-- Accordion Start -->
                 <div class="accordion-section">
                   <div class="accordion-header" onclick="toggleAccordion(this)">
@@ -729,19 +735,6 @@
                   </div>
                   <div class="accordion-content">
                     <!-- المصروفات الأصلية هنا -->
-                    <div class="expense-filters-bar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 15px; background: #f8f8f8; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee;">
-                        <input type="text" id="expenseSearchInput" placeholder="ابحث في المصروفات..." style="padding:7px 12px; border:1px solid #ccc; border-radius:5px; width: 200px; font-size:15px;">
-                        <select id="expenseCategoryFilter" style="padding:7px 12px; border:1px solid #ccc; border-radius:5px; font-size:15px; min-width:120px;">
-                            <option value="">كل التصنيفات</option>
-                        </select>
-                        <select id="expenseTreasuryFilter" style="padding:7px 12px; border:1px solid #ccc; border-radius:5px; font-size:15px; min-width:120px;">
-                            <option value="">كل الخزائن</option>
-                        </select>
-                        <input type="date" id="expenseDateFrom" style="padding:7px 12px; border:1px solid #ccc; border-radius:5px; font-size:15px;" title="من تاريخ">
-                        <span style="font-size:18px; color:#888;">-</span>
-                        <input type="date" id="expenseDateTo" style="padding:7px 12px; border:1px solid #ccc; border-radius:5px; font-size:15px;" title="إلى تاريخ">
-                        <button id="clearExpenseFilters" style="padding:7px 15px; background:#eee; color:#333; border:none; border-radius:5px; font-size:15px; cursor:pointer; transition:background 0.2s;">مسح الفلاتر</button>
-                    </div>
                     <button class="action-button" id="addExpenseBtn"><i class="fas fa-plus"></i> إضافة مصروف</button>
                     <table class="details-table">
                         <thead>
@@ -777,16 +770,6 @@
                   </div>
                   <div class="accordion-content">
                     <!-- الإيرادات الأصلية هنا -->
-                    <div class="revenue-filters-bar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 15px; background: #f8f8f8; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee;">
-                        <input type="text" id="revenueSearchInput" placeholder="ابحث في الإيرادات..." style="padding:7px 12px; border:1px solid #ccc; border-radius:5px; width: 200px; font-size:15px;">
-                        <select id="revenueTreasuryFilter" style="padding:7px 12px; border:1px solid #ccc; border-radius:5px; font-size:15px; min-width:120px;">
-                            <option value="">كل الخزائن</option>
-                        </select>
-                        <input type="date" id="revenueDateFrom" style="padding:7px 12px; border:1px solid #ccc; border-radius:5px; font-size:15px;" title="من تاريخ">
-                        <span style="font-size:18px; color:#888;">-</span>
-                        <input type="date" id="revenueDateTo" style="padding:7px 12px; border:1px solid #ccc; border-radius:5px; font-size:15px;" title="إلى تاريخ">
-                        <button id="clearRevenueFilters" style="padding:7px 15px; background:#eee; color:#333; border:none; border-radius:5px; font-size:15px; cursor:pointer; transition:background 0.2s;">مسح الفلاتر</button>
-                    </div>
                     <button class="action-button" id="addRevenueBtn"><i class="fas fa-plus"></i> إضافة إيراد</button>
                     <table class="details-table">
                         <thead>
@@ -1541,6 +1524,7 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                         headers: { 'x-auth-token': localStorage.getItem('token') }
                     });
                     const expenses = await expensesResponse.json();
+                    renderExpensesByCategoryChart(expenses);
                     document.getElementById('exportProjectExcelBtn').style.display = 'inline-block';
 
                     projectExpensesTableBody.innerHTML = '';
@@ -1573,7 +1557,7 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                 } catch (error) {
                     console.error('Error fetching project expenses:', error);
                     projectExpensesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">فشل في تحميل المصروفات.</td></tr>';
-                }
+                } 
 
                 // Fetch Revenues for this project
                 try {
@@ -1655,6 +1639,7 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                     console.error('Error fetching contractor payments:', error);
                     contractorPaymentsTableBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">فشل في تحميل دفعات المقاولين.</td></tr>';
                 }
+                
             };
 
             // Initial fetch on page load
@@ -2189,6 +2174,40 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                     }
                 });
             }
+
+            function renderExpensesByCategoryChart(expenses) {
+    const categoryTotals = {};
+    expenses.forEach(exp => {
+        const cat = exp.category && exp.category.name ? exp.category.name : 'غير محدد';
+        categoryTotals[cat] = (categoryTotals[cat] || 0) + exp.amount;
+    });
+
+    const labels = Object.keys(categoryTotals);
+    const data = Object.values(categoryTotals);
+    const colors = labels.map((_, i) => `hsl(${i * 360 / labels.length}, 70%, 60%)`);
+
+    if (window.expensesByCategoryChart && typeof window.expensesByCategoryChart.destroy === 'function') {
+        window.expensesByCategoryChart.destroy();
+    }
+
+    const ctx = document.getElementById('expensesByCategoryChart').getContext('2d');
+    window.expensesByCategoryChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors,
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed} ج.م` } }
+            }
+        }
+    });
+}
 
             
             
