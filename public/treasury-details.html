@@ -1008,7 +1008,7 @@
                         detailTreasuryInitialBalanceSpan.textContent = (data.initialBalance || 0).toFixed(2) + ' ج.م';
                         detailTreasuryCurrentBalanceSpan.textContent = (data.currentBalance || 0).toFixed(2) + ' ج.م';
                         detailTreasuryDescriptionSpan.textContent = data.description || 'لا يوجد وصف.';
-                        detailTreasuryDateSpan.textContent = data.date ? new Date(data.date).toLocaleDateString('ar-EG') : 'غير محدد';
+                        detailTreasuryDateSpan.textContent = data.date ? new Date(data.date).toLocaleDateString('en-GB') : 'غير محدد';
                         detailTreasuryReasonSpan.textContent = data.reason || 'لا يوجد سبب.';
 
                         if (data.type === 'عهدة') {
@@ -1049,7 +1049,7 @@
                                 }
 
                                 row.innerHTML = `
-                                    <td>${new Date(trans.date).toLocaleDateString('ar-EG')}</td>
+                                    <td>${new Date(trans.date).toLocaleDateString('en-GB')}</td>
                                     <td style="color: ${trans.type === 'إيداع' ? 'green' : (trans.type === 'مصروف' ? 'red' : 'orange')};">${trans.type}</td>
                                     <td style="font-weight: bold;">${(trans.amount || 0).toFixed(2)} ج.م</td>
                                     <td>${trans.description || 'لا يوجد وصف'}</td>
@@ -1112,7 +1112,7 @@
                         expenses.forEach(expense => {
                             const row = generalExpensesTableBody.insertRow();
                             row.innerHTML = `
-                                <td>${new Date(expense.date).toLocaleDateString('ar-EG')}</td>
+                                <td>${new Date(expense.date).toLocaleDateString('en-GB')}</td>
                                 <td style="font-weight: bold; color: red;">${(expense.amount || 0).toFixed(2)} ج.م</td>
                                 <td>${expense.reason || 'لا يوجد وصف'}</td>
                                 <td>${expense.createdBy ? expense.createdBy.username : 'غير محدد'}</td>
@@ -1336,7 +1336,7 @@
                         ['النوع:', treasuryDetails.type],
                         ['الرصيد الأولي:', treasuryDetails.initialBalance.toFixed(2)],
                         ['الرصيد الحالي:', treasuryDetails.currentBalance.toFixed(2)],
-                        ['تاريخ الإنشاء:', new Date(treasuryDetails.date).toLocaleDateString('ar-EG')],
+                        ['تاريخ الإنشاء:', new Date(treasuryDetails.date).toLocaleDateString('en-GB')],
                         ['السبب:', treasuryDetails.reason || ''],
                         ['الوصف:', treasuryDetails.description || '']
                     ];
@@ -1352,7 +1352,7 @@
                     const transactionsData = [
                         ['التاريخ', 'النوع', 'المبلغ', 'الوصف/السبب', 'التصنيف', 'خزينة الهدف'],
                         ...transactions.map(t => [
-                            new Date(t.date).toLocaleDateString('ar-EG'),
+                            new Date(t.date).toLocaleDateString('en-GB'),
                             t.type,
                             t.amount.toFixed(2),
                             t.description || '',
@@ -1377,7 +1377,7 @@
                         const generalExpensesData = [
                             ['التاريخ', 'المبلغ', 'الوصف', 'تم الإضافة بواسطة'],
                             ...generalExpenses.map(e => [
-                                new Date(e.date).toLocaleDateString('ar-EG'),
+                                new Date(e.date).toLocaleDateString('en-GB'),
                                 e.amount.toFixed(2),
                                 e.reason || '',
                                 e.createdBy ? e.createdBy.username : 'غير محدد'
