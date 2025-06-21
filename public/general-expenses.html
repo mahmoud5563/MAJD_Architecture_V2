@@ -563,12 +563,12 @@
                         <input type="number" id="expenseAmount" name="amount" step="0.01" min="0" required>
                     </div>
                     <div class="form-group">
-                        <label for="expenseReason">السبب *</label>
-                        <textarea id="expenseReason" name="reason" required></textarea>
+                        <label for="expenseDescription">السبب *</label>
+                        <textarea id="expenseDescription" name="description" ></textarea>
                     </div>
                     <div class="form-group">
                         <label for="expenseTreasury">الخزينة *</label>
-                        <select id="expenseTreasury" name="treasuryId" required>
+                        <select id="expenseTreasury" name="treasury" required>
                             <option value="">اختر الخزينة</option>
                         </select>
                     </div>
@@ -614,7 +614,7 @@
         
         // Form elements
         const expenseAmountInput = document.getElementById('expenseAmount');
-        const expenseReasonTextarea = document.getElementById('expenseReason');
+        const expenseReasonTextarea = document.getElementById('expenseDescription');
         const expenseTreasurySelect = document.getElementById('expenseTreasury');
         const expenseDateInput = document.getElementById('expenseDate');
         
@@ -862,8 +862,8 @@
             
             const formData = {
                 amount: parseFloat(expenseAmountInput.value),
-                reason: expenseReasonTextarea.value,
-                treasuryId: expenseTreasurySelect.value,
+                description: expenseReasonTextarea.value,
+                treasury: expenseTreasurySelect.value,
                 date: expenseDateInput.value
             };
             

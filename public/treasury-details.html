@@ -528,6 +528,44 @@
             font-size: 24px;
             flex-shrink: 0;
         }
+        /* Accordion Styles */
+        .accordion-section {
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          margin-bottom: 15px;
+          background: #fff;
+        }
+        .accordion-header {
+          cursor: pointer;
+          padding: 16px 20px;
+          font-size: 18px;
+          font-weight: bold;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: #f7f7f7;
+          border-bottom: 1px solid #eee;
+          transition: background 0.2s;
+        }
+        .accordion-header:hover {
+          background: #e6f7f7;
+        }
+        .accordion-icon {
+          font-size: 22px;
+          transition: transform 0.2s;
+        }
+        .accordion-content {
+          display: none;
+          padding: 18px 20px;
+          background: #fafbfc;
+        }
+        .accordion-section.open .accordion-content {
+          display: block;
+        }
+        .accordion-section.open .accordion-icon {
+          content: '-';
+          transform: rotate(180deg);
+        }
     </style>
 </head>
 
@@ -606,74 +644,89 @@
                     </div>
                 </div>
 
-                <div class="details-section">
-                    <h4>سجل المعاملات</h4>
-                    <div style="margin-bottom: 15px;">
-                        <button class="action-button" id="addDepositBtn"><i class="fas fa-plus"></i> إضافة
-                            إيداع</button>
-                        <!--<button class="action-button" id="addExpenseBtn"><i class="fas fa-minus"></i> إضافة
-                            مصروف</button>-->
-                        <button class="action-button" id="addTransferBtn"><i class="fas fa-exchange-alt"></i>
-                            تحويل</button>
+                <!-- سجل المعاملات أكوردين -->
+                <div class="accordion-section">
+                  <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>سجل المعاملات</span>
+                    <span class="accordion-icon">+</span>
+                  </div>
+                  <div class="accordion-content">
+                    <div class="details-section">
+                      <h4>سجل المعاملات</h4>
+                      <div style="margin-bottom: 15px;">
+                          <button class="action-button" id="addDepositBtn"><i class="fas fa-plus"></i> إضافة إيداع</button>
+                          <!--<button class="action-button" id="addExpenseBtn"><i class="fas fa-minus"></i> إضافة مصروف</button>-->
+                          <button class="action-button" id="addTransferBtn"><i class="fas fa-exchange-alt"></i> تحويل</button>
+                      </div>
+                      <table class="details-table">
+                          <thead>
+                              <tr>
+                                  <th>التاريخ</th>
+                                  <th>النوع</th>
+                                  <th>المبلغ</th>
+                                  <th>الوصف/السبب</th>
+                                  <th>التصنيف</th>
+                                  <th>خزينة الهدف</th>
+                              </tr>
+                          </thead>
+                          <tbody id="transactionsTableBody">
+                              <tr>
+                                  <td colspan="6" style="text-align: center;">لا توجد معاملات حالياً لهذه الخزينة.</td>
+                              </tr>
+                          </tbody>
+                          <tfoot>
+                              <tr>
+                                  <td colspan="2"><strong>إجمالي الإيداعات:</strong></td>
+                                  <td id="totalDepositsCell">0.00 ج.م</td>
+                                  <td colspan="3"></td>
+                              </tr>
+                              <tr>
+                                  <td colspan="2"><strong>إجمالي المصروفات والتحويلات الصادرة:</strong></td>
+                                  <td id="totalWithdrawalsCell">0.00 ج.م</td>
+                                  <td colspan="3"></td>
+                              </tr>
+                          </tfoot>
+                      </table>
                     </div>
-                    <table class="details-table">
-                        <thead>
-                            <tr>
-                                <th>التاريخ</th>
-                                <th>النوع</th>
-                                <th>المبلغ</th>
-                                <th>الوصف/السبب</th>
-                                <th>التصنيف</th>
-                                <th>خزينة الهدف</th>
-                            </tr>
-                        </thead>
-                        <tbody id="transactionsTableBody">
-                            <tr>
-                                <td colspan="6" style="text-align: center;">لا توجد معاملات حالياً لهذه الخزينة.</td>
-                            </tr>
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="2"><strong>إجمالي الإيداعات:</strong></td>
-                                <td id="totalDepositsCell">0.00 ج.م</td>
-                                <td colspan="3"></td>
-                            </tr>
-                            <tr>
-                                <td colspan="2"><strong>إجمالي المصروفات والتحويلات الصادرة:</strong></td>
-                                <td id="totalWithdrawalsCell">0.00 ج.م</td>
-                                <td colspan="3"></td>
-                            </tr>
-                        </tfoot>
-                    </table>
+                  </div>
                 </div>
 
-                <div class="details-section">
-                    <h4>المصروفات العامة</h4>
-                    <div style="margin-bottom: 15px;">
+                <!-- المصروفات العامة أكوردين -->
+                <div class="accordion-section">
+                  <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>المصروفات العامة</span>
+                    <span class="accordion-icon">+</span>
+                  </div>
+                  <div class="accordion-content">
+                    <div class="details-section">
+                      <h4>المصروفات العامة</h4>
+                      <div style="margin-bottom: 15px;">
                         <button class="action-button" id="addGeneralExpenseBtn"><i class="fas fa-plus"></i> إضافة مصروف عام</button>
-                    </div>
-                    <table class="details-table">
+                      </div>
+                      <table class="details-table">
                         <thead>
-                            <tr>
-                                <th>التاريخ</th>
-                                <th>المبلغ</th>
-                                <th>الوصف</th>
-                                <th>تم الإضافة بواسطة</th>
-                            </tr>
+                          <tr>
+                            <th>التاريخ</th>
+                            <th>المبلغ</th>
+                            <th>الوصف</th>
+                            <th>تم الإضافة بواسطة</th>
+                          </tr>
                         </thead>
                         <tbody id="generalExpensesTableBody">
-                            <tr>
-                                <td colspan="4" style="text-align: center;">لا توجد مصروفات عامة حالياً لهذه الخزينة.</td>
-                            </tr>
+                          <tr>
+                            <td colspan="4" style="text-align: center;">لا توجد مصروفات عامة حالياً لهذه الخزينة.</td>
+                          </tr>
                         </tbody>
                         <tfoot>
-                            <tr>
-                                <td colspan="1"><strong>إجمالي المصروفات العامة:</strong></td>
-                                <td id="totalGeneralExpensesCell">0.00 ج.م</td>
-                                <td colspan="2"></td>
-                            </tr>
+                          <tr>
+                            <td colspan="1"><strong>إجمالي المصروفات العامة:</strong></td>
+                            <td id="totalGeneralExpensesCell">0.00 ج.م</td>
+                            <td colspan="2"></td>
+                          </tr>
                         </tfoot>
-                    </table>
+                      </table>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="modal-message" id="pageMessage" style="display: none;"></div>
@@ -1405,6 +1458,14 @@
                 msgDiv.classList.remove('active');
                 setTimeout(() => { msgDiv.style.display = 'none'; }, 400);
             }, duration);
+        }
+
+        window.toggleAccordion = function(header) {
+          const section = header.parentElement;
+          section.classList.toggle('open');
+          // غير علامة + إلى - والعكس
+          const icon = header.querySelector('.accordion-icon');
+          icon.textContent = section.classList.contains('open') ? '-' : '+';
         }
     </script>
 </body>
