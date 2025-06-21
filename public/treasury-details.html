@@ -1020,12 +1020,26 @@
                         }
 
                         summaryTotalDepositsSpan.textContent = (data.totalDeposits || 0).toFixed(2) + ' ج.م';
-                        summaryTotalWithdrawalsSpan.textContent = (data.totalWithdrawals || 0).toFixed(2) + ' ج.م';
+                        let totalWithdrawals = data.totalWithdrawals || 0;
+
+                        // اجلب مصروفات general-expenses لهذه الخزينة
+                        try {
+                            const generalExpensesRes = await fetch(`${BASE_URL}/api/general-expenses/treasury/${currentTreasuryId}`, {
+                                headers: { 'x-auth-token': localStorage.getItem('token') }
+                            });
+                            const generalExpenses = await generalExpensesRes.json();
+                            if (Array.isArray(generalExpenses)) {
+                                const totalGeneralExpenses = generalExpenses.reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
+                                totalWithdrawals += totalGeneralExpenses;
+                            }
+                        } catch (err) {
+                            console.error('Error fetching general expenses for summary:', err);
+                        }
+                        summaryTotalWithdrawalsSpan.textContent = totalWithdrawals.toFixed(2) + ' ج.م';
 
                         // Populate transactions table
                         transactionsTableBody.innerHTML = '';
                         let totalDeposits = 0;
-                        let totalWithdrawals = 0;
                         if (data.transactions && data.transactions.length > 0) {
                             data.transactions.forEach(trans => {
                                 const row = transactionsTableBody.insertRow();
