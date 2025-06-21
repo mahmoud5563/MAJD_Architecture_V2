@@ -515,7 +515,7 @@
 
         <div class="sidebar" id="sidebar">
             <ul>
-                <li class="active"><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>
+                <li><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>
                         الرئيسية</a></li>
                 <li><a href="/add-project.html" data-page="add-project"><i class="fas fa-plus-circle"></i> إضافة
                         مشروع</a></li>
@@ -617,6 +617,7 @@
                 const treasuriesLink = sidebar.querySelector('[data-page="treasuries"]');
                 const contractorsLink = sidebar.querySelector('[data-page="contractors"]');
                 const clientsLink = sidebar.querySelector('[data-page="clients"]');
+                const generalExpensesLink = sidebar.querySelector('[data-page="general-expenses"]');
 
                 if (role === 'مهندس') {
                     // Hide restricted elements for engineer
@@ -625,6 +626,7 @@
                     if (addTreasuryLink) addTreasuryLink.style.display = 'none';
                     if (contractorsLink) contractorsLink.style.display = 'none';
                     if (clientsLink) clientsLink.style.display = 'none';
+                    if (generalExpensesLink) generalExpensesLink.style.display = 'none';
                 }
 
                 // Set active link in sidebar (for this page)

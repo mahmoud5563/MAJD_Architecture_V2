@@ -363,7 +363,7 @@
 
         <div class="sidebar" id="sidebar">
             <ul>
-                <li class="active"><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>
+                <li><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>
                         الرئيسية</a></li>
                 <li><a href="/add-project.html" data-page="add-project"><i class="fas fa-plus-circle"></i> إضافة
                         مشروع</a></li>
@@ -462,6 +462,8 @@
                     if (generalExpensesLink) generalExpensesLink.style.display = 'none';
                 }
 
+                // إزالة active من كل عناصر السايدبار أولاً
+                sidebar.querySelectorAll('li.active').forEach(li => li.classList.remove('active'));
                 // Set active link in sidebar (for this page)
                 const currentPageLink = document.querySelector(`.sidebar ul li a[data-page="dashboard"]`);
                 if (currentPageLink) {
