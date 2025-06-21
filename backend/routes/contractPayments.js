@@ -155,7 +155,6 @@ router.get('/:projectId', auth, async (req, res) => {
     }
 });
 
-
 // @route   DELETE /api/contract-payments/:id
 // @desc    Delete a contract payment (and reverse its effect)
 // @access  Private (Manager, Accountant Manager)

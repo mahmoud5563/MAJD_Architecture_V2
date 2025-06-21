@@ -197,45 +197,36 @@ router.get('/:id/details', auth, async (req, res) => {
             return res.status(404).json({ message: 'المشروع غير موجود.' });
         }
 
-        // إذا كان المستخدم مهندسًا، تأكد من أنه المهندس المسؤول عن المشروع أو له عهدة في المشروع
-        if (req.user.role === 'مهندس') {
-            const isAssignedEngineer = project.engineer && project.engineer._id.toString() === req.user.id;
-            
-            // التحقق من وجود عهدة للمهندس في هذا المشروع
-            const hasTreasury = await Treasury.findOne({
-                responsibleUser: req.user.id,
-                type: 'عهدة',
-                project: projectId
-            });
-
-            if (!isAssignedEngineer && !hasTreasury) {
-                return res.status(403).json({ message: 'ليس لديك صلاحية لعرض تفاصيل هذا المشروع.' });
-            }
+        // إذا كان المستخدم مهندسًا، تأكد من أنه المهندس المسؤول عن المشروع
+        if (req.user.role === 'مهندس' && project.engineer && project.engineer._id.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'ليس لديك صلاحية لعرض تفاصيل هذا المشروع.' });
         }
 
-        // جلب المصروفات والإيرادات المرتبطة بالمشروع
-        const expenses = await Transaction.find({ project: projectId, type: 'مصروف' });
-        const revenues = await Transaction.find({ project: projectId, type: 'إيداع' });
+        // جلب جميع البيانات المالية بالتوازي لتحسين الأداء
+        const [expenses, revenues, contractorAgreements] = await Promise.all([
+            Transaction.find({ project: projectId, type: 'مصروف' }),
+            Transaction.find({ project: projectId, type: 'إيداع' }),
+            ContractAgreement.find({ project: projectId })
+        ]);
 
         // حساب إجمالي الإيرادات
         const totalRevenue = revenues.reduce((sum, r) => sum + r.amount, 0);
 
-        // جلب اتفاقيات المقاولين للمشروع
-        const contractorAgreements = await ContractAgreement.find({ project: projectId });
-
         // حساب إجمالي المبلغ المتفق عليه من جميع اتفاقيات المقاولين
         const totalAgreedContractorAmount = contractorAgreements.reduce((sum, ag) => sum + ag.agreedAmount, 0);
 
-        // جلب دفعات المقاولين المرتبطة باتفاقيات هذا المشروع
-        // أولاً، جمع معرفات الاتفاقيات
-        const agreementIds = contractorAgreements.map(ag => ag._id);
-        const contractorPayments = await ContractPayment.find({ contractAgreement: { $in: agreementIds } });
+        // جلب دفعات المقاولين فقط إذا كان هناك اتفاقيات
+        let contractorPayments = [];
+        if (contractorAgreements.length > 0) {
+            const agreementIds = contractorAgreements.map(ag => ag._id);
+            contractorPayments = await ContractPayment.find({ contractAgreement: { $in: agreementIds } });
+        }
 
         // حساب إجمالي المبلغ المدفوع للمقاولين
         const totalPaidContractorAmount = contractorPayments.reduce((sum, pay) => sum + pay.amount, 0);
 
         // حساب إجمالي المصروفات (يشمل المصروفات العادية ودفعات المقاولين)
-        const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0) + totalPaidContractorAmount; // <-- تم التعديل هنا
+        const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0) + totalPaidContractorAmount;
 
         const netProfitLoss = totalRevenue - totalExpenses;
 
@@ -257,7 +248,6 @@ router.get('/:id/details', auth, async (req, res) => {
         res.status(500).send('حدث خطأ في الخادم أثناء جلب تفاصيل المشروع.');
     }
 });
-
 
 // @route   PUT /api/projects/:id
 // @desc    Update a project

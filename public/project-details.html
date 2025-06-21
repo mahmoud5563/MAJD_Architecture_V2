@@ -1427,7 +1427,6 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                     const projectData = await projectResponse.json();
                     document.getElementById('exportProjectExcelBtn').style.display = 'inline-block';
 
-
                     if (projectResponse.ok) {
                         if (projectTitleSpan) projectTitleSpan.textContent = projectData.projectName;
                         if (detailProjectNameSpan) detailProjectNameSpan.textContent = projectData.projectName;
