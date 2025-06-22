@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { auth } = require('../middleware/authMiddleware');
+const { upload, handleUploadError } = require('../middleware/uploadMiddleware');
 const GeneralExpense = require('../models/GeneralExpense');
 const Treasury = require('../models/Treasury');
 
@@ -53,6 +54,7 @@ router.get('/', auth, requireManagerAccess, async (req, res) => {
         const expenses = await GeneralExpense.find(query)
             .populate('treasury', 'name')
             .populate('createdBy', 'username')
+            .populate('category', 'name')
             .sort({ date: -1 });
             
         res.json(expenses);
@@ -62,13 +64,34 @@ router.get('/', auth, requireManagerAccess, async (req, res) => {
     }
 });
 
-// POST create new general expense
-router.post('/', auth, requireManagerAccess, async (req, res) => {
+// POST create new general expense with file upload support
+router.post('/', auth, requireManagerAccess, upload.array('attachments', 5), handleUploadError, async (req, res) => {
+    console.log('=== General Expense POST Request START ===');
+    console.log('Request method:', req.method);
+    console.log('Request URL:', req.url);
+    console.log('Request headers:', req.headers);
+    console.log('Content-Type:', req.headers['content-type']);
+    console.log('Body:', req.body);
+    console.log('Files:', req.files);
+    console.log('File count:', req.files ? req.files.length : 0);
+    
+    if (req.files && req.files.length > 0) {
+        req.files.forEach((file, index) => {
+            console.log(`File ${index}:`, {
+                fieldname: file.fieldname,
+                originalname: file.originalname,
+                mimetype: file.mimetype,
+                size: file.size,
+                filename: file.filename
+            });
+        });
+    }
+    
     try {
-        const { amount, description, treasury, date } = req.body;
+        const { amount, description, treasury, date, category } = req.body;
         
         // Validate required fields
-        if (!amount || !description || !treasury) {
+        if (!amount || !description || !treasury || !category) {
             return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
         }
         
@@ -85,30 +108,47 @@ router.post('/', auth, requireManagerAccess, async (req, res) => {
         
         // Create the expense
         const expense = new GeneralExpense({
-            amount,
+            amount: parseFloat(amount),
             reason: description,
             treasury,
+            category,
             date: date || new Date(),
             createdBy: req.user.id
         });
+
+        // إضافة المرفقات إذا وجدت
+        if (req.files && req.files.length > 0) {
+            expense.attachments = req.files.map(file => ({
+                filename: file.filename,
+                originalName: file.originalname,
+                mimeType: file.mimetype,
+                size: file.size,
+                path: file.path
+            }));
+        }
         
         await expense.save();
         
         // Update treasury balance
-        treasuryDoc.currentBalance -= amount;
+        treasuryDoc.currentBalance -= expense.amount;
         await treasuryDoc.save();
         
         // Populate and return the created expense
         const populatedExpense = await GeneralExpense.findById(expense._id)
             .populate('treasury', 'name')
-            .populate('createdBy', 'username');
+            .populate('createdBy', 'username')
+            .populate('category', 'name');
             
         res.status(201).json({
             message: 'تم حفظ المصروف العام بنجاح',
             expense: populatedExpense
         });
     } catch (error) {
-        console.error('Error creating general expense:', error);
+        console.error('=== General Expense POST Error ===');
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+        console.error('Error name:', error.name);
+        console.error('Error code:', error.code);
         res.status(500).json({ message: 'خطأ في الخادم' });
     }
 });

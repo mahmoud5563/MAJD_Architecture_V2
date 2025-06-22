@@ -768,18 +768,19 @@
                                 <th>التاريخ</th>
                                 <th>البائع</th>
                                 <th>الخزينة</th>
+                                <th>المرفقات</th>
                                 <th>إجراءات</th>
                             </tr>
                         </thead>
                         <tbody id="projectExpensesTableBody">
                             <tr>
-                                <td colspan="7" style="text-align: center;">لا توجد مصروفات حالياً.</td>
+                                <td colspan="8" style="text-align: center;">لا توجد مصروفات حالياً.</td>
                             </tr>
                         </tbody>
                          <tfoot>
     <tr>
       <td><strong>اجمالي المصروفات</strong></td>
-      <td id="expensesTotal" colspan="3">0.00</td>
+      <td id="expensesTotal" colspan="4">0.00</td>
     </tr>
   </tfoot>
                     </table>
@@ -802,18 +803,19 @@
                                 <th>التاريخ</th>
                                 <th>طريقة التحويل</th>
                                 <th>الخزينة</th>
+                                <th>المرفقات</th>
                                 <th>إجراءات</th>
                             </tr>
                         </thead>
                         <tbody id="projectRevenuesTableBody">
                             <tr>
-                                <td colspan="6" style="text-align: center;">لا توجد إيرادات حالياً.</td>
+                                <td colspan="7" style="text-align: center;">لا توجد إيرادات حالياً.</td>
                             </tr>
                         </tbody>
                          <tfoot>
     <tr>
       <td><strong>اجمالي الايرادات</strong></td>
-      <td id="revenuesTotal" colspan="3">0.00</td>
+      <td id="revenuesTotal" colspan="4">0.00</td>
     </tr>
   </tfoot>
                     </table>
@@ -1033,6 +1035,13 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                         <!-- Treasuries/Accounts will be loaded here -->
                     </select>
                 </div>
+                <div class="modal-form-group">
+                    <label for="expenseAttachment">المرفقات (اختياري):</label>
+                    <input type="file" id="expenseAttachment" name="attachments" accept="image/*,.pdf" multiple>
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        يمكنك رفع صور أو ملفات PDF. الحد الأقصى: 5 ميجابايت لكل ملف.
+                    </small>
+                </div>
                 <div class="modal-message" id="expenseModalMessage"></div>
                 <div class="modal-buttons">
                     <button type="submit" class="modal-button">حفظ المصروف</button>
@@ -1077,6 +1086,13 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                         <option value="">اختر خزينة</option>
                         <!-- Treasuries/Accounts will be loaded here -->
                     </select>
+                </div>
+                <div class="modal-form-group">
+                    <label for="revenueAttachment">المرفقات (اختياري):</label>
+                    <input type="file" id="revenueAttachment" name="attachments" accept="image/*,.pdf" multiple>
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        يمكنك رفع صور أو ملفات PDF. الحد الأقصى: 5 ميجابايت لكل ملف.
+                    </small>
                 </div>
                 <div class="modal-message" id="revenueModalMessage"></div>
                 <div class="modal-buttons">
@@ -1707,6 +1723,36 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                         let totalExpenses = 0;
                         expenses.forEach(exp => {
                             const row = projectExpensesTableBody.insertRow();
+                            
+                            // Create attachments display
+                            let attachmentsHtml = '';
+                            console.log('Expense data:', exp);
+                            console.log('Attachments:', exp.attachments);
+                            
+                            if (exp.attachments && exp.attachments.length > 0) {
+                                exp.attachments.forEach(attachment => {
+                                    console.log('Processing attachment:', attachment);
+                                    const isImage = attachment.mimeType && attachment.mimeType.startsWith('image/');
+                                    const isPdf = attachment.mimeType && attachment.mimeType === 'application/pdf';
+                                    
+                                    if (isImage) {
+                                        attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                            <i class="fas fa-image" style="color: #007bff; font-size: 16px;" title="صورة"></i>
+                                        </button>`;
+                                    } else if (isPdf) {
+                                        attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                            <i class="fas fa-file-pdf" style="color: #dc3545; font-size: 16px;" title="PDF"></i>
+                                        </button>`;
+                                    } else {
+                                        attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                            <i class="fas fa-file" style="color: #6c757d; font-size: 16px;" title="ملف"></i>
+                                        </button>`;
+                                    }
+                                });
+                            } else {
+                                attachmentsHtml = '<span style="color: #999;">لا توجد مرفقات</span>';
+                            }
+                            
                             row.innerHTML = `
                                 <td>${exp.amount.toFixed(2)} ج.م</td>
                                 <td>${exp.description || '-'}</td>
@@ -1714,6 +1760,7 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                                 <td>${formatDate(exp.date)}</td>
                                 <td>${exp.vendor || '-'}</td>
                                 <td>${exp.treasury ? exp.treasury.name : '-'}</td>
+                                <td>${attachmentsHtml}</td>
                                 <td class="action-buttons">
                                     <button class="delete-expense" data-id="${exp._id}"><i class="fas fa-trash-alt"></i> حذف</button>
                                 </td>
@@ -1725,13 +1772,13 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                         });
                         document.getElementById('expensesTotal').textContent = totalExpenses.toFixed(2) + ' ج.م';
                     } else {
-                        projectExpensesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">لا توجد مصروفات حالياً لهذا المشروع.</td></tr>';
+                        projectExpensesTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">لا توجد مصروفات حالياً لهذا المشروع.</td></tr>';
                         document.getElementById('expensesTotal').textContent = '0.00 ج.م';
                     }
                     if (typeof filterExpensesTable === 'function') filterExpensesTable();
                 } catch (error) {
                     console.error('Error fetching project expenses:', error);
-                    projectExpensesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">فشل في تحميل المصروفات.</td></tr>';
+                    projectExpensesTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">فشل في تحميل المصروفات.</td></tr>';
                 }
 
                 // Fetch Revenues for this project
@@ -1747,12 +1794,43 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                         let totalRevenues = 0;
                         revenues.forEach(rev => {
                             const row = projectRevenuesTableBody.insertRow();
+                            
+                            // Create attachments display
+                            let attachmentsHtml = '';
+                            console.log('Revenue data:', rev);
+                            console.log('Attachments:', rev.attachments);
+                            
+                            if (rev.attachments && rev.attachments.length > 0) {
+                                rev.attachments.forEach(attachment => {
+                                    console.log('Processing attachment:', attachment);
+                                    const isImage = attachment.mimeType && attachment.mimeType.startsWith('image/');
+                                    const isPdf = attachment.mimeType && attachment.mimeType === 'application/pdf';
+                                    
+                                    if (isImage) {
+                                        attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                            <i class="fas fa-image" style="color: #007bff; font-size: 16px;" title="صورة"></i>
+                                        </button>`;
+                                    } else if (isPdf) {
+                                        attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                            <i class="fas fa-file-pdf" style="color: #dc3545; font-size: 16px;" title="PDF"></i>
+                                        </button>`;
+                                    } else {
+                                        attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                            <i class="fas fa-file" style="color: #6c757d; font-size: 16px;" title="ملف"></i>
+                                        </button>`;
+                                    }
+                                });
+                            } else {
+                                attachmentsHtml = '<span style="color: #999;">لا توجد مرفقات</span>';
+                            }
+                            
                             row.innerHTML = `
                                 <td>${rev.amount.toFixed(2)} ج.م</td>
                                 <td>${rev.description || '-'}</td>
                                 <td>${formatDate(rev.date)}</td>
                                 <td>${rev.paymentMethod || '-'}</td>
                                 <td>${rev.treasury ? rev.treasury.name : '-'}</td>
+                                <td>${attachmentsHtml}</td>
                                 <td class="action-buttons">
                                     <button class="delete-revenue" data-id="${rev._id}"><i class="fas fa-trash-alt"></i> حذف</button>
                                 </td>
@@ -1764,13 +1842,13 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                         });
                         document.getElementById('revenuesTotal').textContent = totalRevenues.toFixed(2) + ' ج.م';
                     } else {
-                        projectRevenuesTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">لا توجد إيرادات حالياً لهذا المشروع.</td></tr>';
+                        projectRevenuesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">لا توجد إيرادات حالياً لهذا المشروع.</td></tr>';
                         document.getElementById('revenuesTotal').textContent = '0.00 ج.م';
                     }
                     if (typeof filterRevenuesTable === 'function') filterRevenuesTable();
                 } catch (error) {
                     console.error('Error fetching project revenues:', error);
-                    projectRevenuesTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">فشل في تحميل الإيرادات.</td></tr>';
+                    projectRevenuesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">فشل في تحميل الإيرادات.</td></tr>';
                 }
 
                 // Fetch Contractor Payments for this project
@@ -2109,33 +2187,57 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
 
             expenseForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const transactionData = {
-                    project: new URLSearchParams(window.location.search).get('id'),
-                    type: 'مصروف', // Fixed type for expense (withdrawal)
-                    amount: parseFloat(expenseAmountInput.value),
-                    description: expenseDescriptionInput.value || undefined,
-                    category: expenseCategorySelect.value || undefined,
-                    date: expenseDateInput.value,
-                    vendor: expenseVendorInput.value || undefined,
-                    treasury: expenseTreasurySelect.value // Treasury is required for transaction
-                };
+                
+                // Create FormData for file upload
+                const formData = new FormData();
+                formData.append('project', new URLSearchParams(window.location.search).get('id'));
+                formData.append('type', 'مصروف');
+                formData.append('amount', expenseAmountInput.value);
+                formData.append('description', expenseDescriptionInput.value);
+                formData.append('category', expenseCategorySelect.value);
+                formData.append('date', expenseDateInput.value);
+                formData.append('vendor', expenseVendorInput.value);
+                formData.append('treasury', expenseTreasurySelect.value);
 
-                Object.keys(transactionData).forEach(key => {
-                    if (transactionData[key] === undefined) {
-                        delete transactionData[key];
-                    }
-                });
+                // Add attachments if any
+                const attachmentFiles = document.getElementById('expenseAttachment').files;
+                console.log('=== Frontend File Upload ===');
+                console.log('Attachment files:', attachmentFiles);
+                console.log('File count:', attachmentFiles.length);
+                
+                for (let i = 0; i < attachmentFiles.length; i++) {
+                    console.log(`File ${i}:`, attachmentFiles[i]);
+                    formData.append('attachments', attachmentFiles[i]);
+                }
+
+                // Log FormData contents
+                for (let [key, value] of formData.entries()) {
+                    console.log(`${key}:`, value);
+                }
 
                 try {
-                    const response = await fetch(`${BASE_URL}/api/transactions`, { // Use existing transactions API
+                    console.log('=== Sending Request ===');
+                    console.log('URL:', `${BASE_URL}/api/transactions`);
+                    console.log('Token:', localStorage.getItem('token') ? 'Token exists' : 'No token');
+                    console.log('FormData entries:');
+                    for (let [key, value] of formData.entries()) {
+                        console.log(`${key}:`, value);
+                    }
+                    
+                    const response = await fetch(`${BASE_URL}/api/transactions`, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
                             'x-auth-token': localStorage.getItem('token')
                         },
-                        body: JSON.stringify(transactionData)
+                        body: formData // Use FormData instead of JSON
                     });
+                    
+                    console.log('=== Response Received ===');
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+                    
                     const data = await response.json();
+                    console.log('Response data:', data);
 
                     if (response.ok) {
                         expenseModalMessage.className = 'modal-message success';
@@ -2159,32 +2261,56 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
             // Handle Revenue Form Submission
             revenueForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const transactionData = {
-                    project: revenueProjectIdInput.value,
-                    type: 'إيداع', // Fixed type for revenue (deposit)
-                    amount: parseFloat(revenueAmountInput.value),
-                    description: revenueDescriptionInput.value || undefined,
-                    date: revenueDateInput.value,
-                    paymentMethod: revenuePaymentMethodSelect.value,
-                    treasury: revenueTreasurySelect.value // Treasury is required for transaction
-                };
+                
+                // Create FormData for file upload
+                const formData = new FormData();
+                formData.append('project', revenueProjectIdInput.value);
+                formData.append('type', 'إيداع');
+                formData.append('amount', revenueAmountInput.value);
+                formData.append('description', revenueDescriptionInput.value);
+                formData.append('date', revenueDateInput.value);
+                formData.append('paymentMethod', revenuePaymentMethodSelect.value);
+                formData.append('treasury', revenueTreasurySelect.value);
 
-                Object.keys(transactionData).forEach(key => {
-                    if (transactionData[key] === undefined) {
-                        delete transactionData[key];
-                    }
-                });
+                // Add attachments if any
+                const attachmentFiles = document.getElementById('revenueAttachment').files;
+                console.log('=== Frontend File Upload ===');
+                console.log('Attachment files:', attachmentFiles);
+                console.log('File count:', attachmentFiles.length);
+                
+                for (let i = 0; i < attachmentFiles.length; i++) {
+                    console.log(`File ${i}:`, attachmentFiles[i]);
+                    formData.append('attachments', attachmentFiles[i]);
+                }
+
+                // Log FormData contents
+                for (let [key, value] of formData.entries()) {
+                    console.log(`${key}:`, value);
+                }
 
                 try {
-                    const response = await fetch(`${BASE_URL}/api/transactions`, { // Use existing transactions API
+                    console.log('=== Sending Request ===');
+                    console.log('URL:', `${BASE_URL}/api/transactions`);
+                    console.log('Token:', localStorage.getItem('token') ? 'Token exists' : 'No token');
+                    console.log('FormData entries:');
+                    for (let [key, value] of formData.entries()) {
+                        console.log(`${key}:`, value);
+                    }
+                    
+                    const response = await fetch(`${BASE_URL}/api/transactions`, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
                             'x-auth-token': localStorage.getItem('token')
                         },
-                        body: JSON.stringify(transactionData)
+                        body: formData // Use FormData instead of JSON
                     });
+                    
+                    console.log('=== Response Received ===');
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+                    
                     const data = await response.json();
+                    console.log('Response data:', data);
 
                     if (response.ok) {
                         revenueModalMessage.className = 'modal-message success';

@@ -15,6 +15,27 @@ const { upload, handleUploadError } = require('../middleware/uploadMiddleware');
 // @desc    Add a new transaction (deposit, withdrawal, transfer, contractor payment)
 // @access  Private (Manager, Accountant Manager)
 router.post('/', auth, authorizeRoles('مدير', 'مدير حسابات'), upload.array('attachments', 5), handleUploadError, async (req, res) => {
+    console.log('=== Transaction POST Request START ===');
+    console.log('Request method:', req.method);
+    console.log('Request URL:', req.url);
+    console.log('Request headers:', req.headers);
+    console.log('Content-Type:', req.headers['content-type']);
+    console.log('Body:', req.body);
+    console.log('Files:', req.files);
+    console.log('File count:', req.files ? req.files.length : 0);
+    
+    if (req.files && req.files.length > 0) {
+        req.files.forEach((file, index) => {
+            console.log(`File ${index}:`, {
+                fieldname: file.fieldname,
+                originalname: file.originalname,
+                mimetype: file.mimetype,
+                size: file.size,
+                filename: file.filename
+            });
+        });
+    }
+    
     const { treasury, project, type, amount, description, date, category, vendor, paymentMethod, targetTreasury } = req.body;
 
     try {
@@ -115,7 +136,12 @@ router.post('/', auth, authorizeRoles('مدير', 'مدير حسابات'), uplo
         });
 
     } catch (err) {
-        console.error(err.message);
+        console.error('=== Transaction POST Error ===');
+        console.error('Error message:', err.message);
+        console.error('Error stack:', err.stack);
+        console.error('Error name:', err.name);
+        console.error('Error code:', err.code);
+        
         if (err.kind === 'ObjectId') {
             return res.status(400).json({ message: 'معرف غير صالح في بيانات المعاملة.' });
         }

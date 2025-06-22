@@ -258,6 +258,24 @@
             resize: vertical;
             min-height: 80px;
         }
+        .form-group input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+        .form-group input[type="file"]:hover {
+            border-color: var(--primary-color);
+        }
+        .form-group input[type="file"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(1, 76, 71, 0.2);
+        }
         .form-actions {
             padding: 20px;
             border-top: 1px solid var(--border-color);
@@ -478,6 +496,62 @@
             color: #008000;
             border: 1px solid #008000;
         }
+        
+        /* مودال عرض المرفقات */
+        #attachmentViewerModal .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            width: 90%;
+            max-width: 500px;
+            animation-name: animatetop;
+            animation-duration: 0.4s;
+            text-align: right;
+        }
+
+        @keyframes animatetop {
+            from {
+                top: -300px;
+                opacity: 0
+            }
+            to {
+                top: 0;
+                opacity: 1
+            }
+        }
+
+        #attachmentViewerModal .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        #attachmentViewerModal .modal-button {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #attachmentViewerModal .modal-button.cancel {
+            background-color: #6c757d;
+        }
+
+        #attachmentViewerModal .modal-button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        #attachmentViewerModal .modal-button.cancel:hover {
+            background-color: #5a6268;
+        }
     </style>
 </head>
 <body>
@@ -534,14 +608,16 @@
                         <tr>
                             <th>المبلغ</th>
                             <th>السبب</th>
+                            <th>التصنيف</th>
                             <th>الخزينة</th>
                             <th>التاريخ</th>
                             <th>تم الإنشاء بواسطة</th>
+                            <th>المرفقات</th>
                         </tr>
                     </thead>
                     <tbody id="expensesTableBody">
                         <tr>
-                            <td colspan="5" style="text-align: center;">جاري تحميل المصروفات...</td>
+                            <td colspan="7" style="text-align: center;">جاري تحميل المصروفات...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -573,8 +649,21 @@
                         </select>
                     </div>
                     <div class="form-group">
+                        <label for="expenseCategory">التصنيف *</label>
+                        <select id="expenseCategory" name="category" required>
+                            <option value="">اختر التصنيف</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label for="expenseDate">التاريخ</label>
                         <input type="date" id="expenseDate" name="date">
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseAttachment">المرفقات (اختياري):</label>
+                        <input type="file" id="expenseAttachment" name="attachments" accept="image/*,.pdf" multiple>
+                        <small style="color: #666; display: block; margin-top: 5px;">
+                            يمكنك رفع صور أو ملفات PDF. الحد الأقصى: 5 ميجابايت لكل ملف.
+                        </small>
                     </div>
                     <div class="form-message" id="addExpenseMessage" style="display: none;"></div>
                     <div class="form-buttons">
@@ -584,6 +673,23 @@
                 </form>
             </div>
             <span class="close-button" style="position:absolute;top:10px;left:15px;font-size:28px;cursor:pointer;">&times;</span>
+        </div>
+    </div>
+
+    <!-- Attachment Viewer Modal -->
+    <div id="attachmentViewerModal" class="modal">
+        <div class="modal-content" style="max-width: 90%; max-height: 90%; overflow: auto;">
+            <span class="close-button">&times;</span>
+            <h3 id="attachmentViewerTitle">عرض المرفق</h3>
+            <div id="attachmentViewerContent">
+                <!-- سيتم عرض المرفق هنا -->
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-button" id="downloadAttachmentBtn">
+                    <i class="fas fa-download"></i> تحميل
+                </button>
+                <button type="button" class="modal-button cancel" id="closeAttachmentViewerBtn">إغلاق</button>
+            </div>
         </div>
     </div>
     <script>
@@ -616,6 +722,7 @@
         const expenseAmountInput = document.getElementById('expenseAmount');
         const expenseReasonTextarea = document.getElementById('expenseDescription');
         const expenseTreasurySelect = document.getElementById('expenseTreasury');
+        const expenseCategorySelect = document.getElementById('expenseCategory');
         const expenseDateInput = document.getElementById('expenseDate');
         
         // Set today's date as default
@@ -680,6 +787,7 @@
                 
                 // Load initial data
                 loadTreasuries();
+                loadCategories();
                 fetchExpenses();
                 
             } catch (e) {
@@ -711,9 +819,31 @@
             }
         };
 
+        // Load categories for dropdown
+        const loadCategories = async () => {
+            try {
+                const response = await fetch(`${BASE_URL}/api/categories`, {
+                    headers: {
+                        'x-auth-token': localStorage.getItem('token')
+                    }
+                });
+                const categories = await response.json();
+                
+                expenseCategorySelect.innerHTML = '<option value="">اختر التصنيف</option>';
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category._id;
+                    option.textContent = category.name;
+                    expenseCategorySelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        };
+
         // Fetch expenses with optional filtering
         const fetchExpenses = async (filter = null, startDate = null, endDate = null) => {
-            expensesTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">جاري تحميل المصروفات...</td></tr>';
+            expensesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">جاري تحميل المصروفات...</td></tr>';
             pageMessage.style.display = 'none';
 
             try {
@@ -741,33 +871,61 @@
                 if (response.ok) {
                     expensesTableBody.innerHTML = '';
                     if (expenses.length === 0) {
-                        expensesTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">لا توجد مصروفات لعرضها.</td></tr>';
+                        expensesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">لا توجد مصروفات لعرضها.</td></tr>';
                         totalAmountSpan.textContent = '0.00';
                         return;
                     }
 
                     expenses.forEach(expense => {
                         const row = expensesTableBody.insertRow();
+                        
+                        // Create attachments display
+                        let attachmentsHtml = '';
+                        if (expense.attachments && expense.attachments.length > 0) {
+                            expense.attachments.forEach(attachment => {
+                                const isImage = attachment.mimeType && attachment.mimeType.startsWith('image/');
+                                const isPdf = attachment.mimeType && attachment.mimeType === 'application/pdf';
+                                
+                                if (isImage) {
+                                    attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                        <i class="fas fa-image" style="color: #007bff; font-size: 16px;" title="صورة"></i>
+                                    </button>`;
+                                } else if (isPdf) {
+                                    attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                        <i class="fas fa-file-pdf" style="color: #dc3545; font-size: 16px;" title="PDF"></i>
+                                    </button>`;
+                                } else {
+                                    attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                        <i class="fas fa-file" style="color: #6c757d; font-size: 16px;" title="ملف"></i>
+                                    </button>`;
+                                }
+                            });
+                        } else {
+                            attachmentsHtml = '<span style="color: #999;">لا توجد مرفقات</span>';
+                        }
+                        
                         row.innerHTML = `
                             <td>${expense.amount.toFixed(2)} ج.م</td>
                             <td>${expense.reason}</td>
+                            <td>${expense.category ? expense.category.name : '---'}</td>
                             <td>${expense.treasury ? expense.treasury.name : '---'}</td>
                             <td>${new Date(expense.date).toLocaleDateString('en-GB')}</td>
                             <td>${expense.createdBy ? expense.createdBy.username : '---'}</td>
+                            <td>${attachmentsHtml}</td>
                         `;
                     });
                     
                     // Fetch and display total
                     await fetchTotal(filter, startDate, endDate);
                 } else {
-                    expensesTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">فشل في جلب المصروفات.</td></tr>';
+                    expensesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">فشل في جلب المصروفات.</td></tr>';
                     pageMessage.className = 'modal-message error';
                     pageMessage.textContent = expenses.message || 'حدث خطأ أثناء جلب المصروفات.';
                     pageMessage.style.display = 'block';
                 }
             } catch (error) {
                 console.error('Error fetching expenses:', error);
-                expensesTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">خطأ في الاتصال بالخادم.</td></tr>';
+                expensesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">خطأ في الاتصال بالخادم.</td></tr>';
                 pageMessage.className = 'modal-message error';
                 pageMessage.textContent = 'حدث خطأ في الاتصال بالخادم أثناء جلب المصروفات.';
                 pageMessage.style.display = 'block';
@@ -812,6 +970,7 @@
             addExpenseMessage.style.display = 'none';
             addExpenseForm.reset();
             expenseDateInput.value = new Date().toISOString().split('T')[0];
+            loadCategories(); // تحميل التصنيفات عند فتح المودال
         };
 
         const closeAddExpenseModal = () => {
@@ -860,21 +1019,37 @@
         addExpenseForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             
-            const formData = {
-                amount: parseFloat(expenseAmountInput.value),
-                description: expenseReasonTextarea.value,
-                treasury: expenseTreasurySelect.value,
-                date: expenseDateInput.value
-            };
+            // Create FormData for file upload
+            const formData = new FormData();
+            formData.append('amount', expenseAmountInput.value);
+            formData.append('description', expenseReasonTextarea.value);
+            formData.append('treasury', expenseTreasurySelect.value);
+            formData.append('category', expenseCategorySelect.value);
+            formData.append('date', expenseDateInput.value);
+
+            // Add attachments if any
+            const attachmentFiles = document.getElementById('expenseAttachment').files;
+            console.log('=== Frontend File Upload ===');
+            console.log('Attachment files:', attachmentFiles);
+            console.log('File count:', attachmentFiles.length);
+            
+            for (let i = 0; i < attachmentFiles.length; i++) {
+                console.log(`File ${i}:`, attachmentFiles[i]);
+                formData.append('attachments', attachmentFiles[i]);
+            }
+
+            // Log FormData contents
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}:`, value);
+            }
             
             try {
                 const response = await fetch(`${BASE_URL}/api/general-expenses`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
                         'x-auth-token': localStorage.getItem('token')
                     },
-                    body: JSON.stringify(formData)
+                    body: formData // Use FormData instead of JSON
                 });
                 
                 const data = await response.json();
@@ -922,6 +1097,83 @@
         document.addEventListener('click', (event) => {
             if (!sidebar.contains(event.target) && !menuToggle.contains(event.target)) {
                 sidebar.classList.remove('active');
+            }
+        });
+
+        // مودال عرض المرفقات
+        const attachmentViewerModal = document.getElementById('attachmentViewerModal');
+        const attachmentViewerTitle = document.getElementById('attachmentViewerTitle');
+        const attachmentViewerContent = document.getElementById('attachmentViewerContent');
+        const downloadAttachmentBtn = document.getElementById('downloadAttachmentBtn');
+        const closeAttachmentViewerBtn = document.getElementById('closeAttachmentViewerBtn');
+        let currentAttachmentUrl = '';
+
+        // دالة عرض المرفق
+        window.showAttachment = function(filename, mimetype, originalName) {
+            currentAttachmentUrl = `${BASE_URL}/api/files/${filename}`;
+            console.log('Opening attachment:', currentAttachmentUrl);
+            attachmentViewerTitle.textContent = `عرض المرفق: ${originalName || filename}`;
+            
+            const isImage = mimetype && mimetype.startsWith('image/');
+            const isPdf = mimetype && mimetype === 'application/pdf';
+            
+            if (isImage) {
+                attachmentViewerContent.innerHTML = `
+                    <div style="text-align: center;">
+                        <img src="${currentAttachmentUrl}" style="max-width: 100%; max-height: 70vh; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" alt="صورة المرفق" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <div style="display: none; padding: 20px; color: #666;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ffc107; margin-bottom: 10px;"></i>
+                            <p>لا يمكن تحميل الصورة</p>
+                            <p>يمكنك استخدام زر التحميل أدناه</p>
+                        </div>
+                    </div>
+                `;
+            } else if (isPdf) {
+                attachmentViewerContent.innerHTML = `
+                    <div style="text-align: center;">
+                        <iframe src="${currentAttachmentUrl}" style="width: 100%; height: 70vh; border: none; border-radius: 8px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"></iframe>
+                        <div style="display: none; padding: 20px; color: #666;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ffc107; margin-bottom: 10px;"></i>
+                            <p>لا يمكن عرض PDF</p>
+                            <p>يمكنك استخدام زر التحميل أدناه</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                attachmentViewerContent.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-file" style="font-size: 64px; color: #6c757d; margin-bottom: 20px;"></i>
+                        <p style="font-size: 18px; color: #666;">لا يمكن عرض هذا النوع من الملفات</p>
+                        <p style="font-size: 14px; color: #999;">يمكنك تحميل الملف لعرضه</p>
+                    </div>
+                `;
+            }
+            
+            attachmentViewerModal.style.display = 'flex';
+        };
+
+        // زر تحميل المرفق
+        downloadAttachmentBtn.addEventListener('click', () => {
+            if (currentAttachmentUrl) {
+                const link = document.createElement('a');
+                link.href = currentAttachmentUrl;
+                link.download = '';
+                link.click();
+            }
+        });
+
+        // إغلاق مودال المرفقات
+        closeAttachmentViewerBtn.addEventListener('click', () => {
+            attachmentViewerModal.style.display = 'none';
+        });
+
+        attachmentViewerModal.querySelector('.close-button').addEventListener('click', () => {
+            attachmentViewerModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target === attachmentViewerModal) {
+                attachmentViewerModal.style.display = 'none';
             }
         });
     </script>
