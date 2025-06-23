@@ -15,6 +15,8 @@ const contractAgreementsRoutes = require('./routes/contractAgreements'); // اس
 const contractPaymentsRoutes = require('./routes/contractPayments'); // استيراد مسار دفعات المقاولين
 const categoriesRoutes = require('./routes/categories'); // تم إضافة هذا المسار
 const usersRoutes = require('./routes/users');         // تم إضافة هذا المسار
+const employeesRoutes = require('./routes/employees'); // استيراد مسار الموظفين
+const salaryTransactionsRoutes = require('./routes/salaryTransactions'); // استيراد مسار معاملات المرتبات
 const generalExpensesRoutes = require('./routes/generalExpenses'); // استيراد مسار المصروفات العامة
 const filesRoutes = require('./routes/files'); // استيراد مسار الملفات
 
@@ -42,6 +44,8 @@ app.use('/api/contract-agreements', contractAgreementsRoutes); // استخدام
 app.use('/api/contract-payments', contractPaymentsRoutes); // استخدام مسار دفعات المقاولين
 app.use('/api/categories', categoriesRoutes); // استخدام مسار التصنيفات
 app.use('/api/users', usersRoutes);         // استخدام مسار المستخدمين
+app.use('/api/employees', employeesRoutes); // استخدام مسار الموظفين
+app.use('/api/salary-transactions', salaryTransactionsRoutes); // استخدام مسار معاملات المرتبات
 app.use('/api/general-expenses', generalExpensesRoutes); // استخدام مسار المصروفات العامة
 app.use('/api/files', filesRoutes); // استخدام مسار الملفات
 app.use('/api/backup', require('./routes/backup'));

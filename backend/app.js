@@ -16,6 +16,7 @@ const categoriesRoutes = require('./routes/categories');
 const usersRoutes = require('./routes/users');
 const generalExpensesRoutes = require('./routes/generalExpenses');
 const filesRoutes = require('./routes/files');
+const employeesRoutes = require('./routes/employees');
 
 const { auth, authorizeRoles } = require('./middleware/authMiddleware');
 
@@ -43,6 +44,7 @@ app.use('/api/categories', categoriesRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/general-expenses', generalExpensesRoutes);
 app.use('/api/files', filesRoutes);
+app.use('/api/employees', employeesRoutes);
 app.use('/api/backup', require('./routes/backup'));
 
 // تقديم الملفات الثابتة (frontend files)

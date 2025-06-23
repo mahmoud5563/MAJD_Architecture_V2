@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الموظفين - MAJD Architecture</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #014C47;
+            --primary-dark: #003a35;
+            --secondary-bg: #e6e6e6;
+            --text-color: #333;
+            --light-text-color: #f4f4f4;
+            --border-color: #ddd;
+            --sidebar-width: 250px;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            direction: rtl;
+            text-align: right;
+        }
+        .header {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .header .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        .header .user-info {
+            display: flex;
+            align-items: center;
+        }
+        .header .user-info span {
+            margin-right: 15px;
+        }
+        .header .logout-button {
+            background-color: var(--primary-dark);
+            color: var(--light-text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .header .logout-button:hover {
+            background-color: #002b28;
+        }
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--light-text-color);
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .main-container {
+            display: flex;
+            flex: 1;
+        }
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar ul li {
+            margin-bottom: 5px;
+        }
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--light-text-color);
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+        .sidebar ul li a i {
+            margin-left: 10px;
+            font-size: 18px;
+        }
+        .sidebar ul li a:hover,
+        .sidebar ul li.active a {
+            background-color: var(--primary-dark);
+            border-radius: 0 20px 20px 0;
+        }
+        .content-area {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .page-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 28px;
+        }
+        .add-button {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .add-button:hover {
+            background-color: var(--primary-dark);
+        }
+        .search-filter-section {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .search-filter-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .filter-select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            min-width: 150px;
+        }
+        .table-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .data-table th,
+        .data-table td {
+            padding: 12px 15px;
+            border: 1px solid #eee;
+            text-align: right;
+            white-space: nowrap;
+        }
+        .data-table th {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .data-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .data-table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+        .action-buttons button {
+            background-color: #6c757d;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            margin-right: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 14px;
+        }
+        .action-buttons button.edit {
+            background-color: #ffc107;
+            color: #333;
+        }
+        .action-buttons button.delete {
+            background-color: #dc3545;
+        }
+        .action-buttons button:hover {
+            opacity: 0.9;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .status-active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-vacation {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-suspended {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .status-resigned {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation-name: animatetop;
+            animation-duration: 0.4s;
+            text-align: right;
+        }
+        @keyframes animatetop {
+            from { top: -300px; opacity: 0 }
+            to { top: 0; opacity: 1 }
+        }
+        .close-button {
+            color: #aaa;
+            float: left;
+            font-size: 28px;
+            font-weight: bold;
+            margin-left: -10px;
+            margin-top: -10px;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .modal-content h3 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+        .modal-form-group {
+            margin-bottom: 15px;
+        }
+        .modal-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+            font-size: 15px;
+        }
+        .modal-form-group input[type="text"],
+        .modal-form-group input[type="email"],
+        .modal-form-group input[type="number"],
+        .modal-form-group input[type="date"],
+        .modal-form-group textarea,
+        .modal-form-group select {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 15px;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+        }
+        .modal-form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        .form-row .modal-form-group {
+            flex: 1;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .modal-button {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .modal-button.cancel {
+            background-color: #6c757d;
+        }
+        .modal-button:hover {
+            background-color: var(--primary-dark);
+        }
+        .modal-button.cancel:hover {
+            background-color: #5a6268;
+        }
+        .modal-message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+            text-align: center;
+        }
+        .modal-message.error {
+            background-color: #ffe6e6;
+            color: #cc0000;
+            border: 1px solid #cc0000;
+        }
+        .modal-message.success {
+            background-color: #e6ffe6;
+            color: #008000;
+            border: 1px solid #008000;
+        }
+        @media (max-width: 768px) {
+            .header .user-info span { display: none; }
+            .menu-toggle { display: block; }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                right: 0;
+                height: 100%;
+                width: var(--sidebar-width);
+                transform: translateX(100%);
+                z-index: 999;
+                box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+                padding-top: 70px;
+            }
+            .sidebar.active { transform: translateX(0); }
+            .content-area { margin-right: 0; }
+            .search-filter-row { flex-direction: column; align-items: stretch; }
+            .form-row { flex-direction: column; }
+        }
+        .action-buttons .edit {
+            background-color: #ffc107;
+            color: #000;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 5px;
+            font-size: 12px;
+        }
+        .action-buttons .details {
+            background-color: #17a2b8;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 5px;
+            font-size: 12px;
+        }
+        .action-buttons .delete {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div id="dashboardMessage" style="display:none;"></div>
+    <div class="header">
+        <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="logo">
+            
+            <span style="margin-right: 10px;">MAJD Architecture</span>
+        </div>
+        <div class="user-info">
+            <span id="currentUser"></span>
+            <button class="logout-button" id="logoutButton">
+                <i class="fas fa-sign-out-alt"></i>
+                تسجيل الخروج
+            </button>
+        </div>
+    </div>
+    <div class="main-container">
+        <div class="overlay" id="sidebarOverlay"></div>
+        <div class="sidebar" id="sidebar">
+            <ul>
+                <li><a href="dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>الرئيسية</a></li>
+                <li><a href="add-project.html" data-page="add-project"><i class="fas fa-plus-circle"></i>إضافة مشروع</a></li>
+                <li><a href="projects.html" data-page="projects"><i class="fas fa-project-diagram"></i>المشاريع</a></li>
+                <li><a href="clients.html" data-page="clients"><i class="fas fa-users"></i>العملاء</a></li>
+                <li><a href="contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i>المقاولون</a></li>
+                <li><a href="add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i>إضافة خزينة</a></li>
+                <li><a href="treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i>عرض الخزائن</a></li>
+                <li><a href="general-expenses.html" data-page="general-expenses"><i class="fas fa-money-bill-wave"></i>المصروفات العامة</a></li>
+                <li class="active"><a href="employees.html" data-page="employees"><i class="fas fa-user-tie"></i>الموظفين</a></li>
+                <li><a href="users.html" data-page="users"><i class="fas fa-user-friends"></i>المستخدمون</a></li>
+                <li><a href="categories.html" data-page="categories"><i class="fas fa-tags"></i>إدارة التصنيفات</a></li>
+                <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i>تسجيل الخروج</a></li>
+            </ul>
+        </div>
+        <div class="content-area">
+            <div class="page-header">
+                <h1><i class="fas fa-user-tie"></i> إدارة الموظفين</h1>
+                <button class="add-button" onclick="openAddModal()">
+                    <i class="fas fa-plus"></i>
+                    إضافة موظف جديد
+                </button>
+            </div>
+            <div class="search-filter-section">
+                <div class="search-filter-row">
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="البحث بالاسم أو الرقم القومي أو الهاتف..." onkeyup="searchEmployees()">
+                    </div>
+                    <select class="filter-select" id="statusFilter" onchange="filterEmployees()">
+                        <option value="">جميع الحالات</option>
+                        <option value="نشط">نشط</option>
+                        <option value="إجازة">إجازة</option>
+                        <option value="متوقف">متوقف</option>
+                        <option value="مستقيل">مستقيل</option>
+                    </select>
+                    <select class="filter-select" id="departmentFilter" onchange="filterEmployees()">
+                        <option value="">جميع الأقسام</option>
+                        <option value="إدارة">إدارة</option>
+                        <option value="هندسة">هندسة</option>
+                        <option value="محاسبة">محاسبة</option>
+                        <option value="أمن">أمن</option>
+                        <option value="صيانة">صيانة</option>
+                        <option value="أخرى">أخرى</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="data-table" id="employeesTable">
+                    <thead>
+                        <tr>
+                            <th>الاسم</th>
+                            <th>الرقم القومي</th>
+                            <th>الهاتف</th>
+                            <th>الوظيفة</th>
+                            <th>القسم</th>
+                            <th>الراتب</th>
+                            <th>تاريخ التعيين</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeesTableBody">
+                        <!-- البيانات ستتم إضافتها ديناميكياً -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div id="employeeModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <h3 id="modalTitle">إضافة موظف جديد</h3>
+            <form id="employeeForm">
+                <div class="form-row">
+                    <div class="modal-form-group">
+                        <label for="name">الاسم *</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="nationalId">الرقم القومي *</label>
+                        <input type="text" id="nationalId" name="nationalId" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="modal-form-group">
+                        <label for="phone">الهاتف *</label>
+                        <input type="text" id="phone" name="phone" required>
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="email">البريد الإلكتروني</label>
+                        <input type="email" id="email" name="email">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="modal-form-group">
+                        <label for="position">الوظيفة *</label>
+                        <select id="position" name="position" required>
+                            <option value="عامل">عامل</option>
+                            <option value="مهندس">مهندس</option>
+                            <option value="محاسب">محاسب</option>
+                            <option value="مدير">مدير</option>
+                            <option value="سكرتير">سكرتير</option>
+                            <option value="سائق">سائق</option>
+                            <option value="حارس">حارس</option>
+                            <option value="أخرى">أخرى</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="department">القسم *</label>
+                        <select id="department" name="department" required>
+                            <option value="أخرى">أخرى</option>
+                            <option value="إدارة">إدارة</option>
+                            <option value="هندسة">هندسة</option>
+                            <option value="محاسبة">محاسبة</option>
+                            <option value="أمن">أمن</option>
+                            <option value="صيانة">صيانة</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="modal-form-group">
+                        <label for="salary">الراتب *</label>
+                        <input type="number" id="salary" name="salary" min="0" step="0.01" required>
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="hireDate">تاريخ التعيين *</label>
+                        <input type="date" id="hireDate" name="hireDate" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="modal-form-group">
+                        <label for="status">الحالة *</label>
+                        <select id="status" name="status" required>
+                            <option value="نشط">نشط</option>
+                            <option value="إجازة">إجازة</option>
+                            <option value="متوقف">متوقف</option>
+                            <option value="مستقيل">مستقيل</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="address">العنوان</label>
+                        <input type="text" id="address" name="address">
+                    </div>
+                </div>
+                <div class="modal-form-group">
+                    <label for="emergencyContactName">اسم جهة الاتصال للطوارئ</label>
+                    <input type="text" id="emergencyContactName" name="emergencyContactName">
+                </div>
+                <div class="form-row">
+                    <div class="modal-form-group">
+                        <label for="emergencyContactPhone">هاتف جهة الاتصال للطوارئ</label>
+                        <input type="text" id="emergencyContactPhone" name="emergencyContactPhone">
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="emergencyContactRelationship">صلة القرابة</label>
+                        <input type="text" id="emergencyContactRelationship" name="emergencyContactRelationship">
+                    </div>
+                </div>
+                <div class="modal-form-group">
+                    <label for="notes">ملاحظات</label>
+                    <textarea id="notes" name="notes" rows="3"></textarea>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="modal-button cancel" onclick="closeModal()">إلغاء</button>
+                    <button type="submit" class="modal-button" id="submitButton">حفظ</button>
+                </div>
+            </form>
+            <div id="modalMessage" class="modal-message"></div>
+        </div>
+    </div>
+    <script>
+        let employees = [];
+        let currentEmployeeId = null;
+        let isEditMode = false;
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEmployees();
+            setCurrentDate();
+        });
+        function setCurrentDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('hireDate').value = today;
+        }
+        async function loadEmployees() {
+            try {
+                const response = await fetch('/api/employees', {
+                    headers: {
+                        'x-auth-token': localStorage.getItem('token')
+                    }
+                });
+                if (response.ok) {
+                    employees = await response.json();
+                    displayEmployees(employees);
+                } else {
+                    console.error('Failed to load employees');
+                }
+            } catch (error) {
+                console.error('Error loading employees:', error);
+            }
+        }
+        function displayEmployees(employeesToShow) {
+            const tbody = document.getElementById('employeesTableBody');
+            tbody.innerHTML = '';
+            employeesToShow.forEach(employee => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${employee.name}</td>
+                    <td>${employee.nationalId}</td>
+                    <td>${employee.phone}</td>
+                    <td>${employee.position}</td>
+                    <td>${employee.department}</td>
+                    <td>${(employee.baseSalary !== undefined ? employee.baseSalary : employee.salary).toLocaleString()} ج.م</td>
+                    <td>${new Date(employee.hireDate).toLocaleDateString('en-US')}</td>
+                    <td><span class="status-badge status-${getStatusClass(employee.status)}">${employee.status}</span></td>
+                    <td class="action-buttons">
+                        <button class="details" onclick="viewEmployeeDetails('${employee._id}')">
+                            <i class="fas fa-eye"></i> التفاصيل
+                        </button>
+                        <button class="edit" onclick="editEmployee('${employee._id}')">
+                            <i class="fas fa-edit"></i> تعديل
+                        </button>
+                        <button class="delete" onclick="deleteEmployee('${employee._id}')">
+                            <i class="fas fa-trash"></i> حذف
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        function getStatusClass(status) {
+            switch (status) {
+                case 'نشط': return 'active';
+                case 'إجازة': return 'vacation';
+                case 'متوقف': return 'suspended';
+                case 'مستقيل': return 'resigned';
+                default: return 'active';
+            }
+        }
+        function searchEmployees() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filteredEmployees = employees.filter(employee => 
+                employee.name.toLowerCase().includes(searchTerm) ||
+                employee.nationalId.includes(searchTerm) ||
+                employee.phone.includes(searchTerm)
+            );
+            displayEmployees(filteredEmployees);
+        }
+        function filterEmployees() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const departmentFilter = document.getElementById('departmentFilter').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            let filteredEmployees = employees;
+            if (searchTerm) {
+                filteredEmployees = filteredEmployees.filter(employee => 
+                    employee.name.toLowerCase().includes(searchTerm) ||
+                    employee.nationalId.includes(searchTerm) ||
+                    employee.phone.includes(searchTerm)
+                );
+            }
+            if (statusFilter) {
+                filteredEmployees = filteredEmployees.filter(employee => 
+                    employee.status === statusFilter
+                );
+            }
+            if (departmentFilter) {
+                filteredEmployees = filteredEmployees.filter(employee => 
+                    employee.department === departmentFilter
+                );
+            }
+            displayEmployees(filteredEmployees);
+        }
+        function openAddModal() {
+            isEditMode = false;
+            currentEmployeeId = null;
+            document.getElementById('modalTitle').textContent = 'إضافة موظف جديد';
+            document.getElementById('employeeForm').reset();
+            setCurrentDate();
+            document.getElementById('employeeModal').style.display = 'flex';
+        }
+        function editEmployee(employeeId) {
+            const employee = employees.find(emp => emp._id === employeeId);
+            if (!employee) return;
+            isEditMode = true;
+            currentEmployeeId = employeeId;
+            document.getElementById('modalTitle').textContent = 'تعديل بيانات الموظف';
+            document.getElementById('name').value = employee.name;
+            document.getElementById('nationalId').value = employee.nationalId;
+            document.getElementById('phone').value = employee.phone;
+            document.getElementById('email').value = employee.email || '';
+            document.getElementById('position').value = employee.position;
+            document.getElementById('department').value = employee.department;
+            document.getElementById('salary').value = employee.salary;
+            document.getElementById('hireDate').value = new Date(employee.hireDate).toISOString().split('T')[0];
+            document.getElementById('status').value = employee.status;
+            document.getElementById('address').value = employee.address || '';
+            document.getElementById('emergencyContactName').value = employee.emergencyContact?.name || '';
+            document.getElementById('emergencyContactPhone').value = employee.emergencyContact?.phone || '';
+            document.getElementById('emergencyContactRelationship').value = employee.emergencyContact?.relationship || '';
+            document.getElementById('notes').value = employee.notes || '';
+            document.getElementById('employeeModal').style.display = 'flex';
+        }
+        function closeModal() {
+            document.getElementById('employeeModal').style.display = 'none';
+            document.getElementById('modalMessage').style.display = 'none';
+        }
+        async function deleteEmployee(employeeId) {
+            if (!confirm('هل أنت متأكد من حذف هذا الموظف؟')) {
+                return;
+            }
+            try {
+                const response = await fetch(`/api/employees/${employeeId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'x-auth-token': localStorage.getItem('token')
+                    }
+                });
+                if (response.ok) {
+                    alert('تم حذف الموظف بنجاح');
+                    loadEmployees();
+                } else {
+                    const error = await response.json();
+                    alert(error.message || 'حدث خطأ أثناء حذف الموظف');
+                }
+            } catch (error) {
+                console.error('Error deleting employee:', error);
+                alert('حدث خطأ أثناء حذف الموظف');
+            }
+        }
+        document.getElementById('employeeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            let employeeData = {
+                name: formData.get('name'),
+                nationalId: formData.get('nationalId'),
+                phone: formData.get('phone'),
+                email: formData.get('email') || '',
+                position: formData.get('position'),
+                department: formData.get('department'),
+                salary: parseFloat(formData.get('salary')),
+                hireDate: formData.get('hireDate'),
+                status: formData.get('status'),
+                address: formData.get('address') || '',
+                emergencyContact: {
+                    name: formData.get('emergencyContactName') || '',
+                    phone: formData.get('emergencyContactPhone') || '',
+                    relationship: formData.get('emergencyContactRelationship') || ''
+                },
+                notes: formData.get('notes') || ''
+            };
+            if (!isEditMode) {
+                employeeData.baseSalary = parseFloat(formData.get('salary'));
+            }
+            console.log('employeeData to send:', employeeData);
+            try {
+                const url = isEditMode ? `/api/employees/${currentEmployeeId}` : '/api/employees';
+                const method = isEditMode ? 'PUT' : 'POST';
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': localStorage.getItem('token')
+                    },
+                    body: JSON.stringify(employeeData)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showModalMessage(result.message, 'success');
+                    setTimeout(() => {
+                        closeModal();
+                        loadEmployees();
+                    }, 1500);
+                } else {
+                    showModalMessage(result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error saving employee:', error);
+                showModalMessage('حدث خطأ أثناء حفظ بيانات الموظف', 'error');
+            }
+        });
+        function showModalMessage(message, type) {
+            const messageElement = document.getElementById('modalMessage');
+            messageElement.textContent = message;
+            messageElement.className = `modal-message ${type}`;
+            messageElement.style.display = 'block';
+        }
+        function viewEmployeeDetails(employeeId) {
+            window.location.href = `employee-details.html?id=${employeeId}`;
+        }
+        window.onclick = function(event) {
+            const modal = document.getElementById('employeeModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+        const sidebar = document.getElementById('sidebar');
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+            document.body.classList.toggle('sidebar-open');
+        });
+
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            document.body.classList.remove('sidebar-open');
+        });
+
+        sidebar.addEventListener('click', (event) => {
+            const link = event.target.closest('a');
+            if (link && link.href && link.id !== 'sidebarLogoutButton') {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+                document.body.classList.remove('sidebar-open');
+            }
+        });
+
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        });
+        document.getElementById('sidebarLogoutButton').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const decodedPayload = decodeURIComponent(escape(window.atob(base64)));
+                const payload = JSON.parse(decodedPayload);
+                const username = payload.user.username || payload.user.id || 'مستخدم';
+                let role = 'غير محدد';
+                try {
+                    role = payload.user.role || 'غير محدد';
+                } catch (e) {}
+                document.getElementById('currentUser').textContent = `مرحباً، ${username} (${role})`;
+                sidebar.querySelectorAll('li.active').forEach(li => li.classList.remove('active'));
+                const currentPageLink = document.querySelector(`.sidebar ul li a[data-page="employees"]`);
+                if (currentPageLink) {
+                    currentPageLink.parentElement.classList.add('active');
+                }
+            } catch (e) {
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            }
+        });
+    </script>
+</body>
+</html> 

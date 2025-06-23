@@ -653,6 +653,7 @@
                         خزينة</a></li>
                 <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
                 <li><a href="/general-expenses.html" data-page="general-expenses"><i class="fas fa-money-bill-wave"></i> المصروفات العامة</a></li>
+                <li><a href="/employees.html" data-page="employees"><i class="fas fa-user-tie"></i> الموظفين</a></li>
                 <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
                 <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a>
                 </li>
@@ -1222,7 +1223,7 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
     </div>
 
     <script>
-        const BASE_URL = "http://localhost:3000";
+        const BASE_URL = "https://f65a-156-203-153-92.ngrok-free.app";
         // Client-side authentication check and redirection
         document.addEventListener('DOMContentLoaded', function () {
             const token = localStorage.getItem('token');
@@ -1947,32 +1948,112 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                     // Combine and sort all financial activities
                     let allActivities = [];
 
-                    // Add transactions
+                    // Add transactions (excluding contractor payments that are already handled)
                     transactions.forEach(trans => {
-                        allActivities.push({
-                            date: new Date(trans.date),
-                            type: trans.type,
-                            description: trans.description || 'معاملة مالية',
-                            amount: trans.amount,
-                            isTransaction: true,
-                            originalData: trans
-                        });
+                        // Skip transactions that are contractor payments to avoid duplication
+                        if (trans.type !== 'دفعة مقاول') {
+                            // Ensure date is properly formatted
+                            let transactionDate;
+                            try {
+                                transactionDate = new Date(trans.date);
+                                if (isNaN(transactionDate.getTime())) {
+                                    console.warn('Invalid transaction date:', trans.date);
+                                    transactionDate = new Date(); // Use current date as fallback
+                                }
+                            } catch (error) {
+                                console.warn('Error parsing transaction date:', trans.date);
+                                transactionDate = new Date(); // Use current date as fallback
+                            }
+                            
+                            allActivities.push({
+                                date: transactionDate,
+                                type: trans.type,
+                                description: trans.description || 'معاملة مالية',
+                                amount: trans.amount,
+                                isTransaction: true,
+                                originalData: trans,
+                                createdAt: trans.createdAt // Add createdAt
+                            });
+                        }
                     });
 
                     // Add contractor payments
                     contractorPayments.forEach(pay => {
+                        // Ensure date is properly formatted
+                        let paymentDate;
+                        try {
+                            paymentDate = new Date(pay.date);
+                            if (isNaN(paymentDate.getTime())) {
+                                console.warn('Invalid payment date:', pay.date);
+                                paymentDate = new Date(); // Use current date as fallback
+                            }
+                        } catch (error) {
+                            console.warn('Error parsing payment date:', pay.date);
+                            paymentDate = new Date(); // Use current date as fallback
+                        }
+                        
                         allActivities.push({
-                            date: new Date(pay.date),
+                            date: paymentDate,
                             type: 'دفعة مقاول',
                             description: `دفعة مقاول: ${pay.description || 'دفعة للمقاول'}`,
                             amount: pay.amount,
                             isTransaction: false,
-                            originalData: pay
+                            originalData: pay,
+                            createdAt: pay.createdAt // Add createdAt
                         });
                     });
 
-                    // Sort by date (oldest first)
-                    allActivities.sort((a, b) => a.date - b.date);
+                    // DEBUG: Log the array before sorting
+                    console.log('--- All Activities Before Sort ---');
+                    console.table(allActivities.map(a => ({
+                        type: a.type,
+                        date: a.date.toISOString(),
+                        createdAt: a.createdAt ? new Date(a.createdAt).toISOString() : 'N/A',
+                        description: a.description,
+                        original_createdAt: a.originalData ? (a.originalData.createdAt ? new Date(a.originalData.createdAt).toISOString() : 'MISSING') : 'NO_ORIGINAL'
+                    })));
+
+                    // Sort by date (oldest first) - الأقدم في الأعلى
+                    allActivities.sort((a, b) => {
+                        // Ensure we have valid dates and convert them properly
+                        let dateA, dateB;
+                        
+                        try {
+                            dateA = new Date(a.date);
+                            dateB = new Date(b.date);
+                            
+                            // Check if dates are valid
+                            if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+                                console.warn('Invalid date found during sort:', a.date, b.date);
+                                return 0; // Keep original order if dates are invalid
+                            }
+                            
+                            // Convert to timestamps for accurate comparison
+                            const timestampA = dateA.getTime();
+                            const timestampB = dateB.getTime();
+                            
+                            // If dates are the same, sort by creation time, which is more reliable
+                            // for determining the actual order of entry.
+                            const creationTimeA = a.originalData && a.originalData.createdAt 
+                                ? new Date(a.originalData.createdAt).getTime() 
+                                : timestampA; // Fallback to transaction date if not available
+                                
+                            const creationTimeB = b.originalData && b.originalData.createdAt 
+                                ? new Date(b.originalData.createdAt).getTime() 
+                                : timestampB; // Fallback to transaction date if not available
+
+                            // Main sorting logic
+                            if(timestampA !== timestampB) {
+                                return timestampA - timestampB;
+                            } else {
+                                return creationTimeA - creationTimeB;
+                            }
+                            
+                        } catch (error) {
+                            console.error('Error sorting dates:', error, a.date, b.date);
+                            return 0; // Keep original order if there's an error
+                        }
+                    });
 
                     // Calculate running balance and display
                     let runningBalance = 0;

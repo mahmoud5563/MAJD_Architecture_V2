@@ -231,6 +231,77 @@
             background: linear-gradient(90deg, #014C47 0%, #00bfae 100%);
             transform: translateY(-2px) scale(1.04);
         }
+        
+        /* Password Modal Styles */
+        .password-modal {
+            display: none;
+            position: fixed;
+            z-index: 3000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .password-modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .password-modal h3 {
+            color: #014C47;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        .password-modal input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            text-align: center;
+        }
+        .password-modal input:focus {
+            outline: none;
+            border-color: #014C47;
+        }
+        .password-modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .password-modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .password-modal-btn.confirm {
+            background-color: #014C47;
+            color: white;
+        }
+        .password-modal-btn.cancel {
+            background-color: #6c757d;
+            color: white;
+        }
+        .password-modal-btn:hover {
+            opacity: 0.8;
+        }
+        .password-error {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
         @media (max-width: 600px) {
             #backupButtonsContainer {
                 flex-direction: column;
@@ -316,11 +387,13 @@
             font-weight: bold;
             box-shadow: 0 4px 16px rgba(0,0,0,0.13);
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 14px;
             opacity: 0;
             transition: opacity 0.3s;
             pointer-events: none;
+            white-space: pre-line;
+            line-height: 1.4;
         }
         #dashboardMessage.active {
             opacity: 1;
@@ -345,6 +418,21 @@
 
 <body>
     <div id="dashboardMessage" style="display:none;"></div>
+    
+    <!-- Password Modal for Import -->
+    <div id="passwordModal" class="password-modal">
+        <div class="password-modal-content">
+            <h3>🔒 كلمة مرور الاستيراد</h3>
+            <p>أدخل كلمة المرور للمتابعة:</p>
+            <input type="password" id="importPassword" placeholder="كلمة المرور" />
+            <div class="password-error" id="passwordError">كلمة المرور غير صحيحة</div>
+            <div class="password-modal-buttons">
+                <button class="password-modal-btn confirm" id="confirmPassword">تأكيد</button>
+                <button class="password-modal-btn cancel" id="cancelPassword">إلغاء</button>
+            </div>
+        </div>
+    </div>
+    
     <div class="header">
         <button class="menu-toggle" id="menuToggle">
             <i class="fas fa-bars"></i>
@@ -375,6 +463,7 @@
                         خزينة</a></li>
                 <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
                 <li><a href="/general-expenses.html" data-page="general-expenses"><i class="fas fa-money-bill-wave"></i> المصروفات العامة</a></li>
+                <li><a href="/employees.html" data-page="employees"><i class="fas fa-user-tie"></i> الموظفين</a></li>
                 <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
                 <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a>
                 </li>
@@ -435,7 +524,7 @@
     </div>
 
     <script>
-        const BASE_URL = "http://localhost:3000";
+        const BASE_URL = "https://f65a-156-203-153-92.ngrok-free.app";
 
         // Client-side authentication check and redirection
         document.addEventListener('DOMContentLoaded', function () {
@@ -586,7 +675,6 @@
                         const total = clients.length;
                         // Assuming all clients are "active" for now, or you can add a status field to Client model
                         document.getElementById('totalClients').textContent = total;
-                        document.getElementById('activeClients').textContent = total; // Placeholder for active clients
                     } else {
                         console.error('Failed to fetch client summary:', clients.message);
                         document.getElementById('totalClients').textContent = 'خطأ';
@@ -720,11 +808,59 @@
             // زر استيراد النسخة الاحتياطية
             const importBackupBtn = document.getElementById('importBackupBtn');
             const importBackupFile = document.getElementById('importBackupFile');
+            const passwordModal = document.getElementById('passwordModal');
+            const importPassword = document.getElementById('importPassword');
+            const confirmPassword = document.getElementById('confirmPassword');
+            const cancelPassword = document.getElementById('cancelPassword');
+            const passwordError = document.getElementById('passwordError');
+            
+            // كلمة المرور للاستيراد (يمكن تغييرها)
+            const IMPORT_PASSWORD = 'majd2024';
+            
             if (importBackupBtn && importBackupFile) {
                 importBackupBtn.addEventListener('click', function() {
-                    importBackupFile.value = '';
-                    importBackupFile.click();
+                    passwordModal.style.display = 'block';
+                    importPassword.focus();
                 });
+                
+                // إغلاق النافذة المنبثقة
+                cancelPassword.addEventListener('click', function() {
+                    passwordModal.style.display = 'none';
+                    importPassword.value = '';
+                    passwordError.style.display = 'none';
+                });
+                
+                // إغلاق النافذة عند الضغط خارجها
+                passwordModal.addEventListener('click', function(e) {
+                    if (e.target === passwordModal) {
+                        passwordModal.style.display = 'none';
+                        importPassword.value = '';
+                        passwordError.style.display = 'none';
+                    }
+                });
+                
+                // التحقق من كلمة المرور
+                confirmPassword.addEventListener('click', function() {
+                    if (importPassword.value === IMPORT_PASSWORD) {
+                        passwordModal.style.display = 'none';
+                        importPassword.value = '';
+                        passwordError.style.display = 'none';
+                        importBackupFile.value = '';
+                        importBackupFile.click();
+                    } else {
+                        passwordError.style.display = 'block';
+                        importPassword.value = '';
+                        importPassword.focus();
+                    }
+                });
+                
+                // إدخال كلمة المرور بالضغط على Enter
+                importPassword.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        confirmPassword.click();
+                    }
+                });
+                
                 importBackupFile.addEventListener('change', function() {
                     if (!importBackupFile.files.length) return;
                     if (!confirm('تحذير: استرجاع النسخة الاحتياطية سيحذف كل البيانات الحالية ويستبدلها بالنسخة الجديدة! هل أنت متأكد؟')) return;
@@ -745,13 +881,20 @@
                             });
                             const result = await res.json();
                             if (res.ok) {
-                                showDashboardMessage('تم استيراد النسخة الاحتياطية بنجاح! سيتم إعادة تحميل الصفحة.', 'success', 2000);
+                                showDashboardMessage('تم استيراد النسخة الاحتياطية بنجاح!', 'success', 2000);
                                 setTimeout(() => window.location.reload(), 2000);
                             } else {
-                                showDashboardMessage('فشل في استيراد النسخة الاحتياطية: ' + (result.message || ''), 'error', 2500);
+                                let errorMessage = 'فشل في استيراد النسخة الاحتياطية';
+                                if (result.error) {
+                                    errorMessage += ': ' + result.error;
+                                }
+                                if (result.details) {
+                                    errorMessage += '\n' + result.details;
+                                }
+                                showDashboardMessage(errorMessage, 'error', 5000);
                             }
                         } catch (err) {
-                            showDashboardMessage('حدث خطأ أثناء استيراد النسخة الاحتياطية: ' + err.message, 'error', 2500);
+                            showDashboardMessage('حدث خطأ أثناء استيراد النسخة الاحتياطية: ' + err.message, 'error', 5000);
                         } finally {
                             importBackupBtn.disabled = false;
                             importBackupBtn.textContent = 'استيراد نسخة احتياطية';
