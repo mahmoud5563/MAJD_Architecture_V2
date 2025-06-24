@@ -831,11 +831,7 @@
             setTimeout(() => { msgDiv.style.display = 'none'; }, 400);
         }, duration);
     }
-<<<<<<< HEAD
-    const BASE_URL = "https://08e6-156-203-155-30.ngrok-free.app";
-=======
-    const BASE_URL = "https://f65a-156-203-153-92.ngrok-free.app";
->>>>>>> 0e3867fc6451404f4e635b2b1c37d908b0398db6
+    const BASE_URL = "https://e562-156-203-155-30.ngrok-free.app";
     const sidebar = document.getElementById('sidebar');
     const menuToggle = document.getElementById('menuToggle');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
@@ -957,10 +953,7 @@
         document.getElementById('emergencyContactPhone').value = employee.emergencyContact?.phone || '';
         document.getElementById('emergencyContactRelationship').value = employee.emergencyContact?.relationship || '';
         document.getElementById('notes').value = employee.notes || '';
-<<<<<<< HEAD
         renderEmployeeImages(employee.images || []);
-=======
->>>>>>> 0e3867fc6451404f4e635b2b1c37d908b0398db6
     }
 
     function updateCurrentSalary(salary) {
@@ -1228,12 +1221,9 @@
                 <button class="salary-btn" style="margin-top:15px;" onclick="openSalaryModal('salary', true)">
                     <i class="fas fa-money-bill-wave"></i> صرف راتب شهري
                 </button>
-<<<<<<< HEAD
                 <button class="salary-btn" style="margin-top:15px; background-color:#1a8a6b;" onclick="exportSalarySheet()">
                     <i class="fas fa-file-excel"></i> تصدير كشف راتب
                 </button>
-=======
->>>>>>> 0e3867fc6451404f4e635b2b1c37d908b0398db6
             </div>
             <div class="salary-actions">
                 <button class="salary-btn" onclick="openSalaryModal('bonus')">
@@ -1389,7 +1379,6 @@
         const icon = header.querySelector('.accordion-icon');
         icon.textContent = section.classList.contains('open') ? '-' : '+';
     }
-<<<<<<< HEAD
 
     function exportSalarySheet() {
         if (!currentEmployee || !currentEmployee._id) {
@@ -1504,8 +1493,6 @@
             <button onclick="document.getElementById('imageModal').remove()" style="margin-top:10px; padding:7px 18px; background:#014C47; color:#fff; border:none; border-radius:5px; cursor:pointer;">إغلاق</button>
         </div>`;
     }
-=======
->>>>>>> 0e3867fc6451404f4e635b2b1c37d908b0398db6
     </script>
 </body>
 </html> 

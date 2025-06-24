@@ -50,12 +50,10 @@ app.use('/api/general-expenses', generalExpensesRoutes); // استخدام مس�
 app.use('/api/files', filesRoutes); // استخدام مسار الملفات
 app.use('/api/backup', require('./routes/backup'));
 
-<<<<<<< HEAD
 // تقديم ملفات الصور من مجلد uploads
 app.use('/backend/uploads', express.static(path.join(__dirname, 'uploads')));
 
-=======
->>>>>>> 0e3867fc6451404f4e635b2b1c37d908b0398db6
+
 // ******* أمثلة لمسارات API محمية (يمكن إزالتها لاحقًا) *******
 app.get('/api/protected', auth, (req, res) => {
     res.json({
