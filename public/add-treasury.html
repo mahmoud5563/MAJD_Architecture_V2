@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إضافة خزينة - MAJD Architecture</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #014C47;
+            --primary-dark: #003a35;
+            --secondary-bg: #e6e6e6;
+            --text-color: #333;
+            --light-text-color: #f4f4f4;
+            --border-color: #ddd;
+            --sidebar-width: 250px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            direction: rtl;
+            text-align: right;
+        }
+
+        /* Header Styling */
+        .header {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        .header .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .header .user-info span {
+            margin-right: 15px;
+        }
+
+        .header .logout-button {
+            background-color: var(--primary-dark);
+            color: var(--light-text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .header .logout-button:hover {
+            background-color: #002b28;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--light-text-color);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Layout Container */
+        .main-container {
+            display: flex;
+            flex: 1;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 5px;
+        }
+
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--light-text-color);
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar ul li a i {
+            margin-left: 10px;
+            font-size: 18px;
+        }
+
+        .sidebar ul li a:hover,
+        .sidebar ul li.active a {
+            background-color: var(--primary-dark);
+            border-radius: 0 20px 20px 0;
+        }
+
+        /* Main Content Area */
+        .content-area {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Form Styling */
+        .form-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            margin-top: 20px;
+            margin-bottom: 30px;
+        }
+
+        .form-container h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: right;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+            font-size: 16px;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group input[type="date"],
+        .form-group textarea,
+        .form-group select {
+            width: calc(100% - 20px);
+            padding: 12px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .form-button {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .form-button.cancel {
+            background-color: #6c757d;
+        }
+
+        .form-button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .form-button.cancel:hover {
+            background-color: #5a6268;
+        }
+
+        .form-message {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .form-message.error {
+            background-color: #ffe6e6;
+            color: #cc0000;
+            border: 1px solid #cc0000;
+        }
+
+        .form-message.success {
+            background-color: #e6ffe6;
+            color: #008000;
+            border: 1px solid #008000;
+        }
+        
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .header .user-info span {
+                display: none;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                right: 0;
+                height: 100%;
+                width: var(--sidebar-width);
+                transform: translateX(100%);
+                z-index: 999;
+                box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+                padding-top: 70px;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .content-area {
+                margin-right: 0;
+            }
+
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 998;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+
+            .form-container {
+                padding: 20px;
+                margin-left: 20px;
+                margin-right: 20px;
+            }
+
+            .form-container h1 {
+                font-size: 24px;
+            }
+
+            .form-button {
+                padding: 12px 25px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+
+<div class="header">
+    <button class="menu-toggle" id="menuToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="logo">
+        MAJD Architecture
+    </div>
+    <div class="user-info">
+        <span id="loggedInUser"></span>
+        <button class="logout-button" id="logoutButton">تسجيل الخروج</button>
+    </div>
+</div>
+
+<div class="main-container">
+    <div class="overlay" id="sidebarOverlay"></div>
+
+    <div class="sidebar" id="sidebar">
+        <ul>
+            <li ><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>
+                    الرئيسية</a></li>
+            <li><a href="/add-project.html" data-page="add-project"><i class="fas fa-plus-circle"></i> إضافة
+                    مشروع</a></li>
+            <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a>
+            </li>
+            <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
+            <li><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a></li>
+            <li><a href="/add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i> إضافة
+                    خزينة</a></li>
+            <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
+            <li><a href="/general-expenses.html" data-page="general-expenses"><i class="fas fa-money-bill-wave"></i> المصروفات العامة</a></li>
+            <li><a href="/employees.html" data-page="employees"><i class="fas fa-user-tie"></i> الموظفين</a></li>
+            <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
+            <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a>
+            </li>
+            <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
+        </ul>
+    </div>
+
+    <div class="content-area" id="contentArea">
+        <div class="form-container">
+            <h1>إضافة خزينة جديدة</h1>
+            <form id="addTreasuryForm">
+                <div class="form-group">
+                    <label for="treasuryName">اسم الخزينة:</label>
+                    <input type="text" id="treasuryName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="treasuryType">النوع:</label>
+                    <select id="treasuryType" name="type" required>
+                        <option value="خزينة">خزينة</option>
+                        <option value="عهدة">عهدة</option>
+                    </select>
+                </div>
+
+                <!-- New Conditional Fields for 'عهدة' Type -->
+                <div class="form-group" id="engineerGroup" style="display: none;">
+                    <label for="responsibleEngineer">اسم المهندس:</label>
+                    <select id="responsibleEngineer" name="responsibleUser">
+                        <option value="">اختر مهندس</option>
+                        <!-- Engineers will be loaded here dynamically -->
+                    </select>
+                </div>
+                <div class="form-group" id="projectGroup" style="display: none;">
+                    <label for="relatedProject">المشروع:</label>
+                    <select id="relatedProject" name="project">
+                        <option value="">اختر مشروع</option>
+                        <!-- Projects will be loaded here dynamically -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="treasuryDate">التاريخ:</label>
+                    <input type="date" id="treasuryDate" name="date" required>
+                </div>
+                <div class="form-group">
+                    <label for="treasuryReason">السبب:</label>
+                    <textarea id="treasuryReason" name="reason" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="treasuryInitialBalance">الرصيد الأولي:</label>
+                    <input type="number" id="treasuryInitialBalance" name="initialBalance" value="0" step="0.01"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label for="treasuryDescription">الوصف:</label>
+                    <textarea id="treasuryDescription" name="description"></textarea>
+                </div>
+
+                <div class="form-message" id="addTreasuryMessage"></div>
+                <div class="form-buttons">
+                    <button type="submit" class="form-button">إضافة الخزينة</button>
+                    <button type="button" class="form-button cancel" id="cancelAddTreasury">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const BASE_URL = "https://08e6-156-203-155-30.ngrok-free.app";
+
+    // Client-side authentication check and redirection
+    document.addEventListener('DOMContentLoaded', function () {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/';
+            return;
+        }
+
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const decodedPayload = decodeURIComponent(escape(window.atob(base64)));
+            const payload = JSON.parse(decodedPayload);
+
+            const username = payload.user.username || payload.user.id || 'مستخدم';
+            const role = payload.user.role || 'غير محدد';
+
+            document.getElementById('loggedInUser').textContent = `مرحباً، ${username} (${role})`;
+
+            // Client-side authorization based on role for sidebar visibility
+            const sidebar = document.getElementById('sidebar');
+            const addProjectLink = sidebar.querySelector('[data-page="add-project"]');
+            const usersLink = sidebar.querySelector('[data-page="users"]');
+            const categoriesLink = sidebar.querySelector('[data-page="categories"]');
+            const addTreasuryLink = sidebar.querySelector('[data-page="add-treasury"]');
+            const treasuriesLink = sidebar.querySelector('[data-page="treasuries"]');
+            const contractorsLink = sidebar.querySelector('[data-page="contractors"]');
+            const clientsLink = sidebar.querySelector('[data-page="clients"]');
+            const generalExpensesLink = sidebar.querySelector('[data-page="general-expenses"]');
+
+            if (role === 'مهندس') {
+                // Hide restricted elements for engineer
+                if (addProjectLink) addProjectLink.style.display = 'none';
+                if (usersLink) usersLink.style.display = 'none';
+                if (addTreasuryLink) addTreasuryLink.style.display = 'none';
+                if (contractorsLink) contractorsLink.style.display = 'none';
+                if (clientsLink) clientsLink.style.display = 'none';
+                if (generalExpensesLink) generalExpensesLink.style.display = 'none';
+            }
+
+            // Set active link in sidebar (for this page)
+            const currentPageLink = document.querySelector(`.sidebar ul li a[data-page="add-treasury"]`);
+            if (currentPageLink) {
+                currentPageLink.parentElement.classList.add('active');
+            }
+        } catch (e) {
+            console.error("Failed to decode token:", e);
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        }
+
+        // Logout functionality
+        const logout = () => {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        };
+        document.getElementById('logoutButton').addEventListener('click', logout);
+        document.getElementById('sidebarLogoutButton').addEventListener('click', logout);
+
+        // Responsive Sidebar Toggle (for this page as well)
+        const sidebar = document.getElementById('sidebar');
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+            document.body.classList.toggle('sidebar-open');
+        });
+
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            document.body.classList.remove('sidebar-open');
+        });
+
+        // Simple navigation - let links work normally
+        sidebar.addEventListener('click', (event) => {
+            const link = event.target.closest('a');
+            if (link && link.id !== 'sidebarLogoutButton') {
+                // Close sidebar on mobile
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+                document.body.classList.remove('sidebar-open');
+            }
+        });
+
+        /* --- Logic for Add Treasury Form --- */
+        const addTreasuryForm = document.getElementById('addTreasuryForm');
+        const addTreasuryMessage = document.getElementById('addTreasuryMessage');
+        const cancelAddTreasuryBtn = document.getElementById('cancelAddTreasury');
+        const treasuryTypeSelect = document.getElementById('treasuryType');
+        const engineerGroup = document.getElementById('engineerGroup');
+        const projectGroup = document.getElementById('projectGroup');
+        const responsibleEngineerSelect = document.getElementById('responsibleEngineer');
+        const relatedProjectSelect = document.getElementById('relatedProject');
+        const treasuryDateInput = document.getElementById('treasuryDate');
+
+        // Set current date as default for treasuryDateInput
+        treasuryDateInput.valueAsDate = new Date();
+
+        // Function to populate dropdowns
+        const populateDropdown = async (selectElement, apiUrl, valueKey, textKey, defaultOptionText = 'اختر') => {
+            selectElement.innerHTML = `<option value="">${defaultOptionText}</option>`;
+            try {
+                const response = await fetch(apiUrl, {
+                    headers: { 'x-auth-token': localStorage.getItem('token') }
+                });
+                if (response.ok) {
+                    const items = await response.json();
+                    items.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item[valueKey];
+                        option.textContent = item[textKey];
+                        selectElement.appendChild(option);
+                    });
+                } else {
+                    console.error(`Failed to fetch items from ${apiUrl}:`, await response.json());
+                }
+            } catch (error) {
+                console.error(`Error fetching items from ${apiUrl}:`, error);
+            }
+        };
+
+        // Function to toggle visibility of conditional fields
+        const toggleConditionalFields = async () => {
+            if (treasuryTypeSelect.value === 'عهدة') {
+                engineerGroup.style.display = 'block';
+                projectGroup.style.display = 'block';
+                // Populate dropdowns only when they become visible
+                await populateDropdown(responsibleEngineerSelect, '/api/projects/engineers', '_id', 'username', 'اختر مهندس');
+                await populateDropdown(relatedProjectSelect, '/api/projects', '_id', 'projectName', 'اختر مشروع');
+            } else {
+                engineerGroup.style.display = 'none';
+                projectGroup.style.display = 'none';
+                // Clear selected values when hidden
+                responsibleEngineerSelect.value = '';
+                relatedProjectSelect.value = '';
+            }
+        };
+
+        // Event listener for treasuryType change
+        treasuryTypeSelect.addEventListener('change', toggleConditionalFields);
+
+        // Initial call to set correct visibility on page load
+        toggleConditionalFields();
+
+        // Handle form submission
+        addTreasuryForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(addTreasuryForm);
+            const treasuryData = {};
+            for (let [key, value] of formData.entries()) {
+                if (key === 'initialBalance') {
+                    treasuryData[key] = parseFloat(value); // Convert balance to number
+                } else if (value === '') {
+                    treasuryData[key] = undefined; // Send undefined for empty optional fields
+                } else {
+                    treasuryData[key] = value;
+                }
+            }
+
+            // Add the new fields specifically
+            treasuryData.date = treasuryDateInput.value;
+            treasuryData.reason = document.getElementById('treasuryReason').value || undefined;
+
+            // Conditionally add engineer and project for 'عهدة'
+            if (treasuryData.type === 'عهدة') {
+                treasuryData.responsibleUser = responsibleEngineerSelect.value || undefined;
+                treasuryData.project = relatedProjectSelect.value || undefined;
+            } else {
+                // Ensure these are not sent if type is not 'عهدة'
+                delete treasuryData.responsibleUser;
+                delete treasuryData.project;
+            }
+
+            // Remove fields with undefined values to avoid sending "undefined" string
+            Object.keys(treasuryData).forEach(key => {
+                if (treasuryData[key] === undefined) {
+                    delete treasuryData[key];
+                }
+            });
+
+            console.log("Sending treasury data:", treasuryData);
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/treasuries`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': localStorage.getItem('token')
+                    },
+                    body: JSON.stringify(treasuryData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    addTreasuryMessage.className = 'form-message success';
+                    addTreasuryMessage.textContent = data.message || 'تم إضافة الخزينة بنجاح.';
+                    addTreasuryMessage.style.display = 'block';
+                    addTreasuryForm.reset(); // Clear form after successful submission
+                    treasuryDateInput.valueAsDate = new Date(); // Reset date to current
+                    toggleConditionalFields(); // Reset conditional fields visibility
+                    setTimeout(() => addTreasuryMessage.style.display = 'none', 3000); // Hide message after 3 seconds
+                    // Optionally, redirect to treasuries list
+                    // window.location.href = '/treasuries.html'; 
+                } else {
+                    addTreasuryMessage.className = 'form-message error';
+                    addTreasuryMessage.textContent = data.message || 'فشل في إضافة الخزينة. الرجاء التحقق من البيانات.';
+                    addTreasuryMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error adding treasury:', error);
+                addTreasuryMessage.className = 'form-message error';
+                addTreasuryMessage.textContent = 'حدث خطأ أثناء الاتصال بالخادم. الرجاء المحاولة لاحقاً.';
+                addTreasuryMessage.style.display = 'block';
+            }
+        });
+
+        // Redirect to dashboard on cancel button click
+        if (cancelAddTreasuryBtn) {
+            cancelAddTreasuryBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = '/dashboard.html';
+            });
+        }
+    });
+</script>
+</body>
+
+</html>

@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تفاصيل الموظف - MAJD Architecture</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #014C47;
+            --primary-dark: #003a35;
+            --secondary-bg: #e6e6e6;
+            --text-color: #333;
+            --light-text-color: #f4f4f4;
+            --border-color: #ddd;
+            --sidebar-width: 250px;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            direction: rtl;
+            text-align: right;
+        }
+        .header {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .header .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        .header .user-info {
+            display: flex;
+            align-items: center;
+        }
+        .header .user-info span {
+            margin-right: 15px;
+        }
+        .header .logout-button {
+            background-color: var(--primary-dark);
+            color: var(--light-text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .header .logout-button:hover {
+            background-color: #002b28;
+        }
+        .menu-toggle {
+            background: none;
+            border: none;
+            color: var(--light-text-color);
+            font-size: 24px;
+            cursor: pointer;
+            margin-left: 10px;
+            display: none;
+        }
+        .main-container {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        .overlay.active {
+            display: block;
+        }
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+            position: relative;
+            flex-shrink: 0;
+            min-height: 100vh;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar ul li {
+            margin-bottom: 5px;
+        }
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--light-text-color);
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+        .sidebar ul li a i {
+            margin-left: 10px;
+            font-size: 18px;
+        }
+        .sidebar ul li a:hover,
+        .sidebar ul li.active a {
+            background-color: var(--primary-dark);
+            border-radius: 0 20px 20px 0;
+        }
+        .content-area {
+            flex-grow: 1;
+            padding: 30px 20px;
+            overflow-y: auto;
+            background: #f7f7f7;
+            min-width: 0;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .page-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 28px;
+        }
+        .back-button {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .back-button:hover {
+            background-color: var(--primary-dark);
+        }
+        .employee-info-section {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .accordion-section {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            background: #fff;
+        }
+        .accordion-header {
+            cursor: pointer;
+            padding: 16px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f7f7f7;
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s;
+        }
+        .accordion-header:hover {
+            background: #e6f7f7;
+        }
+        .accordion-icon {
+            font-size: 22px;
+            transition: transform 0.2s;
+        }
+        .accordion-content {
+            display: none;
+            padding: 18px 20px;
+            background: #fafbfc;
+        }
+        .accordion-section.open .accordion-content {
+            display: block;
+        }
+        .accordion-section.open .accordion-icon {
+            content: '-';
+            transform: rotate(180deg);
+        }
+        .section-title {
+            color: var(--primary-color);
+            font-size: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .salary-section {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .current-salary {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 18px 20px 10px 20px;
+            margin-bottom: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .current-salary h3 {
+            font-size: 20px;
+            font-weight: bold;
+            color: #014C47;
+            margin: 0 0 8px 0;
+        }
+        .salary-amount {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #1a8a6b;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        .salary-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .salary-btn {
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 14px;
+        }
+        .salary-btn:hover {
+            background-color: var(--primary-dark);
+        }
+        .filter-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .filter-section select {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .filter-btn {
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .filter-btn:hover {
+            background-color: var(--primary-dark);
+        }
+        .transactions-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .transactions-table th, .transactions-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: center;
+        }
+        .transactions-table th {
+            background: #014C47;
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .transactions-table tr:nth-child(even) {
+            background: #f7f7f7;
+        }
+        .transactions-table tr:last-child td {
+            border-bottom: none;
+        }
+        .transactions-table .amount-positive {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .transactions-table .amount-negative {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .transaction-type {
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .type-salary { background-color: #d4edda; color: #155724; }
+        .type-bonus { background-color: #d1ecf1; color: #0c5460; }
+        .type-deduction { background-color: #f8d7da; color: #721c24; }
+        .type-allowance { background-color: #fff3cd; color: #856404; }
+        .type-commission { background-color: #e2e3e5; color: #383d41; }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .modal-title {
+            color: var(--primary-color);
+            font-size: 20px;
+            margin: 0;
+        }
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: var(--text-color);
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        .modal-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        .modal-button.cancel {
+            background-color: #6c757d;
+            color: #fff;
+        }
+        .modal-button.cancel:hover {
+            background-color: #5a6268;
+        }
+        .modal-button.save {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+        .modal-button.save:hover {
+            background-color: var(--primary-dark);
+        }
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        .action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s ease;
+        }
+        .edit-btn {
+            background-color: #ffc107;
+            color: #000;
+        }
+        .edit-btn:hover {
+            background-color: #e0a800;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+            color: #fff;
+        }
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+        @media (max-width: 768px) {
+            .header .user-info span {
+                display: none;
+            }
+            .menu-toggle {
+                display: block;
+            }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                right: 0;
+                height: 100%;
+                width: var(--sidebar-width);
+                transform: translateX(100%);
+                z-index: 999;
+                box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+                padding-top: 70px;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .content-area {
+                margin-right: 0;
+                padding: 10px 4px;
+            }
+            .page-header {
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 10px;
+            }
+            .accordion-header,
+            .accordion-content {
+                padding: 10px !important;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .salary-actions {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .filter-section {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            .transactions-table {
+                display: block;
+                width: 100%;
+                overflow-x: auto;
+                font-size: 14px;
+            }
+            .transactions-table th,
+            .transactions-table td {
+                padding: 8px 10px;
+                font-size: 14px;
+                white-space: nowrap;
+            }
+            .modal-content {
+                padding: 16px;
+                width: 95%;
+            }
+            .current-salary h3 {
+                font-size: 16px;
+            }
+            .salary-amount {
+                font-size: 1.3em;
+            }
+        }
+        @media (max-width: 500px) {
+            .header .logo {
+                font-size: 18px;
+            }
+            .page-header h1 {
+                font-size: 20px;
+            }
+            .back-button, .salary-btn, .filter-btn, .modal-button {
+                font-size: 12px;
+                padding: 7px 10px;
+            }
+            .transactions-table th,
+            .transactions-table td {
+                padding: 6px 6px;
+                font-size: 12px;
+            }
+            .modal-content {
+                padding: 8px;
+                width: 99%;
+            }
+            .accordion-header h3 {
+                font-size: 15px;
+            }
+        }
+        #dashboardMessage {
+            position: fixed;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            min-width: 260px;
+            max-width: 90vw;
+            padding: 18px 36px 18px 18px;
+            border-radius: 12px;
+            font-size: 18px;
+            text-align: right;
+            font-weight: bold;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        #dashboardMessage.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #dashboardMessage.success {
+            background: #e6fff0;
+            color: #137a3a;
+            border: 1.5px solid #b2f2d7;
+        }
+        #dashboardMessage.error {
+            background: #fff0f0;
+            color: #b02a37;
+            border: 1.5px solid #f5b2b2;
+        }
+        #dashboardMessage .msg-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="logo">
+            MAJD Architecture
+        </div>
+        <div class="user-info">
+            <span id="currentUser"></span>
+            <button class="logout-button" id="logoutButton">
+                <i class="fas fa-sign-out-alt"></i>
+                تسجيل الخروج
+            </button>
+        </div>
+    </div>
+    <div class="main-container">
+        <div class="overlay" id="sidebarOverlay"></div>
+        <div class="sidebar" id="sidebar">
+            <ul>
+                <li><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i> الرئيسية</a></li>
+                <li><a href="/add-project.html" data-page="add-project"><i class="fas fa-plus-circle"></i> إضافة مشروع</a></li>
+                <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a></li>
+                <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
+                <li><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a></li>
+                <li><a href="/add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i> إضافة خزينة</a></li>
+                <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
+                <li><a href="/general-expenses.html" data-page="general-expenses"><i class="fas fa-money-bill-wave"></i> المصروفات العامة</a></li>
+                <li><a href="/employees.html" data-page="employees"><i class="fas fa-user-tie"></i> الموظفين</a></li>
+                <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
+                <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a></li>
+                <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
+            </ul>
+        </div>
+        <div class="content-area" id="contentArea">
+            <div class="page-header">
+                <h1>تفاصيل الموظف</h1>
+                <a href="employees.html" class="back-button">
+                    <i class="fas fa-arrow-right"></i> العودة للموظفين
+                </a>
+            </div>
+
+            <!-- بيانات الموظف الأساسية -->
+            <div class="accordion-section">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>البيانات الأساسية</span>
+                    <span class="accordion-icon">+</span>
+                </div>
+                <div class="accordion-content">
+                    <form id="employeeForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="name">الاسم</label>
+                                <input type="text" id="name" name="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="nationalId">الرقم القومي</label>
+                                <input type="text" id="nationalId" name="nationalId" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="phone">رقم الهاتف</label>
+                                <input type="text" id="phone" name="phone" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">البريد الإلكتروني</label>
+                                <input type="email" id="email" name="email">
+                            </div>
+                            <div class="form-group">
+                                <label for="position">المنصب</label>
+                                <select id="position" name="position" required>
+                                    <option value="مدير">مدير</option>
+                                    <option value="مهندس">مهندس</option>
+                                    <option value="محاسب">محاسب</option>
+                                    <option value="سكرتير">سكرتير</option>
+                                    <option value="عامل">عامل</option>
+                                    <option value="سائق">سائق</option>
+                                    <option value="حارس">حارس</option>
+                                    <option value="أخرى">أخرى</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="department">القسم</label>
+                                <select id="department" name="department" required>
+                                    <option value="إدارة">إدارة</option>
+                                    <option value="هندسة">هندسة</option>
+                                    <option value="محاسبة">محاسبة</option>
+                                    <option value="أمن">أمن</option>
+                                    <option value="صيانة">صيانة</option>
+                                    <option value="أخرى">أخرى</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="hireDate">تاريخ التعيين</label>
+                                <input type="date" id="hireDate" name="hireDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="status">الحالة</label>
+                                <select id="status" name="status" required>
+                                    <option value="نشط">نشط</option>
+                                    <option value="إجازة">إجازة</option>
+                                    <option value="متوقف">متوقف</option>
+                                    <option value="مستقيل">مستقيل</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="address">العنوان</label>
+                                <textarea id="address" name="address"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="emergencyContactName">اسم الطوارئ</label>
+                                <input type="text" id="emergencyContactName" name="emergencyContactName">
+                            </div>
+                            <div class="form-group">
+                                <label for="emergencyContactPhone">هاتف الطوارئ</label>
+                                <input type="text" id="emergencyContactPhone" name="emergencyContactPhone">
+                            </div>
+                            <div class="form-group">
+                                <label for="emergencyContactRelationship">صلة القرابة</label>
+                                <input type="text" id="emergencyContactRelationship" name="emergencyContactRelationship">
+                            </div>
+                            <div class="form-group">
+                                <label for="notes">ملاحظات</label>
+                                <textarea id="notes" name="notes"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-buttons">
+                            <button type="submit" class="modal-button save">حفظ التغييرات</button>
+                        </div>
+                    </form>
+                    <hr>
+                    <div id="employeeImagesSection">
+                        <h4>صور الموظف</h4>
+                        <div id="employeeImagesList" style="display:flex; gap:10px; flex-wrap:wrap;"></div>
+                        <button class="salary-btn" style="margin-top:10px; background:#1a8a6b;" onclick="showAddImageForm()">
+                            <i class="fas fa-image"></i> إضافة صورة
+                        </button>
+                        <form id="addImageForm" style="display:none; margin-top:10px; background:#f7f7f7; padding:10px; border-radius:8px;">
+                            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                                <input type="text" id="imageNameInput" placeholder="اسم الصورة" required style="padding:7px; border-radius:5px; border:1px solid #ccc;">
+                                <input type="file" id="imageFileInput" accept="image/*" required style="padding:7px;">
+                                <button type="submit" class="salary-btn" style="background:#014C47;">حفظ الصورة</button>
+                                <button type="button" class="salary-btn" style="background:#dc3545;" onclick="hideAddImageForm()">إلغاء</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- قسم إدارة المرتبات -->
+            <div class="accordion-section">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>إدارة المرتبات</span>
+                    <span class="accordion-icon">+</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="salary-period-select" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
+                        <label for="salaryMonth" style="font-weight:bold;">الشهر:</label>
+                        <select id="salaryMonth" style="padding: 5px;">
+                            <option value="">اختر الشهر</option>
+                            <option value="1">يناير</option>
+                            <option value="2">فبراير</option>
+                            <option value="3">مارس</option>
+                            <option value="4">أبريل</option>
+                            <option value="5">مايو</option>
+                            <option value="6">يونيو</option>
+                            <option value="7">يوليو</option>
+                            <option value="8">أغسطس</option>
+                            <option value="9">سبتمبر</option>
+                            <option value="10">أكتوبر</option>
+                            <option value="11">نوفمبر</option>
+                            <option value="12">ديسمبر</option>
+                        </select>
+                        <label for="salaryYear" style="font-weight:bold;">السنة:</label>
+                        <select id="salaryYear" style="padding: 5px;"></select>
+                    </div>
+                    <div id="salaryActionsAndTable" style="display:none;">
+                    <!-- هنا توضع أزرار إضافة المعاملات وجدول العمليات -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal لإضافة/تعديل معاملة المرتب -->
+    <div id="salaryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="salaryModalTitle">إضافة معاملة</h3>
+                <span class="close" onclick="closeSalaryModal()">&times;</span>
+            </div>
+            <form id="salaryForm">
+                <div class="form-group">
+                    <label for="transactionAmount">المبلغ</label>
+                    <input type="number" id="transactionAmount" name="transactionAmount" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="transactionReason">السبب</label>
+                    <input type="text" id="transactionReason" name="transactionReason">
+                </div>
+                <div class="form-group">
+                    <label for="transactionDate">التاريخ</label>
+                    <input type="date" id="transactionDate" name="transactionDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="transactionNotes">ملاحظات</label>
+                    <textarea id="transactionNotes" name="transactionNotes"></textarea>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="modal-button cancel" onclick="closeSalaryModal()">إلغاء</button>
+                    <button type="submit" class="modal-button save" id="salarySubmitBtn">حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="dashboardMessage" style="display:none;"></div>
+    <script>
+    function showDashboardMessage(message, type = 'success', duration = 2000) {
+        let msgDiv = document.getElementById('dashboardMessage');
+        if (!msgDiv) {
+            msgDiv = document.createElement('div');
+            msgDiv.id = 'dashboardMessage';
+            document.body.appendChild(msgDiv);
+        }
+        let icon = type === 'success'
+            ? '<span class="msg-icon">✅</span>'
+            : '<span class="msg-icon">❌</span>';
+        msgDiv.innerHTML = icon + '<span>' + message + '</span>';
+        msgDiv.className = type + ' active';
+        msgDiv.style.display = 'flex';
+        setTimeout(() => {
+            msgDiv.classList.remove('active');
+            setTimeout(() => { msgDiv.style.display = 'none'; }, 400);
+        }, duration);
+    }
+    const BASE_URL = "https://08e6-156-203-155-30.ngrok-free.app";
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    menuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('active');
+        sidebarOverlay.classList.toggle('active');
+        document.body.classList.toggle('sidebar-open');
+    });
+
+    sidebarOverlay.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+        sidebarOverlay.classList.remove('active');
+        document.body.classList.remove('sidebar-open');
+    });
+
+    sidebar.addEventListener('click', (event) => {
+        const link = event.target.closest('a');
+        if (link && link.href && link.id !== 'sidebarLogoutButton') {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            document.body.classList.remove('sidebar-open');
+        }
+    });
+
+    const logout = () => {
+        localStorage.removeItem('token');
+        window.location.href = '/';
+    };
+    document.getElementById('logoutButton').addEventListener('click', logout);
+    document.getElementById('sidebarLogoutButton').addEventListener('click', logout);
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/';
+            return;
+        }
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const decodedPayload = decodeURIComponent(escape(window.atob(base64)));
+            const payload = JSON.parse(decodedPayload);
+            const username = payload.user.username || payload.user.id || 'مستخدم';
+            let role = 'غير محدد';
+            try {
+                role = payload.user.role || 'غير محدد';
+            } catch (e) {}
+            document.getElementById('currentUser').textContent = `مرحباً، ${username} (${role})`;
+            sidebar.querySelectorAll('li.active').forEach(li => li.classList.remove('active'));
+            const currentPageLink = document.querySelector(`.sidebar ul li a[data-page="employees"]`);
+            if (currentPageLink) {
+                currentPageLink.parentElement.classList.add('active');
+            }
+        } catch (e) {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        }
+    });
+
+    let currentEmployee = null;
+    let currentTransactionId = null;
+    let isEditMode = false;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadEmployeeData();
+        populateYearFilter();
+        setCurrentDate();
+    });
+
+    function loadEmployeeData() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const employeeId = urlParams.get('id');
+        
+        if (!employeeId) {
+            alert('لم يتم تحديد موظف');
+            window.location.href = 'employees.html';
+            return;
+        }
+
+        fetch(`/api/employees/${employeeId}`, {
+            headers: {
+                'x-auth-token': localStorage.getItem('token')
+            }
+        })
+        .then(response => {
+            if (response.status === 401) {
+                showDashboardMessage('انتهت الجلسة أو التوكن غير صالح. سيتم تحويلك لتسجيل الدخول...', 'error', 2000);
+                setTimeout(() => { window.location.href = '/'; }, 2000);
+                throw new Error('Unauthorized');
+            }
+            return response.json();
+        })
+        .then(data => {
+            currentEmployee = data;
+            populateEmployeeForm(data);
+            updateCurrentSalary(data.salary);
+            loadTransactions(employeeId);
+        })
+        .catch(error => {
+            if (error.message !== 'Unauthorized') {
+                console.error('Error loading employee:', error);
+                showDashboardMessage('حدث خطأ أثناء تحميل بيانات الموظف', 'error', 2500);
+            }
+        });
+    }
+
+    function populateEmployeeForm(employee) {
+        document.getElementById('name').value = employee.name;
+        document.getElementById('nationalId').value = employee.nationalId;
+        document.getElementById('phone').value = employee.phone;
+        document.getElementById('email').value = employee.email || '';
+        document.getElementById('position').value = employee.position;
+        document.getElementById('department').value = employee.department;
+        document.getElementById('hireDate').value = new Date(employee.hireDate).toISOString().split('T')[0];
+        document.getElementById('status').value = employee.status;
+        document.getElementById('address').value = employee.address || '';
+        document.getElementById('emergencyContactName').value = employee.emergencyContact?.name || '';
+        document.getElementById('emergencyContactPhone').value = employee.emergencyContact?.phone || '';
+        document.getElementById('emergencyContactRelationship').value = employee.emergencyContact?.relationship || '';
+        document.getElementById('notes').value = employee.notes || '';
+        renderEmployeeImages(employee.images || []);
+    }
+
+    function updateCurrentSalary(salary) {
+        const el = document.getElementById('currentSalaryAmount');
+        if (el) {
+            el.textContent = `${salary.toLocaleString()} ج.م`;
+        }
+    }
+
+    function populateYearFilter() {
+        const yearSelect = document.getElementById('salaryYear');
+        const currentYear = new Date().getFullYear();
+        
+        for (let year = currentYear; year >= currentYear - 10; year--) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            yearSelect.appendChild(option);
+        }
+    }
+
+    function setCurrentDate() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('transactionDate').value = today;
+    }
+
+    function loadTransactions(employeeId) {
+        const month = document.getElementById('salaryMonth').value;
+        const year = document.getElementById('salaryYear').value;
+        let url = `/api/salary-transactions/employee/${employeeId}`;
+        if (month && year) {
+            url += `?month=${month}&year=${year}`;
+        }
+        fetch(url, {
+            headers: {
+                'x-auth-token': localStorage.getItem('token')
+            }
+        })
+        .then(response => {
+            if (response.status === 401) {
+                showDashboardMessage('انتهت الجلسة أو التوكن غير صالح. سيتم تحويلك لتسجيل الدخول...', 'error', 2000);
+                setTimeout(() => { window.location.href = '/'; }, 2000);
+                throw new Error('Unauthorized');
+            }
+            return response.json();
+        })
+        .then(data => {
+            displayTransactions(data);
+        })
+        .catch(error => {
+            if (error.message !== 'Unauthorized') {
+                console.error('Error loading transactions:', error);
+                showDashboardMessage('حدث خطأ أثناء تحميل معاملات المرتب', 'error', 2500);
+            }
+        });
+    }
+
+    function displayTransactions(transactions) {
+        const tbody = document.getElementById('transactionsTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        // تحديث الراتب الحالي حسب المعاملات
+        let salaryToShow = 0;
+        if (transactions.length > 0) {
+            // الراتب بعد آخر معاملة في هذا الشهر
+            salaryToShow = transactions[transactions.length - 1].salaryAfter;
+        } else if (currentEmployee && typeof currentEmployee.baseSalary === 'number') {
+            // لا توجد معاملات: أظهر الراتب الأساسي
+            salaryToShow = currentEmployee.baseSalary;
+        }
+        updateCurrentSalary(salaryToShow);
+        // عرض المعاملات في الجدول
+        transactions.forEach(transaction => {
+            const row = document.createElement('tr');
+            const amountClass = transaction.amount >= 0 ? 'amount-positive' : 'amount-negative';
+            const amountSign = transaction.amount >= 0 ? '+' : '';
+            row.innerHTML = `
+                <td>${new Date(transaction.date).toLocaleDateString('en-US')}</td>
+                <td><span class="transaction-type type-${transaction.type}">${getTypeName(transaction.type)}</span></td>
+                <td class="${amountClass}">${amountSign}${transaction.amount.toLocaleString()} ج.م</td>
+                <td>${transaction.salaryBefore.toLocaleString()} ج.م</td>
+                <td>${transaction.salaryAfter.toLocaleString()} ج.م</td>
+                <td>${transaction.notes || '-'}</td>
+                <td class="action-buttons">
+                    <button class="action-btn edit-btn" onclick="editTransaction('${transaction._id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete-btn" onclick="deleteTransaction('${transaction._id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function getTypeName(type) {
+        const types = {
+            'salary': 'راتب',
+            'bonus': 'مكافأة',
+            'deduction': 'خصم',
+            'allowance': 'بدل',
+            'commission': 'عمولة'
+        };
+        return types[type] || type;
+    }
+
+    function filterTransactions() {
+        if (currentEmployee) {
+            loadTransactions(currentEmployee._id);
+        }
+    }
+
+    // عدل دالة openSalaryModal لتبدأ دومًا بإزالة حقل الخزينة، ثم تضيفه فقط إذا كان النوع salary
+    window.openSalaryModal = function(type, isCurrentSalary) {
+        removeTreasuryFieldFromModal();
+        if (type === 'salary') {
+            addTreasuryFieldToModal();
+            loadTreasuriesForSalaryModal();
+        }
+        isEditMode = false;
+        currentTransactionId = null;
+        document.getElementById('salaryModalTitle').textContent = `إضافة ${getTypeName(type)}`;
+        document.getElementById('transactionAmount').value = '';
+        document.getElementById('transactionReason').value = '';
+        document.getElementById('transactionNotes').value = '';
+        setCurrentDate();
+        document.getElementById('salaryModal').style.display = 'flex';
+        if (isCurrentSalary) {
+            document.getElementById('transactionAmount').value = Math.abs(currentEmployee.salary);
+        }
+        window.currentSalaryType = type;
+    };
+
+    function closeSalaryModal() {
+        document.getElementById('salaryModal').style.display = 'none';
+    }
+
+    function editTransaction(transactionId) {
+        // سيتم تنفيذ تعديل المعاملة هنا
+        console.log('Edit transaction:', transactionId);
+    }
+
+    function deleteTransaction(transactionId) {
+        if (!confirm('هل أنت متأكد من حذف هذه المعاملة؟')) {
+            return;
+        }
+
+        fetch(`/api/salary-transactions/${transactionId}`, {
+            method: 'DELETE',
+            headers: {
+                'x-auth-token': localStorage.getItem('token')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            loadTransactions(currentEmployee._id);
+            loadEmployeeData(); // لتحديث المرتب الحالي
+        })
+        .catch(error => {
+            console.error('Error deleting transaction:', error);
+            alert('حدث خطأ أثناء حذف المعاملة');
+        });
+    }
+
+    // حفظ بيانات الموظف
+    document.getElementById('employeeForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const employeeData = {
+            name: formData.get('name'),
+            nationalId: formData.get('nationalId'),
+            phone: formData.get('phone'),
+            email: formData.get('email') || '',
+            position: formData.get('position'),
+            department: formData.get('department'),
+            hireDate: formData.get('hireDate'),
+            status: formData.get('status'),
+            address: formData.get('address') || '',
+            emergencyContact: {
+                name: formData.get('emergencyContactName') || '',
+                phone: formData.get('emergencyContactPhone') || '',
+                relationship: formData.get('emergencyContactRelationship') || ''
+            },
+            notes: formData.get('notes') || ''
+        };
+
+        try {
+            const response = await fetch(`/api/employees/${currentEmployee._id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-auth-token': localStorage.getItem('token')
+                },
+                body: JSON.stringify(employeeData)
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                alert('تم حفظ بيانات الموظف بنجاح');
+                loadEmployeeData();
+            } else {
+                alert(result.message || 'حدث خطأ أثناء حفظ البيانات');
+            }
+        } catch (error) {
+            console.error('Error saving employee:', error);
+            alert('حدث خطأ أثناء حفظ بيانات الموظف');
+        }
+    });
+
+    // --- منطق اختيار الشهر والسنة ---
+    const salaryMonthSelect = document.getElementById('salaryMonth');
+    const salaryYearSelect = document.getElementById('salaryYear');
+    const salaryActionsAndTable = document.getElementById('salaryActionsAndTable');
+    let selectedMonth = '';
+    let selectedYear = '';
+
+    // تعبئة السنوات (من 2022 حتى السنة الحالية + 1) مرة واحدة فقط عند تحميل الصفحة
+    function fillSalaryYears() {
+        const currentYear = new Date().getFullYear();
+        salaryYearSelect.innerHTML = '<option value="">اختر السنة</option>';
+        for (let y = currentYear; y >= 2022; y--) {
+            salaryYearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+        }
+    }
+    // نفذها مرة واحدة فقط
+    fillSalaryYears();
+
+    // اختيار الشهر والسنة الحاليين تلقائياً عند تحميل الصفحة
+    (function selectCurrentMonthYear() {
+        const now = new Date();
+        salaryMonthSelect.value = (now.getMonth() + 1).toString();
+        salaryYearSelect.value = now.getFullYear().toString();
+        selectedMonth = salaryMonthSelect.value;
+        selectedYear = salaryYearSelect.value;
+        if (selectedMonth && selectedYear) {
+            salaryActionsAndTable.style.display = '';
+            renderSalaryActionsAndTable();
+        }
+    })();
+
+    salaryMonthSelect.addEventListener('change', handlePeriodChange);
+    salaryYearSelect.addEventListener('change', handlePeriodChange);
+
+    function handlePeriodChange() {
+        selectedMonth = salaryMonthSelect.value;
+        selectedYear = salaryYearSelect.value;
+        if (selectedMonth && selectedYear) {
+            salaryActionsAndTable.style.display = '';
+            renderSalaryActionsAndTable();
+        } else {
+            salaryActionsAndTable.style.display = 'none';
+            salaryActionsAndTable.innerHTML = '';
+        }
+    }
+
+    // إعادة بناء واجهة الأزرار والجدول حسب الشهر والسنة المختارين
+    function renderSalaryActionsAndTable() {
+        salaryActionsAndTable.innerHTML = `
+            <div class="current-salary">
+                <h3>المرتب الحالي</h3>
+                <div class="salary-amount" id="currentSalaryAmount">0 ج.م</div>
+                <button class="salary-btn" style="margin-top:15px;" onclick="openSalaryModal('salary', true)">
+                    <i class="fas fa-money-bill-wave"></i> صرف راتب شهري
+                </button>
+                <button class="salary-btn" style="margin-top:15px; background-color:#1a8a6b;" onclick="exportSalarySheet()">
+                    <i class="fas fa-file-excel"></i> تصدير كشف راتب
+                </button>
+            </div>
+            <div class="salary-actions">
+                <button class="salary-btn" onclick="openSalaryModal('bonus')">
+                    <i class="fas fa-gift"></i> إضافة مكافأة
+                </button>
+                <button class="salary-btn" onclick="openSalaryModal('deduction')">
+                    <i class="fas fa-minus"></i> إضافة خصم
+                </button>
+                <button class="salary-btn" onclick="openSalaryModal('allowance')">
+                    <i class="fas fa-plus-circle"></i> إضافة بدل
+                </button>
+                <button class="salary-btn" onclick="openSalaryModal('commission')">
+                    <i class="fas fa-percentage"></i> إضافة عمولة
+                </button>
+            </div>
+            <div class="table-container" style="overflow-x:auto; margin-top:20px;">
+                <table class="transactions-table">
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>النوع</th>
+                            <th>المبلغ</th>
+                            <th>المرتب قبل</th>
+                            <th>المرتب بعد</th>
+                            <th>ملاحظات</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsTableBody"></tbody>
+                </table>
+            </div>
+        `;
+        // تحميل العمليات لهذا الشهر والسنة
+        if (currentEmployee) {
+            loadTransactions(currentEmployee._id);
+        }
+    }
+
+    // إضافة حقل اختيار الخزينة في المودال
+    const salaryForm = document.getElementById('salaryForm');
+    let treasurySelect;
+    function addTreasuryFieldToModal() {
+        if (!document.getElementById('transactionTreasury')) {
+            const amountGroup = document.getElementById('transactionAmount').parentElement;
+            const treasuryGroup = document.createElement('div');
+            treasuryGroup.className = 'form-group';
+            treasuryGroup.id = 'treasuryGroup';
+            treasuryGroup.innerHTML = `
+                <label for="transactionTreasury">الخزينة</label>
+                <select id="transactionTreasury" name="transactionTreasury" required>
+                    <option value="">اختر الخزينة</option>
+                </select>
+            `;
+            amountGroup.insertAdjacentElement('afterend', treasuryGroup);
+        }
+        treasurySelect = document.getElementById('transactionTreasury');
+    }
+    function removeTreasuryFieldFromModal() {
+        const treasuryGroup = document.getElementById('treasuryGroup');
+        if (treasuryGroup) treasuryGroup.remove();
+    }
+    // جلب الخزائن
+    async function loadTreasuriesForSalaryModal() {
+        if (!treasurySelect) return;
+        treasurySelect.innerHTML = '<option value="">اختر الخزينة</option>';
+        try {
+            const response = await fetch('/api/treasuries', {
+                headers: { 'x-auth-token': localStorage.getItem('token') }
+            });
+            const treasuries = await response.json();
+            treasuries.forEach(treasury => {
+                const option = document.createElement('option');
+                option.value = treasury._id;
+                option.textContent = `${treasury.name} (${treasury.currentBalance.toLocaleString()} ج.م)`;
+                treasurySelect.appendChild(option);
+            });
+        } catch (error) {
+            treasurySelect.innerHTML = '<option value="">فشل في جلب الخزائن</option>';
+        }
+    }
+    // عند الحفظ
+    salaryForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        if (!selectedMonth || !selectedYear) {
+            alert('يجب اختيار الشهر والسنة أولاً!');
+            return;
+        }
+        const formData = new FormData(e.target);
+        let amount = parseFloat(formData.get('transactionAmount'));
+        let type = window.currentSalaryType || 'salary';
+        if (type === 'salary' || type === 'deduction') {
+            amount = -Math.abs(amount);
+        } else {
+            amount = Math.abs(amount);
+        }
+        // استخدم اليوم الأول من الشهر مع الشهر والسنة المختارين
+        const date = new Date(parseInt(selectedYear), parseInt(selectedMonth) - 1, 1).toISOString();
+        const transactionData = {
+            employeeId: currentEmployee._id,
+            amount: amount,
+            date: date,
+            notes: formData.get('transactionNotes') || '',
+            reason: formData.get('transactionReason') || '',
+            type: type
+        };
+        if (type === 'salary') {
+            const treasuryId = treasurySelect ? treasurySelect.value : '';
+            if (!treasuryId) {
+                alert('يجب اختيار الخزينة لصرف المرتب!');
+                return;
+            }
+            transactionData.treasuryId = treasuryId;
+        }
+        try {
+            const response = await fetch('/api/salary-transactions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-auth-token': localStorage.getItem('token')
+                },
+                body: JSON.stringify(transactionData)
+            });
+            const result = await response.json();
+            if (response.ok) {
+                alert(result.message);
+                closeSalaryModal();
+                if (currentEmployee) loadTransactions(currentEmployee._id);
+                loadEmployeeData();
+            } else {
+                alert(result.message || 'حدث خطأ أثناء حفظ المعاملة');
+            }
+        } catch (error) {
+            console.error('Error saving transaction:', error);
+            alert('حدث خطأ أثناء حفظ معاملة المرتب');
+        }
+    });
+
+    // إغلاق Modal عند النقر خارجه
+    window.onclick = function(event) {
+        const modal = document.getElementById('salaryModal');
+        if (event.target === modal) {
+            closeSalaryModal();
+        }
+    }
+
+    function viewEmployeeDetails(employeeId) {
+        window.location.href = `employee-details.html?id=${employeeId}`;
+    }
+    function toggleAccordion(header) {
+        const section = header.parentElement;
+        section.classList.toggle('open');
+        // غير علامة + إلى - والعكس
+        const icon = header.querySelector('.accordion-icon');
+        icon.textContent = section.classList.contains('open') ? '-' : '+';
+    }
+
+    function exportSalarySheet() {
+        if (!currentEmployee || !currentEmployee._id) {
+            alert('لم يتم تحميل بيانات الموظف بعد!');
+            return;
+        }
+        const token = localStorage.getItem('token');
+        fetch(`/api/employees/${currentEmployee._id}/export-salary-sheet`, {
+            headers: { 'x-auth-token': token }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('فشل في تصدير كشف الراتب');
+            return response.blob();
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `كشف_راتب_${currentEmployee.name}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(err => {
+            alert('حدث خطأ أثناء تصدير كشف الراتب');
+        });
+    }
+
+    function renderEmployeeImages(images) {
+        const list = document.getElementById('employeeImagesList');
+        list.innerHTML = '';
+        if (!images || images.length === 0) {
+            list.innerHTML = '<span style="color:#888">لا توجد صور بعد</span>';
+            return;
+        }
+        images.forEach(img => {
+            const imgDiv = document.createElement('div');
+            imgDiv.style.position = 'relative';
+            imgDiv.style.display = 'inline-block';
+            imgDiv.style.textAlign = 'center';
+            imgDiv.style.margin = '5px';
+            imgDiv.innerHTML = `
+                <img src="/backend/uploads/${img.filename}" alt="${img.name}" title="${img.name}" style="width:80px; height:80px; object-fit:cover; border-radius:6px; cursor:pointer; border:2px solid #eee;">
+                <div style="font-size:12px; margin-top:3px;">${img.name}</div>
+            `;
+            imgDiv.querySelector('img').onclick = () => showImageModal(`/backend/uploads/${img.filename}`, img.name);
+            list.appendChild(imgDiv);
+        });
+    }
+
+    function showAddImageForm() {
+        document.getElementById('addImageForm').style.display = 'block';
+    }
+    function hideAddImageForm() {
+        document.getElementById('addImageForm').style.display = 'none';
+        document.getElementById('imageNameInput').value = '';
+        document.getElementById('imageFileInput').value = '';
+    }
+    document.getElementById('addImageForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const name = document.getElementById('imageNameInput').value.trim();
+        const file = document.getElementById('imageFileInput').files[0];
+        if (!name || !file) return alert('يرجى إدخال اسم الصورة واختيار ملف.');
+        const formData = new FormData();
+        formData.append('imageName', name);
+        formData.append('image', file);
+        const token = localStorage.getItem('token');
+        try {
+            const res = await fetch(`/api/employees/${currentEmployee._id}/images`, {
+                method: 'POST',
+                headers: { 'x-auth-token': token },
+                body: formData
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showDashboardMessage('تمت إضافة الصورة بنجاح');
+                currentEmployee.images = currentEmployee.images || [];
+                currentEmployee.images.push(data.image);
+                renderEmployeeImages(currentEmployee.images);
+                hideAddImageForm();
+            } else {
+                alert(data.message || 'فشل في إضافة الصورة');
+            }
+        } catch (err) {
+            alert('حدث خطأ أثناء رفع الصورة');
+        }
+    });
+
+    // Modal لعرض الصورة بحجم أكبر
+    function showImageModal(src, name) {
+        let modal = document.getElementById('imageModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'imageModal';
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100vw';
+            modal.style.height = '100vh';
+            modal.style.background = 'rgba(0,0,0,0.7)';
+            modal.style.display = 'flex';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
+            modal.style.zIndex = '9999';
+            modal.style.onclick = function(e) { if (e.target === modal) modal.remove(); };
+            document.body.appendChild(modal);
+        }
+        modal.innerHTML = `<div style="background:#fff; padding:20px; border-radius:10px; max-width:90vw; max-height:90vh; text-align:center;">
+            <img src="${src}" alt="${name}" style="max-width:80vw; max-height:70vh; border-radius:8px; box-shadow:0 2px 12px #0002;">
+            <div style="margin-top:10px; color:#014C47; font-weight:bold;">${name}</div>
+            <button onclick="document.getElementById('imageModal').remove()" style="margin-top:10px; padding:7px 18px; background:#014C47; color:#fff; border:none; border-radius:5px; cursor:pointer;">إغلاق</button>
+        </div>`;
+    }
+    </script>
+</body>
+</html> 

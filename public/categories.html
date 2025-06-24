@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة التصنيفات - MAJD Architecture</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #014C47;
+            --primary-dark: #003a35;
+            --secondary-bg: #e6e6e6;
+            --text-color: #333;
+            --light-text-color: #f4f4f4;
+            --border-color: #ddd;
+            --sidebar-width: 250px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            direction: rtl;
+            text-align: right;
+        }
+
+        /* Header Styling */
+        .header {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        .header .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .header .user-info span {
+            margin-right: 15px;
+        }
+
+        .header .logout-button {
+            background-color: var(--primary-dark);
+            color: var(--light-text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .header .logout-button:hover {
+            background-color: #002b28;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--light-text-color);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Layout Container */
+        .main-container {
+            display: flex;
+            flex: 1;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 5px;
+        }
+
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--light-text-color);
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar ul li a i {
+            margin-left: 10px;
+            font-size: 18px;
+        }
+
+        .sidebar ul li a:hover,
+        .sidebar ul li.active a {
+            background-color: var(--primary-dark);
+            border-radius: 0 20px 20px 0;
+        }
+
+        /* Main Content Area */
+        .content-area {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .page-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .add-button {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .add-button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        /* Table Styling */
+        .table-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+            /* For responsive tables */
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px 15px;
+            border: 1px solid #eee;
+            text-align: right;
+            white-space: nowrap;
+            /* Prevent text wrapping in cells */
+        }
+
+        .data-table th {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .data-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .action-buttons button {
+            background-color: #6c757d;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            margin-right: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 14px;
+        }
+
+        .action-buttons button.edit {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        .action-buttons button.delete {
+            background-color: #dc3545;
+        }
+
+        .action-buttons button:hover {
+            opacity: 0.9;
+        }
+
+        /* Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            width: 90%;
+            max-width: 500px;
+            animation-name: animatetop;
+            animation-duration: 0.4s;
+            text-align: right;
+        }
+
+        @keyframes animatetop {
+            from {
+                top: -300px;
+                opacity: 0
+            }
+
+            to {
+                top: 0;
+                opacity: 1
+            }
+        }
+
+        .close-button {
+            color: #aaa;
+            float: left;
+            font-size: 28px;
+            font-weight: bold;
+            margin-left: -10px;
+            margin-top: -10px;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-content h3 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+
+        .modal-form-group {
+            margin-bottom: 15px;
+        }
+
+        .modal-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+            font-size: 15px;
+        }
+
+        .modal-form-group input[type="text"],
+        .modal-form-group input[type="number"],
+        .modal-form-group textarea,
+        .modal-form-group select {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 15px;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+        }
+
+        .modal-form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .modal-button {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-button.cancel {
+            background-color: #6c757d;
+        }
+
+        .modal-button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .modal-button.cancel:hover {
+            background-color: #5a6268;
+        }
+
+        .modal-message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+            text-align: center;
+        }
+
+        .modal-message.error {
+            background-color: #ffe6e6;
+            color: #cc0000;
+            border: 1px solid #cc0000;
+        }
+
+        .modal-message.success {
+            background-color: #e6ffe6;
+            color: #008000;
+            border: 1px solid #008000;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .header .user-info span {
+                display: none;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                right: 0;
+                height: 100%;
+                width: var(--sidebar-width);
+                transform: translateX(100%);
+                z-index: 999;
+                box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+                padding-top: 70px;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .content-area {
+                margin-right: 0;
+            }
+
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 998;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+
+            .modal-content {
+                padding: 20px;
+                width: 95%;
+            }
+
+            .modal-content h3 {
+                font-size: 20px;
+            }
+
+            .modal-button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+
+            .add-button {
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+
+            .action-buttons button {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+        }
+
+        #dashboardMessage {
+            position: fixed;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            min-width: 260px;
+            max-width: 90vw;
+            padding: 18px 36px 18px 18px;
+            border-radius: 12px;
+            font-size: 18px;
+            text-align: right;
+            font-weight: bold;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        #dashboardMessage.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #dashboardMessage.success {
+            background: #e6fff0;
+            color: #137a3a;
+            border: 1.5px solid #b2f2d7;
+        }
+        #dashboardMessage.error {
+            background: #fff0f0;
+            color: #b02a37;
+            border: 1.5px solid #f5b2b2;
+        }
+        #dashboardMessage .msg-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="dashboardMessage" style="display:none;"></div>
+    <div class="header">
+        <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="logo">
+            MAJD Architecture
+        </div>
+        <div class="user-info">
+            <span id="loggedInUser"></span>
+            <button class="logout-button" id="logoutButton">تسجيل الخروج</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="overlay" id="sidebarOverlay"></div>
+
+        <div class="sidebar" id="sidebar">
+            <ul>
+                <li><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>
+                        الرئيسية</a></li>
+                <li><a href="/add-project.html" data-page="add-project"><i class="fas fa-plus-circle"></i> إضافة
+                        مشروع</a></li>
+                <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a>
+                </li>
+                <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
+                <li><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a></li>
+                <li><a href="/add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i> إضافة
+                        خزينة</a></li>
+                <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
+                <li><a href="/general-expenses.html" data-page="general-expenses"><i class="fas fa-money-bill-wave"></i> المصروفات العامة</a></li>
+                <li><a href="/employees.html" data-page="employees"><i class="fas fa-user-tie"></i> الموظفين</a></li>
+                <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
+                <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a>
+                </li>
+                <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
+            </ul>
+        </div>
+
+        <div class="content-area" id="contentArea">
+            <div class="page-header">
+                <h1>إدارة التصنيفات</h1>
+                <button class="add-button" id="addCategoryBtn"><i class="fas fa-plus-circle"></i> إضافة تصنيف
+                    جديد</button>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>الاسم</th>
+                            <th>الوصف</th> <!-- Removed 'النوع' -->
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categoriesTableBody">
+                        <!-- Categories data will be loaded here -->
+                        <tr>
+                            <td colspan="3" style="text-align: center;">جاري تحميل التصنيفات...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-message" id="categoriesPageMessage"></div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Category Modal -->
+    <div id="categoryModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3 id="categoryModalTitle">إضافة تصنيف جديد</h3>
+            <form id="categoryForm">
+                <input type="hidden" id="categoryId">
+                <div class="modal-form-group">
+                    <label for="categoryName">الاسم:</label>
+                    <input type="text" id="categoryName" name="name" required>
+                </div>
+                <!-- Removed Type field -->
+                <div class="modal-form-group">
+                    <label for="categoryDescription">الوصف:</label>
+                    <textarea id="categoryDescription" name="description" rows="3"></textarea>
+                </div>
+                <div class="modal-message" id="categoryModalMessage"></div>
+                <div class="modal-buttons">
+                    <button type="submit" class="modal-button">حفظ</button>
+                    <button type="button" class="modal-button cancel" id="cancelCategoryButton">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = "https://08e6-156-203-155-30.ngrok-free.app";
+        // Client-side authentication check and redirection
+        document.addEventListener('DOMContentLoaded', function () {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const decodedPayload = decodeURIComponent(escape(window.atob(base64)));
+                const payload = JSON.parse(decodedPayload);
+
+                const username = payload.user.username || payload.user.id || 'مستخدم';
+                const role = payload.user.role || 'غير محدد';
+
+                document.getElementById('loggedInUser').textContent = `مرحباً، ${username} (${role})`;
+
+                // Client-side authorization based on role for sidebar visibility
+                const sidebar = document.getElementById('sidebar');
+                const addProjectLink = sidebar.querySelector('[data-page="add-project"]');
+                const usersLink = sidebar.querySelector('[data-page="users"]');
+                const categoriesLink = sidebar.querySelector('[data-page="categories"]');
+                const addTreasuryLink = sidebar.querySelector('[data-page="add-treasury"]');
+                const treasuriesLink = sidebar.querySelector('[data-page="treasuries"]');
+                const contractorsLink = sidebar.querySelector('[data-page="contractors"]');
+                const clientsLink = sidebar.querySelector('[data-page="clients"]');
+                const generalExpensesLink = sidebar.querySelector('[data-page="general-expenses"]');
+
+                if (role === 'مهندس') {
+                    // Hide restricted elements for engineer
+                    if (addProjectLink) addProjectLink.style.display = 'none';
+                    if (usersLink) usersLink.style.display = 'none';
+                    if (addTreasuryLink) addTreasuryLink.style.display = 'none';
+                    if (contractorsLink) contractorsLink.style.display = 'none';
+                    if (clientsLink) clientsLink.style.display = 'none';
+                    if (generalExpensesLink) generalExpensesLink.style.display = 'none';
+                }
+
+                // Set active link in sidebar (for this page)
+                const currentPageLink = document.querySelector(`.sidebar ul li a[data-page="categories"]`);
+                if (currentPageLink) {
+                    currentPageLink.parentElement.classList.add('active');
+                }
+            } catch (e) {
+                console.error("Failed to decode token:", e);
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            }
+
+            // Logout functionality
+            const logout = () => {
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            };
+            document.getElementById('logoutButton').addEventListener('click', logout);
+            document.getElementById('sidebarLogoutButton').addEventListener('click', logout);
+
+            // Responsive Sidebar Toggle
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            // متغير لتخزين رابط الوجهة مؤقتًا
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+                sidebarOverlay.classList.toggle('active');
+                document.body.classList.toggle('sidebar-open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+                document.body.classList.remove('sidebar-open');
+            });
+
+            // تنقل مباشر لما المستخدم يضغط على لينك
+            sidebar.addEventListener('click', (event) => {
+                const link = event.target.closest('a');
+                if (link && link.href && link.id !== 'sidebarLogoutButton') {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                    document.body.classList.remove('sidebar-open');
+                    // مفيش preventDefault، وسيب التنقل يشتغل عادي
+                }
+            });
+
+
+
+
+            /* --- Categories Page Logic --- */
+            const categoriesTableBody = document.getElementById('categoriesTableBody');
+            const addCategoryBtn = document.getElementById('addCategoryBtn');
+            const categoryModal = document.getElementById('categoryModal');
+            const categoryModalTitle = document.getElementById('categoryModalTitle');
+            const categoryForm = document.getElementById('categoryForm');
+            const categoryIdInput = document.getElementById('categoryId');
+            const categoryNameInput = document.getElementById('categoryName');
+            // const categoryTypeSelect = document.getElementById('categoryType'); // Removed
+            const categoryDescriptionTextarea = document.getElementById('categoryDescription');
+            const categoryModalMessage = document.getElementById('categoryModalMessage');
+            const cancelCategoryButton = document.getElementById('cancelCategoryButton');
+            const categoriesPageMessage = document.getElementById('categoriesPageMessage');
+
+
+            // Function to fetch and display categories
+            const fetchCategories = async () => {
+                categoriesTableBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">جاري تحميل التصنيفات...</td></tr>'; // Updated colspan
+                categoriesPageMessage.style.display = 'none';
+
+                try {
+                    const response = await fetch(`${BASE_URL}/api/categories`, {
+                        headers: {
+                            'x-auth-token': localStorage.getItem('token')
+                        }
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        categoriesTableBody.innerHTML = ''; // Clear loading message
+                        if (data.length === 0) {
+                            categoriesTableBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">لا توجد تصنيفات لعرضها.</td></tr>'; // Updated colspan
+                            return;
+                        }
+
+                        data.forEach(category => {
+                            const row = categoriesTableBody.insertRow();
+                            row.innerHTML = `
+                                <td>${category.name}</td>
+                                <td>${category.description || 'لا يوجد وصف'}</td> <!-- Removed category.type -->
+                                <td class="action-buttons">
+                                    <button class="edit" data-id="${category._id}"><i class="fas fa-edit"></i> تعديل</button>
+                                    <button class="delete" data-id="${category._id}"><i class="fas fa-trash-alt"></i> حذف</button>
+                                </td>
+                            `;
+                        });
+                    } else {
+                        categoriesTableBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">فشل في جلب التصنيفات.</td></tr>'; // Updated colspan
+                        categoriesPageMessage.className = 'modal-message error';
+                        categoriesPageMessage.textContent = data.message || 'حدث خطأ أثناء جلب التصنيفات.';
+                        categoriesPageMessage.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error fetching categories:', error);
+                    categoriesTableBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">خطأ في الاتصال بالخادم.</td></tr>'; // Updated colspan
+                    categoriesPageMessage.className = 'modal-message error';
+                    categoriesPageMessage.textContent = 'حدث خطأ في الاتصال بالخادم أثناء جلب التصنيفات.';
+                    categoriesPageMessage.style.display = 'block';
+                }
+            };
+
+            // Initial fetch of categories on page load
+            fetchCategories();
+
+            // Open Add Category Modal
+            addCategoryBtn.addEventListener('click', () => {
+                categoryModalTitle.textContent = 'إضافة تصنيف جديد';
+                categoryForm.reset();
+                categoryIdInput.value = ''; // Clear ID for new entry
+                categoryModalMessage.style.display = 'none';
+                categoryModal.style.display = 'flex';
+            });
+
+            // Close Category Modal Function
+            const closeCategoryModal = () => {
+                categoryModal.style.display = 'none';
+                categoryModalMessage.style.display = 'none';
+                categoryForm.reset();
+            };
+
+            // Event Listeners for closing modal
+            categoryModal.querySelector('.close-button').addEventListener('click', closeCategoryModal);
+            cancelCategoryButton.addEventListener('click', closeCategoryModal);
+            window.addEventListener('click', (event) => {
+                if (event.target == categoryModal) {
+                    closeCategoryModal();
+                }
+            });
+
+            // Handle Edit/Delete buttons on table
+            categoriesTableBody.addEventListener('click', async (event) => {
+                const target = event.target.closest('button');
+                if (!target) return;
+
+                const categoryId = target.dataset.id;
+                const action = target.classList[0]; // 'edit', 'delete'
+
+                if (action === 'edit') {
+                    categoryModalMessage.style.display = 'none'; // Hide previous messages
+
+                    try {
+                        const response = await fetch(`${BASE_URL}/api/categories/${categoryId}`, {
+                            headers: {
+                                'x-auth-token': localStorage.getItem('token')
+                            }
+                        });
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            categoryModalTitle.textContent = 'تعديل التصنيف';
+                            categoryIdInput.value = data._id;
+                            categoryNameInput.value = data.name;
+                            // categoryTypeSelect.value = data.type; // Removed
+                            categoryDescriptionTextarea.value = data.description || '';
+
+                            categoryModal.style.display = 'flex'; // Show modal
+                        } else {
+                            categoriesPageMessage.className = 'modal-message error';
+                            categoriesPageMessage.textContent = data.message || 'فشل في جلب بيانات التصنيف للتعديل.';
+                            categoriesPageMessage.style.display = 'block';
+                            setTimeout(() => categoriesPageMessage.style.display = 'none', 3000);
+                        }
+                    } catch (error) {
+                        console.error('Error fetching category for edit:', error);
+                        categoriesPageMessage.className = 'modal-message error';
+                        categoriesPageMessage.textContent = 'خطأ في الاتصال بالخادم لجلب بيانات التصنيف.';
+                        categoriesPageMessage.style.display = 'block';
+                        setTimeout(() => categoriesPageMessage.style.display = 'none', 3000);
+                    }
+
+                } else if (action === 'delete') {
+                    if (confirm('هل أنت متأكد أنك تريد حذف هذا التصنيف؟ قد يكون مرتبطًا بمعاملات مالية.')) {
+                        try {
+                            const response = await fetch(`${BASE_URL}/api/categories/${categoryId}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'x-auth-token': localStorage.getItem('token')
+                                }
+                            });
+                            const data = await response.json();
+
+                            if (response.ok) {
+                                showDashboardMessage(data.message || 'تم حذف التصنيف بنجاح', 'success');
+                                fetchCategories(); // Refresh list after deletion
+                            } else {
+                                showDashboardMessage(data.message || 'فشل في حذف التصنيف.', 'error');
+                            }
+                        } catch (error) {
+                            console.error('Error deleting category:', error);
+                            showDashboardMessage('خطأ في الاتصال بالخادم أثناء حذف التصنيف.', 'error');
+                        }
+                    }
+                }
+            });
+
+            // Handle Category Form Submission (Add/Edit)
+            categoryForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const categoryId = categoryIdInput.value;
+                const method = categoryId ? 'PUT' : 'POST';
+                const apiUrl = categoryId ? `/api/categories/${categoryId}` : '/api/categories';
+
+                const categoryData = {
+                    name: categoryNameInput.value,
+                    description: categoryDescriptionTextarea.value || undefined // Only name and description
+                };
+
+                Object.keys(categoryData).forEach(key => {
+                    if (categoryData[key] === undefined) {
+                        delete categoryData[key];
+                    }
+                });
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-auth-token': localStorage.getItem('token')
+                        },
+                        body: JSON.stringify(categoryData)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        categoryModalMessage.className = 'modal-message success';
+                        categoryModalMessage.textContent = data.message || 'تم حفظ التصنيف بنجاح.';
+                        categoryModalMessage.style.display = 'block';
+                        fetchCategories(); // Refresh categories list
+                        setTimeout(closeCategoryModal, 1500);
+                    } else {
+                        categoryModalMessage.className = 'modal-message error';
+                        categoryModalMessage.textContent = data.message || 'فشل في حفظ التصنيف. الرجاء التحقق من البيانات.';
+                        categoryModalMessage.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error saving category:', error);
+                    categoryModalMessage.className = 'modal-message error';
+                    categoryModalMessage.textContent = 'حدث خطأ أثناء الاتصال بالخادم. الرجاء المحاولة لاحقاً.';
+                    categoryModalMessage.style.display = 'block';
+                }
+            });
+        });
+
+        function showDashboardMessage(message, type = 'success', duration = 2000) {
+            let msgDiv = document.getElementById('dashboardMessage');
+            let icon = type === 'success'
+                ? '<span class="msg-icon">✅</span>'
+                : '<span class="msg-icon">❌</span>';
+            msgDiv.innerHTML = icon + '<span>' + message + '</span>';
+            msgDiv.className = type + ' active';
+            msgDiv.style.display = 'flex';
+            setTimeout(() => {
+                msgDiv.classList.remove('active');
+                setTimeout(() => { msgDiv.style.display = 'none'; }, 400);
+            }, duration);
+        }
+    </script>
+</body>
+
+</html>

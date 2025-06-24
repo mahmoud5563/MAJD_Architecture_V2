@@ -1,0 +1,2922 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تفاصيل المشروع - MAJD Architecture</title>
+   <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #014C47;
+            --primary-dark: #003a35;
+            --secondary-bg: #e6e6e6;
+            --text-color: #333;
+            --light-text-color: #f4f4f4;
+            --border-color: #ddd;
+            --sidebar-width: 250px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            direction: rtl;
+            text-align: right;
+        }
+
+        /* Header Styling */
+        .header {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        .header .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .header .user-info span {
+            margin-right: 15px;
+        }
+
+        .header .logout-button {
+            background-color: var(--primary-dark);
+            color: var(--light-text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .header .logout-button:hover {
+            background-color: #002b28;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--light-text-color);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Layout Container */
+        .main-container {
+            display: flex;
+            flex: 1;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 5px;
+        }
+
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--light-text-color);
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar ul li a i {
+            margin-left: 10px;
+            font-size: 18px;
+        }
+
+        .sidebar ul li a:hover,
+        .sidebar ul li.active a {
+            background-color: var(--primary-dark);
+            border-radius: 0 20px 20px 0;
+        }
+
+        /* Main Content Area */
+        .content-area {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .page-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .details-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 900px;
+            /* Wider for details */
+            margin: 0 auto;
+            /* Center the container */
+        }
+
+        .details-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background-color: #f8f8f8;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+
+        .details-section h4 {
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 22px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            /* Responsive grid */
+            gap: 15px;
+        }
+
+        .details-grid p {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+
+        .details-grid p strong {
+            color: #555;
+            margin-left: 8px;
+        }
+
+        .details-full-width {
+            margin-top: 15px;
+        }
+
+        .details-full-width p {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+
+        .details-full-width p strong {
+            color: #555;
+            margin-left: 8px;
+        }
+
+        .action-button {
+            /* Renamed from add-button for clarity in detail pages */
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 5px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-bottom: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-button.edit {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        .action-button.delete {
+            background-color: #dc3545;
+        }
+
+        .action-button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .action-button.edit:hover {
+            background-color: #e0a800;
+        }
+
+        .action-button.delete:hover {
+            background-color: #c82333;
+        }
+
+
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .details-table th,
+        .details-table td {
+            padding: 12px 15px;
+            border: 1px solid #eee;
+            text-align: right;
+            font-size: 15px;
+        }
+
+        .details-table th {
+            background-color: #f0f0f0;
+            color: var(--text-color);
+            font-weight: bold;
+        }
+
+        /* Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            width: 90%;
+            max-width: 500px;
+            animation-name: animatetop;
+            animation-duration: 0.4s;
+            text-align: right;
+        }
+
+        @keyframes animatetop {
+            from {
+                top: -300px;
+                opacity: 0
+            }
+
+            to {
+                top: 0;
+                opacity: 1
+            }
+        }
+
+        .close-button {
+            color: #aaa;
+            float: left;
+            font-size: 28px;
+            font-weight: bold;
+            margin-left: -10px;
+            margin-top: -10px;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-content h3 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+
+        .modal-form-group {
+            margin-bottom: 15px;
+        }
+
+        .modal-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+            font-size: 15px;
+        }
+
+        .modal-form-group input[type="text"],
+        .modal-form-group input[type="number"],
+        .modal-form-group input[type="date"],
+        .modal-form-group textarea,
+        .modal-form-group select {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 15px;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+        }
+
+        .modal-form-group input[type="file"] {
+            width: calc(100% - 20px);
+            padding: 8px;
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        .modal-form-group input[type="file"]:hover {
+            border-color: var(--primary-color);
+        }
+
+        .modal-form-group input[type="file"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(1, 76, 71, 0.2);
+        }
+
+        .modal-form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .modal-button {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-button.cancel {
+            background-color: #6c757d;
+        }
+
+        .modal-button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .modal-button.cancel:hover {
+            background-color: #5a6268;
+        }
+
+        .modal-message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+            text-align: center;
+        }
+
+        .modal-message.error {
+            background-color: #ffe6e6;
+            color: #cc0000;
+            border: 1px solid #cc0000;
+        }
+
+        .modal-message.success {
+            background-color: #e6ffe6;
+            color: #008000;
+            border: 1px solid #008000;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .header .user-info span {
+                display: none;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                right: 0;
+                height: 100%;
+                width: var(--sidebar-width);
+                transform: translateX(100%);
+                z-index: 999;
+                box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+                padding-top: 70px;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .content-area {
+                margin-right: 0;
+            }
+
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 998;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+
+            .details-container {
+                padding: 20px;
+            }
+
+            .details-grid {
+                grid-template-columns: 1fr;
+                /* Stack details vertically on small screens */
+            }
+
+            .action-button {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+
+            .details-table th,
+            .details-table td {
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+
+            .modal-content {
+                padding: 20px;
+                width: 95%;
+            }
+
+            .modal-content h3 {
+                font-size: 20px;
+            }
+
+            .modal-button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+
+        #dashboardMessage {
+            position: fixed;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3000 !important;
+            min-width: 260px;
+            max-width: 90vw;
+            padding: 18px 36px 18px 18px;
+            border-radius: 12px;
+            font-size: 18px;
+            text-align: right;
+            font-weight: bold;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        #dashboardMessage.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #dashboardMessage.success {
+            background: #e6fff0;
+            color: #137a3a;
+            border: 1.5px solid #b2f2d7;
+        }
+        #dashboardMessage.error {
+            background: #fff0f0;
+            color: #b02a37;
+            border: 1.5px solid #f5b2b2;
+        }
+        #dashboardMessage .msg-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        /* Accordion Styles */
+        .accordion-section {
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          margin-bottom: 15px;
+          background: #fff;
+        }
+        .accordion-header {
+          cursor: pointer;
+          padding: 16px 20px;
+          font-size: 18px;
+          font-weight: bold;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: #f7f7f7;
+          border-bottom: 1px solid #eee;
+          transition: background 0.2s;
+        }
+        .accordion-header:hover {
+          background: #e6f7f7;
+        }
+        .accordion-icon {
+          font-size: 22px;
+          transition: transform 0.2s;
+        }
+        .accordion-content {
+          display: none;
+          padding: 18px 20px;
+          background: #fafbfc;
+        }
+        .accordion-section.open .accordion-content {
+          display: block;
+        }
+        .accordion-section.open .accordion-icon {
+          content: '-';
+          transform: rotate(180deg);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="dashboardMessage" style="display:none;"></div>
+    <script>
+    function showDashboardMessage(message, type = 'success', duration = 2000) {
+        let msgDiv = document.getElementById('dashboardMessage');
+        if (!msgDiv) {
+            msgDiv = document.createElement('div');
+            msgDiv.id = 'dashboardMessage';
+            document.body.appendChild(msgDiv);
+        }
+        let icon = type === 'success'
+            ? '<span class="msg-icon">✅</span>'
+            : '<span class="msg-icon">❌</span>';
+        msgDiv.innerHTML = icon + '<span>' + message + '</span>';
+        msgDiv.className = type + ' active';
+        msgDiv.style.display = 'flex';
+        setTimeout(() => {
+            msgDiv.classList.remove('active');
+            setTimeout(() => { msgDiv.style.display = 'none'; }, 400);
+        }, duration);
+    }
+    </script>
+    <div class="header">
+        <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="logo">
+            MAJD Architecture
+        </div>
+        <div class="user-info">
+            <span id="loggedInUser"></span>
+            <button class="logout-button" id="logoutButton">تسجيل الخروج</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="overlay" id="sidebarOverlay"></div>
+        <div class="sidebar" id="sidebar">
+
+            <ul>
+                <li><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>
+                        الرئيسية</a></li>
+                <li><a href="/add-project.html" data-page="add-project"><i class="fas fa-plus-circle"></i> إضافة
+                        مشروع</a></li>
+                <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a>
+                </li>
+                <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
+                <li><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a></li>
+                <li><a href="/add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i> إضافة
+                        خزينة</a></li>
+                <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
+                <li><a href="/general-expenses.html" data-page="general-expenses"><i class="fas fa-money-bill-wave"></i> المصروفات العامة</a></li>
+                <li><a href="/employees.html" data-page="employees"><i class="fas fa-user-tie"></i> الموظفين</a></li>
+                <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
+                <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a>
+                </li>
+                <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
+            </ul>
+        </div>
+
+        <div class="content-area" id="contentArea">
+            <div class="page-header">
+                <h1>تفاصيل المشروع: <span id="projectTitle"></span></h1>
+                <div>
+                    <button class="action-button edit" id="editProjectBtn"><i class="fas fa-edit"></i> تعديل
+                        المشروع</button>
+                    <button class="action-button delete" id="deleteProjectBtn"><i class="fas fa-trash-alt"></i> حذف
+                        المشروع</button>
+                    <button class="action-button" id="backToProjectsBtn"><i class="fas fa-arrow-right"></i> العودة
+                        للمشاريع</button>
+                </div>
+            </div>
+
+            <div class="details-container">
+                <div class="details-section">
+                    <h4>بيانات المشروع</h4>
+                    <div class="details-grid">
+                        <p><strong>اسم المشروع:</strong> <span id="detailProjectName"></span></p>
+                        <p><strong>العنوان:</strong> <span id="detailProjectAddress"></span></p>
+                        <p><strong>المهندس:</strong> <span id="detailProjectEngineer"></span></p>
+                        <p><strong>العميل:</strong> <span id="detailProjectClient"></span></p>
+                        <p><strong>تاريخ البدء:</strong> <span id="detailProjectStartDate"></span></p>
+                        <p><strong>تاريخ الانتهاء:</strong> <span id="detailProjectEndDate"></span></p>
+                        <p><strong>الحالة:</strong> <span id="detailProjectStatus"></span></p>
+                    </div>
+                    <div class="details-full-width">
+                        <p><strong>الوصف:</strong> <span id="detailProjectDescription"></span></p>
+                        <p><strong>ملاحظات:</strong> <span id="detailProjectNotes"></span></p>
+                    </div>
+                </div>
+
+                <div class="details-section">
+                    <h4>ملخص المعاملات المالية</h4>
+                    <div class="details-grid">
+                        <p><strong>إجمالي الإيرادات:</strong> <span id="summaryTotalRevenue">0.00</span> ج.م</p>
+                        <p><strong>إجمالي المصروفات:</strong> <span id="summaryTotalExpenses">0.00</span> ج.م</p>
+                        <p><strong>صافي الربح / الخسارة:</strong> <span id="summaryNetProfitLoss">0.00</span> ج.م</p>
+                    </div>
+                </div>
+
+                <div style="margin: 30px 0;">
+                    <h3 style="text-align:center;">بنود المصروفات</h3>
+                    <canvas id="expensesByCategoryChart" height="120"></canvas>
+                  </div>
+
+                <!-- Accordion Start -->
+                <div class="accordion-section">
+                  <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>دفعات المقاولين</span>
+                    <span class="accordion-icon">+</span>
+                  </div>
+                  <div class="accordion-content">
+                    <!-- دفعات المقاولين الأصلية هنا -->
+                    <div class="details-grid" style="margin-bottom: 15px;">
+                        <p><strong>المبلغ المتفق عليه الكلي:</strong> <span id="contractorAgreedAmount">0.00</span> ج.م</p>
+                        <p><strong>المدفوع الكلي:</strong> <span id="contractorPaidAmount">0.00</span> ج.م</p>
+                        <p><strong>المتبقي الكلي:</strong> <span id="contractorRemainingAmount">0.00</span> ج.م</p>
+                    </div>
+                    <button class="action-button" id="addContractAgreementBtn"><i class="fas fa-handshake"></i> إضافة اتفاق مقاول</button>
+                    <button class="action-button" id="addContractPaymentBtn"><i class="fas fa-money-check-alt"></i> إضافة دفعة مقاول</button>
+                    <button class="action-button" id="showContractorStatementBtn"><i class="fas fa-file-invoice-dollar"></i> كشف حساب مقاول</button>
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>المقاول</th>
+                                <th>المبلغ المتفق عليه (للاتفاقية)</th>
+                                <th>المدفوع من الاتفاقية</th>
+                                <th>المتبقي من الاتفاقية</th>
+                                <th>تاريخ الدفعة</th>
+                                <th>مبلغ الدفعة</th>
+                                <th>الخزينة</th>
+                                <th>الوصف</th>
+                                <th>المرفقات</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contractorPaymentsTableBody">
+                            <tr>
+                                <td colspan="10" style="text-align: center;">لا توجد دفعات مقاولين حالياً.</td>
+                            </tr>
+                        </tbody>
+                         <tfoot>
+    <tr>
+      <td><strong>اجمالي المدفوع</strong></td>
+      <td id="contractorPaymentsTotal" colspan="4">0.00</td>
+    </tr>
+  </tfoot>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="accordion-section">
+                  <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>المصروفات</span>
+                    <span class="accordion-icon">+</span>
+                    </div>
+                  <div class="accordion-content">
+                    <!-- المصروفات الأصلية هنا -->
+                    <button class="action-button" id="addExpenseBtn"><i class="fas fa-plus"></i> إضافة مصروف</button>
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>المبلغ</th>
+                                <th>الوصف</th>
+                                <th>التصنيف</th>
+                                <th>التاريخ</th>
+                                <th>البائع</th>
+                                <th>الخزينة</th>
+                                <th>المرفقات</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projectExpensesTableBody">
+                            <tr>
+                                <td colspan="8" style="text-align: center;">لا توجد مصروفات حالياً.</td>
+                            </tr>
+                        </tbody>
+                         <tfoot>
+    <tr>
+      <td><strong>اجمالي المصروفات</strong></td>
+      <td id="expensesTotal" colspan="4">0.00</td>
+    </tr>
+  </tfoot>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="accordion-section">
+                  <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>الإيرادات</span>
+                    <span class="accordion-icon">+</span>
+                    </div>
+                  <div class="accordion-content">
+                    <!-- الإيرادات الأصلية هنا -->
+                    <button class="action-button" id="addRevenueBtn"><i class="fas fa-plus"></i> إضافة إيراد</button>
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>المبلغ</th>
+                                <th>الوصف</th>
+                                <th>التاريخ</th>
+                                <th>طريقة التحويل</th>
+                                <th>الخزينة</th>
+                                <th>المرفقات</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projectRevenuesTableBody">
+                            <tr>
+                                <td colspan="7" style="text-align: center;">لا توجد إيرادات حالياً.</td>
+                            </tr>
+                        </tbody>
+                         <tfoot>
+    <tr>
+      <td><strong>اجمالي الايرادات</strong></td>
+      <td id="revenuesTotal" colspan="4">0.00</td>
+    </tr>
+  </tfoot>
+                    </table>
+                </div>
+                </div>
+
+                <div class="accordion-section">
+                  <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>الحركة المالية للمشروع</span>
+                    <span class="accordion-icon">+</span>
+                  </div>
+                  <div class="accordion-content">
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>التاريخ</th>
+                                <th>النوع</th>
+                                <th>الوصف</th>
+                                <th>المبلغ</th>
+                                <th>الرصيد بعد العملية</th>
+                            </tr>
+                        </thead>
+                        <tbody id="financialMovementTableBody">
+                            <tr>
+                                <td colspan="5" style="text-align: center;">لا توجد حركة مالية حالياً.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="financial-summary" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 8px;">
+                        <h4 style="margin-bottom: 15px; color: var(--primary-color);">ملخص الحركة المالية</h4>
+                        <div class="summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div class="summary-item">
+                                <strong>إجمالي الإيرادات:</strong>
+                                <span id="movementTotalRevenue" style="color: #28a745; font-weight: bold;">0.00 ج.م</span>
+                            </div>
+                            <div class="summary-item">
+                                <strong>إجمالي المصروفات:</strong>
+                                <span id="movementTotalExpenses" style="color: #dc3545; font-weight: bold;">0.00 ج.م</span>
+                            </div>
+                            <div class="summary-item">
+                                <strong>صافي الربح/الخسارة:</strong>
+                                <span id="movementNetProfitLoss" style="font-weight: bold;">0.00 ج.م</span>
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Accordion End -->
+                <div class="modal-message" id="pageMessage" style="display: none;"></div>
+
+                <div class="details-buttons"
+                    style="display: flex; justify-content: center; gap: 15px; margin-top: 30px;">
+                    <button type="button" class="action-button" id="exportProjectExcelBtn" style="display: none;">
+                        <i class="fas fa-file-excel"></i> تصدير Excel
+                    </button>
+
+
+
+
+
+
+
+
+
+<script>
+document.getElementById('exportProjectExcelBtn').addEventListener('click', function () {
+    console.log("✅ زر التصدير شغال");
+
+    const wb = XLSX.utils.book_new();
+
+    // 🟦 1- بيانات المشروع
+    const projectDetailsData = [
+        ['تفاصيل المشروع'],
+        ['اسم المشروع', document.getElementById('detailProjectName').textContent.trim()],
+        ['العنوان', document.getElementById('detailProjectAddress').textContent.trim()],
+        ['المهندس', document.getElementById('detailProjectEngineer').textContent.trim()],
+        ['العميل', document.getElementById('detailProjectClient').textContent.trim()],
+        ['تاريخ البدء', document.getElementById('detailProjectStartDate').textContent.trim()],
+        ['تاريخ الانتهاء', document.getElementById('detailProjectEndDate').textContent.trim()],
+        ['الحالة', document.getElementById('detailProjectStatus').textContent.trim()],
+        ['الوصف', document.getElementById('detailProjectDescription').textContent.trim()],
+        ['ملاحظات', document.getElementById('detailProjectNotes').textContent.trim()],
+    ];
+    const projectSheet = XLSX.utils.aoa_to_sheet(projectDetailsData);
+    XLSX.utils.book_append_sheet(wb, projectSheet, 'Project_Info');
+
+    // 🟦 2- المصروفات
+    const expensesTable = document.getElementById('projectExpensesTableBody');
+    const expensesData = [['المبلغ', 'الوصف', 'التصنيف', 'التاريخ', 'البائع', 'الخزينة']];
+    let totalExpenses = 0;
+    for (let row of expensesTable.rows) {
+        if (row.cells.length >= 6) {
+            const amount = parseFloat(row.cells[0].textContent.trim()) || 0;
+            totalExpenses += amount;
+
+            expensesData.push([
+                row.cells[0].textContent.trim(),
+                row.cells[1].textContent.trim(),
+                row.cells[2].textContent.trim(),
+                row.cells[3].textContent.trim(),
+                row.cells[4].textContent.trim(),
+                row.cells[5].textContent.trim()
+            ]);
+        }
+    }
+
+    // 🟦 3- دفعات المقاولين
+    const contractorTable = document.getElementById('contractorPaymentsTableBody');
+    const contractorData = [['المقاول', 'المبلغ المتفق عليه', 'المدفوع', 'المتبقي', 'تاريخ الدفعة', 'مبلغ الدفعة', 'الخزينة', 'الوصف']];
+    let totalContractorPayments = 0;
+    for (let row of contractorTable.rows) {
+        if (row.cells.length >= 8) {
+            const paidNow = parseFloat(row.cells[5].textContent.trim()) || 0;
+            totalContractorPayments += paidNow;
+
+            contractorData.push([
+                row.cells[0].textContent.trim(),
+                row.cells[1].textContent.trim(),
+                row.cells[2].textContent.trim(),
+                row.cells[3].textContent.trim(),
+                row.cells[4].textContent.trim(),
+                row.cells[5].textContent.trim(),
+                row.cells[6].textContent.trim(),
+                row.cells[7].textContent.trim()
+            ]);
+        }
+    }
+
+    // 🧾 نضيف الإجماليات في نهاية شيت المصروفات
+    expensesData.push(['', '', '', '', 'إجمالي المصروفات:', totalExpenses.toFixed(2) + ' ج.م']);
+    expensesData.push(['', '', '', '', 'الإجمالي الكلي:', (totalExpenses + totalContractorPayments).toFixed(2) + ' ج.م']);
+
+    const expensesSheet = XLSX.utils.aoa_to_sheet(expensesData);
+    XLSX.utils.book_append_sheet(wb, expensesSheet, 'Expenses');
+
+    // 🟦 4- الإيرادات
+    const revenueTable = document.getElementById('projectRevenuesTableBody');
+    const revenueData = [['المبلغ', 'الوصف', 'التاريخ', 'طريقة التحويل', 'الخزينة']];
+    for (let row of revenueTable.rows) {
+        if (row.cells.length >= 5) {
+            revenueData.push([
+                row.cells[0].textContent.trim(),
+                row.cells[1].textContent.trim(),
+                row.cells[2].textContent.trim(),
+                row.cells[3].textContent.trim(),
+                row.cells[4].textContent.trim()
+            ]);
+        }
+    }
+    revenueData.push(['', '', '', 'الإجمالي:', document.getElementById('summaryTotalRevenue').textContent.trim()]);
+    const revenueSheet = XLSX.utils.aoa_to_sheet(revenueData);
+    XLSX.utils.book_append_sheet(wb, revenueSheet, 'Revenues');
+
+    // 🟦 5- شيت المقاولين
+    contractorData.push(['', '', totalContractorPayments.toFixed(2) + ' ج.م']);
+    const contractorSheet = XLSX.utils.aoa_to_sheet(contractorData);
+    XLSX.utils.book_append_sheet(wb, contractorSheet, 'Contractor_Payments');
+
+    // 🟦 6- صافي الربح / الخسارة
+    const profitLossSheet = XLSX.utils.aoa_to_sheet([
+        ['صافي الربح / الخسارة'],
+        [document.getElementById('summaryNetProfitLoss').textContent.trim()]
+    ]);
+    XLSX.utils.book_append_sheet(wb, profitLossSheet, 'Profit_Loss');
+
+    // 🟦 7- حفظ الملف
+    const fileName = `${document.getElementById('detailProjectName').textContent.trim().replace(/[:\\/?*[\]]/g, '-')}-تفاصيل.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    showDashboardMessage('تم تصدير تفاصيل المشروع بنجاح!', 'success', 2000);
+});
+</script>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals for Add/Edit Expense, Revenue, Contract Agreement, Contract Payment -->
+
+    <!-- Add/Edit Expense Modal -->
+    <div id="expenseModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3 id="expenseModalTitle">إضافة مصروف</h3>
+            <form id="expenseForm">
+                <input type="hidden" id="expenseProjectId">
+                <input type="hidden" id="expenseId">
+                <div class="modal-form-group">
+                    <label for="expenseAmount">المبلغ:</label>
+                    <input type="number" id="expenseAmount" name="amount" required step="0.01">
+                </div>
+                <div class="modal-form-group">
+                    <label for="expenseDescription">الوصف:</label>
+                    <textarea id="expenseDescription" name="description"></textarea>
+                </div>
+                <div class="modal-form-group">
+                    <label for="expenseCategory">التصنيف:</label>
+                    <select id="expenseCategory" name="category" required>
+                        <option value="">اختر تصنيف</option>
+                        <!-- Categories will be loaded here dynamically -->
+                    </select>
+                </div>
+                <div class="modal-form-group">
+                    <label for="expenseDate">التاريخ:</label>
+                    <input type="date" id="expenseDate" name="date" required>
+                </div>
+                <div class="modal-form-group">
+                    <label for="expenseVendor">البائع:</label>
+                    <input type="text" id="expenseVendor" name="vendor">
+                </div>
+                <div class="modal-form-group">
+                    <label for="expenseTreasury">الخزينة/العهدة:</label>
+                    <select id="expenseTreasury" name="treasury" required>
+                        <option value="">اختر خزينة</option>
+                        <!-- Treasuries/Accounts will be loaded here -->
+                    </select>
+                </div>
+                <div class="modal-form-group">
+                    <label for="expenseAttachment">المرفقات (اختياري):</label>
+                    <input type="file" id="expenseAttachment" name="attachments" accept="image/*,.pdf" multiple>
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        يمكنك رفع صور أو ملفات PDF. الحد الأقصى: 5 ميجابايت لكل ملف.
+                    </small>
+                </div>
+                <div class="modal-message" id="expenseModalMessage"></div>
+                <div class="modal-buttons">
+                    <button type="submit" class="modal-button">حفظ المصروف</button>
+                    <button type="button" class="modal-button cancel" id="cancelExpenseButton">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add/Edit Revenue Modal -->
+    <div id="revenueModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3 id="revenueModalTitle">إضافة إيراد</h3>
+            <form id="revenueForm">
+                <input type="hidden" id="revenueProjectId">
+                <input type="hidden" id="revenueId">
+                <div class="modal-form-group">
+                    <label for="revenueAmount">المبلغ:</label>
+                    <input type="number" id="revenueAmount" name="amount" required step="0.01">
+                </div>
+                <div class="modal-form-group">
+                    <label for="revenueDescription">الوصف:</label>
+                    <textarea id="revenueDescription" name="description"></textarea>
+                </div>
+                <div class="modal-form-group">
+                    <label for="revenueDate">التاريخ:</label>
+                    <input type="date" id="revenueDate" name="date" required>
+                </div>
+                <div class="modal-form-group">
+                    <label for="revenuePaymentMethod">طريقة التحويل:</label>
+                    <select id="revenuePaymentMethod" name="paymentMethod" required>
+                        <option value="">اختر طريقة</option>
+                        <option value="كاش">كاش</option>
+                        <option value="تحويل بنكي">تحويل بنكي</option>
+                        <option value="شيك">شيك</option>
+                    </select>
+                </div>
+                <div class="modal-form-group">
+                    <label for="revenueTreasury">الخزينة/العهدة:</label>
+                    <select id="revenueTreasury" name="treasury" required>
+                        <option value="">اختر خزينة</option>
+                        <!-- Treasuries/Accounts will be loaded here -->
+                    </select>
+                </div>
+                <div class="modal-form-group">
+                    <label for="revenueAttachment">المرفقات (اختياري):</label>
+                    <input type="file" id="revenueAttachment" name="attachments" accept="image/*,.pdf" multiple>
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        يمكنك رفع صور أو ملفات PDF. الحد الأقصى: 5 ميجابايت لكل ملف.
+                    </small>
+                </div>
+                <div class="modal-message" id="revenueModalMessage"></div>
+                <div class="modal-buttons">
+                    <button type="submit" class="modal-button">حفظ الإيراد</button>
+                    <button type="button" class="modal-button cancel" id="cancelRevenueButton">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Contract Agreement Modal -->
+    <div id="contractAgreementModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3>إضافة اتفاق مقاول</h3>
+            <form id="contractAgreementForm">
+                <input type="hidden" id="agreementProjectId">
+                <div class="modal-form-group">
+                    <label for="agreementContractor">اسم المقاول:</label>
+                    <select id="agreementContractor" name="contractorId" required>
+                        <option value="">اختر المقاول</option>
+                        <!-- Contractors will be loaded here -->
+                    </select>
+                </div>
+                <div class="modal-form-group">
+                    <label for="agreementAmount">المبلغ المتفق عليه (ج.م):</label>
+                    <input type="number" id="agreementAmount" name="agreedAmount" required step="0.01">
+                </div>
+                <div class="modal-form-group">
+                    <label for="agreementDescription">الوصف:</label>
+                    <textarea id="agreementDescription" name="description"></textarea>
+                </div>
+                <div class="modal-message" id="contractAgreementMessage"></div>
+                <div class="modal-buttons">
+                    <button type="submit" class="modal-button">حفظ الاتفاق</button>
+                    <button type="button" class="modal-button cancel" id="cancelContractAgreementButton">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Add Contract Payment Modal -->
+    <div id="contractPaymentModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3>إضافة دفعة مقاول</h3>
+            <form id="contractPaymentForm">
+                <input type="hidden" id="paymentProjectId">
+                <input type="hidden" id="paymentAgreementId">
+                <div class="modal-form-group">
+                    <label for="paymentContractAgreement">اتفاق المقاول:</label>
+                    <select id="paymentContractAgreement" name="contractorAgreementId" required>
+                        <option value="">اختر اتفاق مقاول</option>
+                        <!-- Contractor agreements for this project will be loaded here -->
+                    </select>
+                </div>
+                <div class="modal-form-group">
+                    <label for="paymentAmount">مبلغ الدفعة (ج.م):</label>
+                    <input type="number" id="paymentAmount" name="amount" required step="0.01">
+                </div>
+                <div class="modal-form-group">
+                    <label for="paymentDescription">الوصف (اختياري):</label>
+                    <textarea id="paymentDescription" name="description"></textarea>
+                </div>
+                <div class="modal-form-group">
+                    <label for="paymentDate">التاريخ:</label>
+                    <input type="date" id="paymentDate" name="date" required>
+                </div>
+                <div class="modal-form-group">
+                    <label for="paymentTreasury">الخزينة/العهدة:</label>
+                    <select id="paymentTreasury" name="treasuryId" required>
+                        <option value="">اختر خزينة</option>
+                        <!-- Treasuries/Accounts will be loaded here -->
+                    </select>
+                </div>
+                <div class="modal-form-group">
+                    <label for="paymentAttachment">المرفقات (اختياري):</label>
+                    <input type="file" id="paymentAttachment" name="attachment" accept="image/*,.pdf" multiple>
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        يمكنك رفع صور أو ملفات PDF. الحد الأقصى: 5 ميجابايت لكل ملف.
+                    </small>
+                </div>
+                <div class="modal-message" id="contractPaymentMessage"></div>
+                <div class="modal-buttons">
+                    <button type="submit" class="modal-button">إضافة الدفعة</button>
+                    <button type="button" class="modal-button cancel" id="cancelContractPaymentButton">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Contractor Statement Modal -->
+    <div id="contractorStatementModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <span class="close-button">&times;</span>
+            <h3>كشف حساب مقاول</h3>
+            <div class="modal-form-group">
+                <label for="statementContractorSelect">اختر المقاول:</label>
+                <select id="statementContractorSelect">
+                    <option value="">اختر المقاول</option>
+                    <!-- سيتم تحميل المقاولين هنا -->
+                </select>
+            </div>
+            <div id="contractorStatementTableContainer">
+                <!-- سيتم عرض كشف الحساب هنا -->
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-button cancel" id="closeContractorStatementBtn">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attachment Viewer Modal -->
+    <div id="attachmentViewerModal" class="modal">
+        <div class="modal-content" style="max-width: 90%; max-height: 90%; overflow: auto;">
+            <span class="close-button">&times;</span>
+            <h3 id="attachmentViewerTitle">عرض المرفق</h3>
+            <div id="attachmentViewerContent">
+                <!-- سيتم عرض المرفق هنا -->
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-button" id="downloadAttachmentBtn">
+                    <i class="fas fa-download"></i> تحميل
+                </button>
+                <button type="button" class="modal-button cancel" id="closeAttachmentViewerBtn">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = "https://08e6-156-203-155-30.ngrok-free.app";
+        // Client-side authentication check and redirection
+        document.addEventListener('DOMContentLoaded', function () {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+
+            let currentUserRole = '';
+            let currentProjectId = null; // To store the ID of the currently viewed project
+
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const decodedPayload = decodeURIComponent(escape(window.atob(base64)));
+                const payload = JSON.parse(decodedPayload);
+
+                const username = payload.user.username || payload.user.id || 'مستخدم';
+                const role = payload.user.role || 'غير محدد';
+                currentUserRole = role;
+
+                document.getElementById('loggedInUser').textContent = `مرحباً، ${username} (${role})`;
+
+                // Client-side authorization based on role for sidebar visibility
+                const sidebar = document.getElementById('sidebar');
+                const addProjectLink = sidebar.querySelector('[data-page="add-project"]');
+                const usersLink = sidebar.querySelector('[data-page="users"]');
+                const categoriesLink = sidebar.querySelector('[data-page="categories"]');
+                const addTreasuryLink = sidebar.querySelector('[data-page="add-treasury"]');
+                const treasuriesLink = sidebar.querySelector('[data-page="treasuries"]');
+                const contractorsLink = sidebar.querySelector('[data-page="contractors"]');
+                const clientsLink = sidebar.querySelector('[data-page="clients"]');
+
+                if (role === 'مهندس') {
+                    // Hide restricted elements for engineer
+                    if (addProjectLink) addProjectLink.style.display = 'none';
+                    if (usersLink) usersLink.style.display = 'none';
+                    if (addTreasuryLink) addTreasuryLink.style.display = 'none';
+                    if (contractorsLink) contractorsLink.style.display = 'none';
+                    if (clientsLink) clientsLink.style.display = 'none';
+                }
+
+                // Set active link in sidebar (for this page)
+                const currentPageLink = document.querySelector(`.sidebar ul li a[data-page="projects"]`);
+                if (currentPageLink) {
+                    currentPageLink.parentElement.classList.add('active');
+                }
+            } catch (e) {
+                console.error("Failed to decode token:", e);
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            }
+
+            // Get project ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            currentProjectId = urlParams.get('id');
+
+            if (!currentProjectId) {
+                document.getElementById('contentArea').innerHTML = '<h1 style="text-align: center; margin-top: 50px; color: #dc3545;">خطأ: لم يتم تحديد معرف المشروع.</h1><p style="text-align: center;"><button onclick="window.location.href=\'/projects.html\'" style="padding: 10px 20px; background-color: var(--primary-color); color: white; border: none; border-radius: 5px; cursor: pointer;">العودة للمشاريع</button></p>';
+                return;
+            }
+
+            // Logout functionality
+            const logout = () => {
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            };
+            document.getElementById('logoutButton').addEventListener('click', logout);
+            document.getElementById('sidebarLogoutButton').addEventListener('click', logout);
+
+            // Responsive Sidebar Toggle
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+                sidebarOverlay.classList.toggle('active');
+                document.body.classList.toggle('sidebar-open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+                document.body.classList.remove('sidebar-open');
+            });
+
+            // تنقل مباشر لما المستخدم يضغط على لينك
+            sidebar.addEventListener('click', (event) => {
+                const link = event.target.closest('a');
+                if (link && link.href && link.id !== 'sidebarLogoutButton') {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                    document.body.classList.remove('sidebar-open');
+                    // مفيش preventDefault، وسيب التنقل يشتغل عادي
+                }
+            });
+
+            /* --- Project Details Page Logic --- */
+            const projectTitleSpan = document.getElementById('projectTitle');
+            const detailProjectNameSpan = document.getElementById('detailProjectName');
+            const detailProjectAddressSpan = document.getElementById('detailProjectAddress');
+            const detailProjectDescriptionSpan = document.getElementById('detailProjectDescription');
+            const detailProjectEngineerSpan = document.getElementById('detailProjectEngineer');
+            const detailProjectClientSpan = document.getElementById('detailProjectClient');
+            const detailProjectStartDateSpan = document.getElementById('detailProjectStartDate');
+            const detailProjectEndDateSpan = document.getElementById('detailProjectEndDate');
+            const detailProjectStatusSpan = document.getElementById('detailProjectStatus');
+            const detailProjectNotesSpan = document.getElementById('detailProjectNotes');
+            const projectEngineerSelect = document.getElementById('projectEngineer');
+
+
+
+
+               
+
+
+
+            
+            const summaryTotalRevenueSpan = document.getElementById('summaryTotalRevenue');
+            const summaryTotalExpensesSpan = document.getElementById('summaryTotalExpenses');
+            const summaryNetProfitLossSpan = document.getElementById('summaryNetProfitLoss');
+
+            const contractorAgreedAmountSpan = document.getElementById('contractorAgreedAmount');
+            const contractorPaidAmountSpan = document.getElementById('contractorPaidAmount');
+            const contractorRemainingAmountSpan = document.getElementById('contractorRemainingAmount');
+            const contractorPaymentsTableBody = document.getElementById('contractorPaymentsTableBody');
+
+            const projectExpensesTableBody = document.getElementById('projectExpensesTableBody');
+            const projectRevenuesTableBody = document.getElementById('projectRevenuesTableBody');
+
+            const pageMessage = document.getElementById('pageMessage');
+            const backToProjectsBtn = document.getElementById('backToProjectsBtn');
+            const editProjectBtn = document.getElementById('editProjectBtn');
+            const deleteProjectBtn = document.getElementById('deleteProjectBtn');
+            const exportProjectExcelBtn = document.getElementById('exportProjectExcelBtn');
+
+            // Modals and buttons
+            const expenseModal = document.getElementById('expenseModal');
+            const revenueModal = document.getElementById('revenueModal');
+            const contractAgreementModal = document.getElementById('contractAgreementModal');
+            const contractPaymentModal = document.getElementById('contractPaymentModal');
+
+            const addExpenseBtn = document.getElementById('addExpenseBtn');
+            const addRevenueBtn = document.getElementById('addRevenueBtn');
+            const addContractAgreementBtn = document.getElementById('addContractAgreementBtn');
+            const addContractPaymentBtn = document.getElementById('addContractPaymentBtn');
+
+            // Form inputs within modals
+            const expenseForm = document.getElementById('expenseForm');
+            const expenseProjectIdInput = document.getElementById('expenseProjectId');
+            const expenseAmountInput = document.getElementById('expenseAmount');
+            const expenseDescriptionInput = document.getElementById('expenseDescription');
+            const expenseCategorySelect = document.getElementById('expenseCategory');
+            const expenseDateInput = document.getElementById('expenseDate');
+            const expenseVendorInput = document.getElementById('expenseVendor');
+            const expenseTreasurySelect = document.getElementById('expenseTreasury');
+            const expenseModalMessage = document.getElementById('expenseModalMessage');
+            const cancelExpenseButton = document.getElementById('cancelExpenseButton');
+
+            const revenueForm = document.getElementById('revenueForm');
+            const revenueProjectIdInput = document.getElementById('revenueProjectId');
+            const revenueAmountInput = document.getElementById('revenueAmount');
+            const revenueDescriptionInput = document.getElementById('revenueDescription');
+            const revenueDateInput = document.getElementById('revenueDate');
+            const revenuePaymentMethodSelect = document.getElementById('revenuePaymentMethod');
+            const revenueTreasurySelect = document.getElementById('revenueTreasury'); // New Treasury for Revenue
+            const revenueModalMessage = document.getElementById('revenueModalMessage');
+            const cancelRevenueButton = document.getElementById('cancelRevenueButton');
+
+            const contractAgreementForm = document.getElementById('contractAgreementForm');
+            const agreementProjectIdInput = document.getElementById('agreementProjectId');
+            const agreementContractorSelect = document.getElementById('agreementContractor');
+            const agreementAmountInput = document.getElementById('agreementAmount');
+            const agreementDescriptionInput = document.getElementById('agreementDescription');
+            const contractAgreementMessage = document.getElementById('contractAgreementMessage');
+            const cancelContractAgreementButton = document.getElementById('cancelContractAgreementButton');
+
+            const contractPaymentForm = document.getElementById('contractPaymentForm');
+            const paymentProjectIdInput = document.getElementById('paymentProjectId');
+            const paymentAgreementIdInput = document.getElementById('paymentAgreementId');
+            const paymentContractAgreementSelect = document.getElementById('paymentContractAgreement'); // This will hold agreement IDs
+            const paymentAmountInput = document.getElementById('paymentAmount');
+            const paymentDescriptionInput = document.getElementById('paymentDescription'); // Added description for payment
+            const paymentDateInput = document.getElementById('paymentDate');
+            const paymentTreasurySelect = document.getElementById('paymentTreasury');
+            const contractPaymentMessage = document.getElementById('contractPaymentMessage');
+            const cancelContractPaymentButton = document.getElementById('cancelContractPaymentButton');
+
+            // زر كشف حساب مقاول
+            const showContractorStatementBtn = document.getElementById('showContractorStatementBtn');
+            const contractorStatementModal = document.getElementById('contractorStatementModal');
+            const closeContractorStatementBtn = document.getElementById('closeContractorStatementBtn');
+            const statementContractorSelect = document.getElementById('statementContractorSelect');
+
+            // مودال عرض المرفقات
+            const attachmentViewerModal = document.getElementById('attachmentViewerModal');
+            const attachmentViewerTitle = document.getElementById('attachmentViewerTitle');
+            const attachmentViewerContent = document.getElementById('attachmentViewerContent');
+            const downloadAttachmentBtn = document.getElementById('downloadAttachmentBtn');
+            const closeAttachmentViewerBtn = document.getElementById('closeAttachmentViewerBtn');
+            let currentAttachmentUrl = '';
+
+            // دالة عرض المرفق
+            function showAttachment(filename, mimetype, originalName) {
+                const token = localStorage.getItem('token');
+                currentAttachmentUrl = `${BASE_URL}/api/files/${filename}`;
+                console.log('Opening attachment:', currentAttachmentUrl);
+                attachmentViewerTitle.textContent = `عرض المرفق: ${originalName || filename}`;
+                
+                const isImage = mimetype && mimetype.startsWith('image/');
+                const isPdf = mimetype && mimetype === 'application/pdf';
+                
+                if (isImage) {
+                    attachmentViewerContent.innerHTML = `
+                        <div style="text-align: center;">
+                            <img src="${currentAttachmentUrl}" style="max-width: 100%; max-height: 70vh; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" alt="صورة المرفق" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <div style="display: none; padding: 20px; color: #666;">
+                                <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ffc107; margin-bottom: 10px;"></i>
+                                <p>لا يمكن تحميل الصورة</p>
+                                <p>يمكنك استخدام زر التحميل أدناه</p>
+                            </div>
+                        </div>
+                    `;
+                } else if (isPdf) {
+                    attachmentViewerContent.innerHTML = `
+                        <div style="text-align: center;">
+                            <iframe src="${currentAttachmentUrl}" style="width: 100%; height: 70vh; border: none; border-radius: 8px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"></iframe>
+                            <div style="display: none; padding: 20px; color: #666;">
+                                <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ffc107; margin-bottom: 10px;"></i>
+                                <p>لا يمكن عرض PDF</p>
+                                <p>يمكنك استخدام زر التحميل أدناه</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    attachmentViewerContent.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <i class="fas fa-file" style="font-size: 64px; color: #6c757d; margin-bottom: 20px;"></i>
+                            <p style="font-size: 18px; color: #666;">لا يمكن عرض هذا النوع من الملفات</p>
+                            <p style="font-size: 14px; color: #999;">يمكنك تحميل الملف لعرضه</p>
+                        </div>
+                    `;
+                }
+                
+                attachmentViewerModal.style.display = 'flex';
+            }
+
+            // زر تحميل المرفق
+            downloadAttachmentBtn.addEventListener('click', () => {
+                if (currentAttachmentUrl) {
+                    const token = localStorage.getItem('token');
+                    const link = document.createElement('a');
+                    link.href = currentAttachmentUrl;
+                    link.download = '';
+                    
+                    // إضافة token للرابط إذا كان مطلوباً
+                    if (token) {
+                        link.href += `?token=${token}`;
+                    }
+                    
+                    link.click();
+                }
+            });
+
+            // إغلاق مودال المرفقات
+            closeAttachmentViewerBtn.addEventListener('click', () => {
+                attachmentViewerModal.style.display = 'none';
+            });
+
+            attachmentViewerModal.querySelector('.close-button').addEventListener('click', () => {
+                attachmentViewerModal.style.display = 'none';
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target === attachmentViewerModal) {
+                    attachmentViewerModal.style.display = 'none';
+                }
+            });
+
+            // عند اختيار مقاول من القائمة، جلب وعرض كشف الحساب
+            statementContractorSelect.addEventListener('change', async function() {
+                const contractorId = this.value;
+                const tableContainer = document.getElementById('contractorStatementTableContainer');
+                tableContainer.innerHTML = '';
+                if (!contractorId) return;
+                try {
+                    const agreementsResponse = await fetch(`${BASE_URL}/api/contract-agreements/${currentProjectId}`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    const agreements = await agreementsResponse.json();
+                    // ترتيب الاتفاقيات من الأقدم للأحدث
+                    const contractorAgreements = agreements.filter(ag => ag.contractor && ag.contractor._id === contractorId).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                    if (contractorAgreements.length === 0) {
+                        tableContainer.innerHTML = '<div style="text-align:center; color:#888; margin:20px;">لا توجد اتفاقيات لهذا المقاول في هذا المشروع.</div>';
+                        return;
+                    }
+                    const paymentsResponse = await fetch(`${BASE_URL}/api/contract-payments/${currentProjectId}`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    const payments = await paymentsResponse.json();
+                    const agreementIds = contractorAgreements.map(ag => ag._id);
+                    const contractorPayments = payments.filter(pay => agreementIds.includes(pay.contractAgreementId));
+                    let html = '';
+                    contractorAgreements.forEach((ag, idx) => {
+                        const agPayments = contractorPayments.filter(pay => pay.contractAgreementId === ag._id);
+                        html += `<div style="border:1px solid #eee; border-radius:8px; margin-bottom:20px; padding:10px; background:#fafbfc;">
+                            <div style="margin-bottom:8px; font-weight:bold; color:#1a237e; font-size:17px;">${ag.description || 'اتفاقية بدون وصف'} (${idx+1})</div>
+                            <div style="margin-bottom:8px;">
+                                <strong>المبلغ المتفق عليه:</strong> <span>${ag.agreedAmount.toFixed(2)} ج.م</span>
+                            </div>`;
+                        if (agPayments.length > 0) {
+                            html += `<div style="overflow-x:auto;"><table class="details-table" style="margin-top:10px; min-width:500px;">
+                                <thead><tr><th>التاريخ</th><th>المبلغ</th><th>الخزينة</th><th>الوصف</th></tr></thead><tbody>`;
+                            agPayments.forEach(pay => {
+                                html += `<tr>
+                                    <td>${formatDate(pay.date)}</td>
+                                    <td>${pay.amount.toFixed(2)} ج.م</td>
+                                    <td>${pay.treasury || '-'}</td>
+                                    <td>${pay.description || '-'}</td>
+                                </tr>`;
+                            });
+                            html += '</tbody></table></div>';
+                        } else {
+                            html += '<div style="color:#888; margin:10px 0;">لا توجد دفعات لهذه الاتفاقية.</div>';
+                        }
+                        html += `<div style="margin-top:8px;"><strong>المتبقي من الاتفاقية:</strong> <span>${(ag.agreedAmount - (ag.paidAmount || 0)).toFixed(2)} ج.م</span></div>`;
+                        html += '</div>';
+                    });
+                    // زر تصدير Excel
+                    html += '<div style="text-align:left; margin-top:20px;"><button id="exportContractorStatementExcelBtn" class="action-button"><i class="fas fa-file-excel"></i> تصدير كشف الحساب Excel</button></div>';
+                    tableContainer.innerHTML = html;
+                    // كود التصدير
+                    document.getElementById('exportContractorStatementExcelBtn').onclick = function() {
+                        try {
+                            const wb = XLSX.utils.book_new();
+                            contractorAgreements.forEach((ag, idx) => {
+                                const agPayments = contractorPayments.filter(pay => pay.contractAgreementId === ag._id);
+                                const sheetData = [];
+                                sheetData.push([`الاتفاقية: ${(ag.description || 'اتفاقية بدون وصف')} (${idx+1})`]);
+                                sheetData.push(['المبلغ المتفق عليه', ag.agreedAmount.toFixed(2) + ' ج.م']);
+                                sheetData.push(['المتبقي من الاتفاقية', (ag.agreedAmount - (ag.paidAmount || 0)).toFixed(2) + ' ج.م']);
+                                sheetData.push([]);
+                                sheetData.push(['التاريخ', 'المبلغ', 'الخزينة', 'الوصف']);
+                                if (agPayments.length > 0) {
+                                    agPayments.forEach(pay => {
+                                        sheetData.push([
+                                            formatDate(pay.date),
+                                            pay.amount.toFixed(2) + ' ج.م',
+                                            pay.treasury || '-',
+                                            pay.description || '-'
+                                        ]);
+                                    });
+                                } else {
+                                    sheetData.push(['لا توجد دفعات لهذه الاتفاقية']);
+                                }
+                                const sheet = XLSX.utils.aoa_to_sheet(sheetData);
+                                XLSX.utils.book_append_sheet(wb, sheet, `اتفاقية${idx+1}`);
+                            });
+                            XLSX.writeFile(wb, 'كشف_حساب_مقاول.xlsx');
+                            showDashboardMessage('تم تصدير كشف الحساب بنجاح!', 'success', 2000);
+                        } catch (err) {
+                            showDashboardMessage('فشل في تصدير كشف الحساب: ' + (err.message || ''), 'error', 2500);
+                        }
+                    };
+                } catch (error) {
+                    tableContainer.innerHTML = '<div style="text-align:center; color:red; margin:20px;">حدث خطأ أثناء جلب كشف الحساب.</div>';
+                }
+            });
+
+            // غلق المودال عند الضغط على زر الإغلاق
+            closeContractorStatementBtn.addEventListener('click', () => {
+                contractorStatementModal.style.display = 'none';
+            });
+            // غلق المودال عند الضغط على علامة الإغلاق
+            contractorStatementModal.querySelector('.close-button').addEventListener('click', () => {
+                contractorStatementModal.style.display = 'none';
+            });
+
+            // Helper function to format dates
+            const formatDate = (dateString) => {
+                if (!dateString) return 'غير محدد';
+                return new Date(dateString).toLocaleDateString('en-GB');
+            };
+
+
+
+
+
+
+
+
+
+            // Helper function to populate dropdowns
+            async function populateDropdown(selectElement, apiUrl, valueKey, textKey, defaultOptionText = 'اختر', customFilter = null, customTextFormatter = null) {
+                selectElement.innerHTML = `<option value="">${defaultOptionText}</option>`;
+                try {
+                    const response = await fetch(apiUrl, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    if (response.ok) {
+                        let items = await response.json();
+                        if (customFilter && typeof customFilter === 'function') {
+                            items = items.filter(customFilter);
+                        }
+                        items.forEach(item => {
+                            const option = document.createElement('option');
+                            option.value = item[valueKey];
+                            option.textContent = customTextFormatter ? customTextFormatter(item) : item[textKey];
+                            selectElement.appendChild(option);
+                        });
+                    } else {
+                        console.error(`Failed to fetch items from ${apiUrl}:`, await response.json());
+                    }
+                } catch (error) {
+                    console.error(`Error fetching items from ${apiUrl}:`, error);
+                }
+            }
+
+            // Function to fetch and display project details and related financial data
+            const fetchProjectDetails = async () => {
+                pageMessage.style.display = 'none';
+                projectTitleSpan.textContent = 'جاري التحميل...';
+
+                // Fetch project details
+                try {
+                    const projectResponse = await fetch(`${BASE_URL}/api/projects/${currentProjectId}/details`, { // Use details endpoint for summary
+                        headers: {
+                            'x-auth-token': localStorage.getItem('token')
+                        }
+                    });
+                    const projectData = await projectResponse.json();
+                    document.getElementById('exportProjectExcelBtn').style.display = 'inline-block';
+
+                    if (projectResponse.ok) {
+                        if (projectTitleSpan) projectTitleSpan.textContent = projectData.projectName;
+                        if (detailProjectNameSpan) detailProjectNameSpan.textContent = projectData.projectName;
+                        if (detailProjectAddressSpan) detailProjectAddressSpan.textContent = projectData.address;
+                        if (detailProjectDescriptionSpan) detailProjectDescriptionSpan.textContent = projectData.description || 'لا يوجد وصف.';
+                        if (detailProjectEngineerSpan) detailProjectEngineerSpan.textContent = projectData.engineer ? projectData.engineer.username : 'غير محدد';
+                        if (detailProjectClientSpan) detailProjectClientSpan.textContent = projectData.client ? projectData.client.clientName : 'غير محدد';
+                        if (detailProjectStartDateSpan) detailProjectStartDateSpan.textContent = formatDate(projectData.startDate);
+                        if (detailProjectEndDateSpan) detailProjectEndDateSpan.textContent = formatDate(projectData.endDate);
+                        if (detailProjectStatusSpan) detailProjectStatusSpan.textContent = projectData.status;
+                        if (detailProjectNotesSpan) detailProjectNotesSpan.textContent = projectData.notes || 'لا توجد ملاحظات.';
+
+                        if (summaryTotalRevenueSpan) summaryTotalRevenueSpan.textContent = (projectData.totalRevenue || 0).toFixed(2) + ' ج.م';
+                        if (summaryTotalExpensesSpan) summaryTotalExpensesSpan.textContent = (projectData.totalExpenses || 0).toFixed(2) + ' ج.م';
+                        if (summaryNetProfitLossSpan) summaryNetProfitLossSpan.textContent = (projectData.netProfitLoss || 0).toFixed(2) + ' ج.م';
+
+                        if (contractorAgreedAmountSpan) contractorAgreedAmountSpan.textContent = (projectData.totalAgreedContractorAmount || 0).toFixed(2) + ' ج.م';
+                        if (contractorPaidAmountSpan) contractorPaidAmountSpan.textContent = (projectData.totalPaidContractorAmount || 0).toFixed(2) + ' ج.م';
+                        projectTitleSpan.textContent = projectData.projectName;
+                        detailProjectNameSpan.textContent = projectData.projectName;
+                        detailProjectAddressSpan.textContent = projectData.address;
+                        detailProjectDescriptionSpan.textContent = projectData.description || 'لا يوجد وصف.';
+                        detailProjectEngineerSpan.textContent = projectData.engineer ? projectData.engineer.username : 'غير محدد';
+                        detailProjectClientSpan.textContent = projectData.client ? projectData.client.clientName : 'غير محدد';
+                        detailProjectStartDateSpan.textContent = formatDate(projectData.startDate);
+                        detailProjectEndDateSpan.textContent = formatDate(projectData.endDate);
+                        detailProjectStatusSpan.textContent = projectData.status;
+                        detailProjectNotesSpan.textContent = projectData.notes || 'لا توجد ملاحظات.';
+
+                        // Populate financial summary (now from backend calculated values)
+                        summaryTotalRevenueSpan.textContent = (projectData.totalRevenue || 0).toFixed(2) + ' ج.م';
+                        summaryTotalExpensesSpan.textContent = (projectData.totalExpenses || 0).toFixed(2) + ' ج.م';
+                        summaryNetProfitLossSpan.textContent = (projectData.netProfitLoss || 0).toFixed(2) + ' ج.م';
+
+                        contractorAgreedAmountSpan.textContent = (projectData.totalAgreedContractorAmount || 0).toFixed(2) + ' ج.م';
+                        contractorPaidAmountSpan.textContent = (projectData.totalPaidContractorAmount || 0).toFixed(2) + ' ج.م';
+                        contractorRemainingAmountSpan.textContent = (projectData.totalRemainingContractorAmount || 0).toFixed(2) + ' ج.م';
+
+                    } else {
+                        pageMessage.className = 'modal-message error';
+                        pageMessage.textContent = projectData.message || 'فشل في جلب تفاصيل المشروع.';
+                        pageMessage.style.display = 'block';
+                        return; // Stop if project details fail
+                    }
+                } catch (error) {
+                    console.error('Error fetching project details:', error);
+                    pageMessage.className = 'modal-message error';
+                    pageMessage.textContent = 'خطأ في الاتصال بالخادم لجلب تفاصيل المشروع.';
+                    pageMessage.style.display = 'block';
+                    return; // Stop if project details fail
+                }
+
+                // Fetch Expenses for this project
+                try {
+                    const expensesResponse = await fetch(`${BASE_URL}/api/transactions?project=${currentProjectId}&type=مصروف`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    const expenses = await expensesResponse.json();
+                    renderExpensesByCategoryChart(expenses);
+                    document.getElementById('exportProjectExcelBtn').style.display = 'inline-block';
+
+                    projectExpensesTableBody.innerHTML = '';
+                    if (expenses.length > 0) {
+                        let totalExpenses = 0;
+                        expenses.forEach(exp => {
+                            const row = projectExpensesTableBody.insertRow();
+                            
+                            // Create attachments display
+                            let attachmentsHtml = '';
+                            console.log('Expense data:', exp);
+                            console.log('Attachments:', exp.attachments);
+                            
+                            if (exp.attachments && exp.attachments.length > 0) {
+                                exp.attachments.forEach(attachment => {
+                                    console.log('Processing attachment:', attachment);
+                                    const isImage = attachment.mimeType && attachment.mimeType.startsWith('image/');
+                                    const isPdf = attachment.mimeType && attachment.mimeType === 'application/pdf';
+                                    
+                                    if (isImage) {
+                                        attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                            <i class="fas fa-image" style="color: #007bff; font-size: 16px;" title="صورة"></i>
+                                        </button>`;
+                                    } else if (isPdf) {
+                                        attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                            <i class="fas fa-file-pdf" style="color: #dc3545; font-size: 16px;" title="PDF"></i>
+                                        </button>`;
+                                    } else {
+                                        attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                            <i class="fas fa-file" style="color: #6c757d; font-size: 16px;" title="ملف"></i>
+                                        </button>`;
+                                    }
+                                });
+                            } else {
+                                attachmentsHtml = '<span style="color: #999;">لا توجد مرفقات</span>';
+                            }
+                            
+                            row.innerHTML = `
+                                <td>${exp.amount.toFixed(2)} ج.م</td>
+                                <td>${exp.description || '-'}</td>
+                                <td>${exp.category ? exp.category.name : '-'}</td>
+                                <td>${formatDate(exp.date)}</td>
+                                <td>${exp.vendor || '-'}</td>
+                                <td>${exp.treasury ? exp.treasury.name : '-'}</td>
+                                <td>${attachmentsHtml}</td>
+                                <td class="action-buttons">
+                                    <button class="delete-expense" data-id="${exp._id}"><i class="fas fa-trash-alt"></i> حذف</button>
+                                </td>
+                            `;
+                            let amount = parseFloat(exp.amount);
+                            if (!isNaN(amount)) {
+                                totalExpenses += amount;
+                            }
+                        });
+                        document.getElementById('expensesTotal').textContent = totalExpenses.toFixed(2) + ' ج.م';
+                    } else {
+                        projectExpensesTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">لا توجد مصروفات حالياً لهذا المشروع.</td></tr>';
+                        document.getElementById('expensesTotal').textContent = '0.00 ج.م';
+                    }
+                    if (typeof filterExpensesTable === 'function') filterExpensesTable();
+                } catch (error) {
+                    console.error('Error fetching project expenses:', error);
+                    projectExpensesTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">فشل في تحميل المصروفات.</td></tr>';
+                }
+
+                // Fetch Revenues for this project
+                try {
+                    const revenuesResponse = await fetch(`${BASE_URL}/api/transactions?project=${currentProjectId}&type=إيداع`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    const revenues = await revenuesResponse.json();
+                    document.getElementById('exportProjectExcelBtn').style.display = 'inline-block';
+
+                    projectRevenuesTableBody.innerHTML = '';
+                    if (revenues.length > 0) {
+                        let totalRevenues = 0;
+                        revenues.forEach(rev => {
+                            const row = projectRevenuesTableBody.insertRow();
+                            
+                            // Create attachments display
+                            let attachmentsHtml = '';
+                            console.log('Revenue data:', rev);
+                            console.log('Attachments:', rev.attachments);
+                            
+                            if (rev.attachments && rev.attachments.length > 0) {
+                                rev.attachments.forEach(attachment => {
+                                    console.log('Processing attachment:', attachment);
+                                    const isImage = attachment.mimeType && attachment.mimeType.startsWith('image/');
+                                    const isPdf = attachment.mimeType && attachment.mimeType === 'application/pdf';
+                                    
+                                    if (isImage) {
+                                        attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                            <i class="fas fa-image" style="color: #007bff; font-size: 16px;" title="صورة"></i>
+                                        </button>`;
+                                    } else if (isPdf) {
+                                        attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                            <i class="fas fa-file-pdf" style="color: #dc3545; font-size: 16px;" title="PDF"></i>
+                                        </button>`;
+                                    } else {
+                                        attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                            <i class="fas fa-file" style="color: #6c757d; font-size: 16px;" title="ملف"></i>
+                                        </button>`;
+                                    }
+                                });
+                            } else {
+                                attachmentsHtml = '<span style="color: #999;">لا توجد مرفقات</span>';
+                            }
+                            
+                            row.innerHTML = `
+                                <td>${rev.amount.toFixed(2)} ج.م</td>
+                                <td>${rev.description || '-'}</td>
+                                <td>${formatDate(rev.date)}</td>
+                                <td>${rev.paymentMethod || '-'}</td>
+                                <td>${rev.treasury ? rev.treasury.name : '-'}</td>
+                                <td>${attachmentsHtml}</td>
+                                <td class="action-buttons">
+                                    <button class="delete-revenue" data-id="${rev._id}"><i class="fas fa-trash-alt"></i> حذف</button>
+                                </td>
+                            `;
+                            let amount = parseFloat(rev.amount);
+                            if (!isNaN(amount)) {
+                                totalRevenues += amount;
+                            }
+                        });
+                        document.getElementById('revenuesTotal').textContent = totalRevenues.toFixed(2) + ' ج.م';
+                    } else {
+                        projectRevenuesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">لا توجد إيرادات حالياً لهذا المشروع.</td></tr>';
+                        document.getElementById('revenuesTotal').textContent = '0.00 ج.م';
+                    }
+                    if (typeof filterRevenuesTable === 'function') filterRevenuesTable();
+                } catch (error) {
+                    console.error('Error fetching project revenues:', error);
+                    projectRevenuesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">فشل في تحميل الإيرادات.</td></tr>';
+                }
+
+                // Fetch Contractor Payments for this project
+                try {
+                    const contractorPaymentsResponse = await fetch(`${BASE_URL}/api/contract-payments/${currentProjectId}`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    const payments = await contractorPaymentsResponse.json();
+                    document.getElementById('exportProjectExcelBtn').style.display = 'inline-block';
+
+                    contractorPaymentsTableBody.innerHTML = '';
+                    if (payments.length > 0) {
+                        let totalContractorPayments = 0;
+                        payments.forEach(pay => {
+                            const row = contractorPaymentsTableBody.insertRow();
+                            
+                            // Create attachments display
+                            let attachmentsHtml = '';
+                            console.log('Payment data:', pay);
+                            console.log('Attachments:', pay.attachments);
+                            
+                            if (pay.attachments && pay.attachments.length > 0) {
+                                pay.attachments.forEach(attachment => {
+                                    console.log('Processing attachment:', attachment);
+                                    const isImage = attachment.mimeType && attachment.mimeType.startsWith('image/');
+                                    const isPdf = attachment.mimeType && attachment.mimeType === 'application/pdf';
+                                    
+                                    if (isImage) {
+                                        attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                            <i class="fas fa-image" style="color: #007bff; font-size: 16px;" title="صورة"></i>
+                                        </button>`;
+                                    } else if (isPdf) {
+                                        attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                            <i class="fas fa-file-pdf" style="color: #dc3545; font-size: 16px;" title="PDF"></i>
+                                        </button>`;
+                                    } else {
+                                        attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                            <i class="fas fa-file" style="color: #6c757d; font-size: 16px;" title="ملف"></i>
+                                        </button>`;
+                                    }
+                                });
+                            } else {
+                                attachmentsHtml = '<span style="color: #999;">لا توجد مرفقات</span>';
+                            }
+                            
+                            row.innerHTML = `
+                                <td>${pay.contractorName || '-'}</td>
+                                <td>${pay.agreedAmount.toFixed(2)}</td>
+                                <td>${pay.paidAmount.toFixed(2)}</td>
+                                <td>${(pay.agreedAmount - pay.paidAmount).toFixed(2)}</td>
+                                <td>${formatDate(pay.date)}</td>
+                                <td>${pay.amount.toFixed(2)}</td>
+                                <td>${pay.treasury || '-'}</td>
+                                <td>${pay.description || '-'}</td>
+                                <td>${attachmentsHtml}</td>
+                                <td class="action-buttons">
+                                    <button class="delete-contract-payment" data-id="${pay._id}"><i class="fas fa-trash-alt"></i> حذف</button>
+                                </td>
+                            `;
+                            let amount = parseFloat(pay.amount);
+                            if (!isNaN(amount)) {
+                                totalContractorPayments += amount;
+                            }
+                        });
+                        document.getElementById('contractorPaymentsTotal').textContent = totalContractorPayments.toFixed(2) + ' ج.م';
+                    } else {
+                        contractorPaymentsTableBody.innerHTML = '<tr><td colspan="10" style="text-align: center;">لا توجد دفعات مقاولين حالياً لهذا المشروع.</td></tr>';
+                        document.getElementById('contractorPaymentsTotal').textContent = '0.00 ج.م';
+                    }
+                    if (typeof filterContractorPaymentsTable === 'function') filterContractorPaymentsTable();
+                } catch (error) {
+                    console.error('Error fetching contractor payments:', error);
+                    contractorPaymentsTableBody.innerHTML = '<tr><td colspan="10" style="text-align: center;">فشل في تحميل دفعات المقاولين.</td></tr>';
+                }
+
+                // Fetch Financial Movement for this project
+                await fetchFinancialMovement();
+                
+            };
+
+            // Function to fetch and display financial movement
+            const fetchFinancialMovement = async () => {
+                try {
+                    // Get all transactions for this project
+                    const transactionsResponse = await fetch(`${BASE_URL}/api/transactions?project=${currentProjectId}`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    const transactions = await transactionsResponse.json();
+
+                    // Get contractor payments for this project
+                    const contractorPaymentsResponse = await fetch(`${BASE_URL}/api/contract-payments/${currentProjectId}`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    const contractorPayments = await contractorPaymentsResponse.json();
+
+                    // Combine and sort all financial activities
+                    let allActivities = [];
+
+                    // Add transactions (excluding contractor payments that are already handled)
+                    transactions.forEach(trans => {
+                        // Skip transactions that are contractor payments to avoid duplication
+                        if (trans.type !== 'دفعة مقاول') {
+                            // Ensure date is properly formatted
+                            let transactionDate;
+                            try {
+                                transactionDate = new Date(trans.date);
+                                if (isNaN(transactionDate.getTime())) {
+                                    console.warn('Invalid transaction date:', trans.date);
+                                    transactionDate = new Date(); // Use current date as fallback
+                                }
+                            } catch (error) {
+                                console.warn('Error parsing transaction date:', trans.date);
+                                transactionDate = new Date(); // Use current date as fallback
+                            }
+                            
+                            allActivities.push({
+                                date: transactionDate,
+                                type: trans.type,
+                                description: trans.description || 'معاملة مالية',
+                                amount: trans.amount,
+                                isTransaction: true,
+                                originalData: trans,
+                                createdAt: trans.createdAt // Add createdAt
+                            });
+                        }
+                    });
+
+                    // Add contractor payments
+                    contractorPayments.forEach(pay => {
+                        // Ensure date is properly formatted
+                        let paymentDate;
+                        try {
+                            paymentDate = new Date(pay.date);
+                            if (isNaN(paymentDate.getTime())) {
+                                console.warn('Invalid payment date:', pay.date);
+                                paymentDate = new Date(); // Use current date as fallback
+                            }
+                        } catch (error) {
+                            console.warn('Error parsing payment date:', pay.date);
+                            paymentDate = new Date(); // Use current date as fallback
+                        }
+                        
+                        allActivities.push({
+                            date: paymentDate,
+                            type: 'دفعة مقاول',
+                            description: `دفعة مقاول: ${pay.description || 'دفعة للمقاول'}`,
+                            amount: pay.amount,
+                            isTransaction: false,
+                            originalData: pay,
+                            createdAt: pay.createdAt // Add createdAt
+                        });
+                    });
+
+                    // DEBUG: Log the array before sorting
+                    console.log('--- All Activities Before Sort ---');
+                    console.table(allActivities.map(a => ({
+                        type: a.type,
+                        date: a.date.toISOString(),
+                        createdAt: a.createdAt ? new Date(a.createdAt).toISOString() : 'N/A',
+                        description: a.description,
+                        original_createdAt: a.originalData ? (a.originalData.createdAt ? new Date(a.originalData.createdAt).toISOString() : 'MISSING') : 'NO_ORIGINAL'
+                    })));
+
+                    // Sort by date (oldest first) - الأقدم في الأعلى
+                    allActivities.sort((a, b) => {
+                        // Ensure we have valid dates and convert them properly
+                        let dateA, dateB;
+                        
+                        try {
+                            dateA = new Date(a.date);
+                            dateB = new Date(b.date);
+                            
+                            // Check if dates are valid
+                            if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+                                console.warn('Invalid date found during sort:', a.date, b.date);
+                                return 0; // Keep original order if dates are invalid
+                            }
+                            
+                            // Convert to timestamps for accurate comparison
+                            const timestampA = dateA.getTime();
+                            const timestampB = dateB.getTime();
+                            
+                            // If dates are the same, sort by creation time, which is more reliable
+                            // for determining the actual order of entry.
+                            const creationTimeA = a.originalData && a.originalData.createdAt 
+                                ? new Date(a.originalData.createdAt).getTime() 
+                                : timestampA; // Fallback to transaction date if not available
+                                
+                            const creationTimeB = b.originalData && b.originalData.createdAt 
+                                ? new Date(b.originalData.createdAt).getTime() 
+                                : timestampB; // Fallback to transaction date if not available
+
+                            // Main sorting logic
+                            if(timestampA !== timestampB) {
+                                return timestampA - timestampB;
+                            } else {
+                                return creationTimeA - creationTimeB;
+                            }
+                            
+                        } catch (error) {
+                            console.error('Error sorting dates:', error, a.date, b.date);
+                            return 0; // Keep original order if there's an error
+                        }
+                    });
+
+                    // Calculate running balance and display
+                    let runningBalance = 0;
+                    let totalRevenue = 0;
+                    let totalExpenses = 0;
+
+                    const tableBody = document.getElementById('financialMovementTableBody');
+                    tableBody.innerHTML = '';
+
+                    if (allActivities.length > 0) {
+                        allActivities.forEach(activity => {
+                            const row = tableBody.insertRow();
+                            
+                            // Calculate running balance
+                            if (activity.type === 'إيداع') {
+                                runningBalance += activity.amount;
+                                totalRevenue += activity.amount;
+                            } else {
+                                runningBalance -= activity.amount;
+                                totalExpenses += activity.amount;
+                            }
+
+                            // Determine type display and color
+                            let typeDisplay = activity.type;
+                            let typeColor = '#333';
+                            if (activity.type === 'إيداع') {
+                                typeDisplay = 'إيراد';
+                                typeColor = '#28a745';
+                            } else if (activity.type === 'مصروف') {
+                                typeDisplay = 'مصروف';
+                                typeColor = '#dc3545';
+                            } else if (activity.type === 'دفعة مقاول') {
+                                typeDisplay = 'دفعة مقاول';
+                                typeColor = '#fd7e14';
+                            }
+
+                            row.innerHTML = `
+                                <td>${formatDate(activity.date)}</td>
+                                <td style="color: ${typeColor}; font-weight: bold;">${typeDisplay}</td>
+                                <td>${activity.description}</td>
+                                <td style="color: ${activity.type === 'إيداع' ? '#28a745' : '#dc3545'}; font-weight: bold;">
+                                    ${activity.type === 'إيداع' ? '+' : '-'}${activity.amount.toFixed(2)} ج.م
+                                </td>
+                                <td style="font-weight: bold; color: ${runningBalance >= 0 ? '#28a745' : '#dc3545'}">
+                                    ${runningBalance.toFixed(2)} ج.م
+                                </td>
+                            `;
+                        });
+                    } else {
+                        tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">لا توجد حركة مالية حالياً لهذا المشروع.</td></tr>';
+                    }
+
+                    // Update summary
+                    const netProfitLoss = totalRevenue - totalExpenses;
+                    document.getElementById('movementTotalRevenue').textContent = totalRevenue.toFixed(2) + ' ج.م';
+                    document.getElementById('movementTotalExpenses').textContent = totalExpenses.toFixed(2) + ' ج.م';
+                    document.getElementById('movementNetProfitLoss').textContent = netProfitLoss.toFixed(2) + ' ج.م';
+                    document.getElementById('movementNetProfitLoss').style.color = netProfitLoss >= 0 ? '#28a745' : '#dc3545';
+
+                } catch (error) {
+                    console.error('Error fetching financial movement:', error);
+                    document.getElementById('financialMovementTableBody').innerHTML = 
+                        '<tr><td colspan="5" style="text-align: center;">فشل في تحميل الحركة المالية.</td></tr>';
+                }
+            };
+
+            // Initial fetch on page load
+            fetchProjectDetails();
+
+            // Back to projects button
+            backToProjectsBtn.addEventListener('click', () => {
+                window.location.href = '/projects.html';
+            });
+
+            // Edit Project Button (redirect to add-project page with ID)
+            editProjectBtn.addEventListener('click', () => {
+                window.location.href = `/add-project.html?id=${currentProjectId}`; // Reuse add-project for editing
+            });
+
+            // Delete Project Button
+            deleteProjectBtn.addEventListener('click', async () => {
+                if (confirm('هل أنت متأكد أنك تريد حذف هذا المشروع؟ سيؤدي هذا إلى حذف جميع البيانات المرتبطة به. لا يمكن التراجع عن هذا الإجراء.')) {
+                    try {
+                        const response = await fetch(`${BASE_URL}/api/projects/${currentProjectId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'x-auth-token': localStorage.getItem('token')
+                            }
+                        });
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            pageMessage.className = 'modal-message success';
+                            pageMessage.textContent = data.message;
+                            pageMessage.style.display = 'block';
+        setTimeout(() => {
+                                window.location.href = '/projects.html'; // Redirect after successful deletion
+                            }, 1500);
+                        } else {
+                            pageMessage.className = 'modal-message error';
+                            pageMessage.textContent = data.message || 'فشل في حذف المشروع.';
+                            pageMessage.style.display = 'block';
+                        }
+                    } catch (error) {
+                        console.error('Error deleting project:', error);
+                        pageMessage.className = 'modal-message error';
+                        pageMessage.textContent = 'خطأ في الاتصال بالخادم أثناء حذف المشروع.';
+                        pageMessage.style.display = 'block';
+                    }
+                }
+            });
+
+
+            // General function to close modals
+            function setupModalCloseListeners(modalElement, cancelButton) {
+                modalElement.querySelector('.close-button').addEventListener('click', () => {
+                    modalElement.style.display = 'none';
+                    // Reset message div inside modal
+                    const modalMessageDiv = modalElement.querySelector('.modal-message');
+                    if (modalMessageDiv) {
+                        modalMessageDiv.style.display = 'none';
+                    }
+                });
+                if (cancelButton) {
+                    cancelButton.addEventListener('click', () => {
+                        modalElement.style.display = 'none';
+                        const modalMessageDiv = modalElement.querySelector('.modal-message');
+                        if (modalMessageDiv) {
+                            modalMessageDiv.style.display = 'none';
+                        }
+                    });
+                }
+                window.addEventListener('click', (event) => {
+                    if (event.target === modalElement) {
+                        modalElement.style.display = 'none';
+                        const modalMessageDiv = modalElement.querySelector('.modal-message');
+                        if (modalMessageDiv) {
+                            modalMessageDiv.style.display = 'none';
+                        }
+                    }
+                });
+            }
+
+            // Setup listeners for all modals
+            setupModalCloseListeners(expenseModal, cancelExpenseButton);
+            setupModalCloseListeners(revenueModal, cancelRevenueButton);
+            setupModalCloseListeners(contractAgreementModal, cancelContractAgreementButton);
+            setupModalCloseListeners(contractPaymentModal, cancelContractPaymentButton);
+
+
+            // Open Expense Modal
+            addExpenseBtn.addEventListener('click', async () => {
+                expenseModal.style.display = 'flex';
+                expenseForm.reset();
+                expenseProjectIdInput.value = currentProjectId;
+                expenseDateInput.valueAsDate = new Date(); // Set current date
+                await populateDropdown(expenseCategorySelect, '/api/categories', '_id', 'name', 'اختر تصنيف');
+                await populateDropdown(expenseTreasurySelect, '/api/treasuries', '_id', 'name', 'اختر خزينة');
+                // إخفاء رسالة المصروف القديمة
+                expenseModalMessage.style.display = 'none';
+                expenseModalMessage.textContent = '';
+            });
+
+            // Open Revenue Modal
+            addRevenueBtn.addEventListener('click', async () => {
+                revenueModal.style.display = 'flex';
+                revenueForm.reset();
+                revenueProjectIdInput.value = currentProjectId;
+                revenueDateInput.valueAsDate = new Date(); // Set current date
+                await populateDropdown(revenueTreasurySelect, '/api/treasuries', '_id', 'name', 'اختر خزينة'); // Populate treasury
+                // إخفاء رسالة الإيراد القديمة
+                revenueModalMessage.style.display = 'none';
+                revenueModalMessage.textContent = '';
+            });
+
+            // Open Contract Agreement Modal
+            addContractAgreementBtn.addEventListener('click', async () => {
+                contractAgreementModal.style.display = 'flex';
+                contractAgreementForm.reset();
+                agreementProjectIdInput.value = currentProjectId;
+                await populateDropdown(agreementContractorSelect, '/api/contractors', '_id', 'contractorName', 'اختر المقاول');
+                // إخفاء رسالة الاتفاق القديمة
+                contractAgreementMessage.style.display = 'none';
+                contractAgreementMessage.textContent = '';
+            });
+
+            // Open Contract Payment Modal
+            addContractPaymentBtn.addEventListener('click', async () => {
+                contractPaymentModal.style.display = 'flex';
+                contractPaymentForm.reset();
+                paymentProjectIdInput.value = currentProjectId;
+                paymentDateInput.valueAsDate = new Date(); // Set current date
+
+                // Populate contractor agreements for this project
+                await populateDropdown(
+                    paymentContractAgreementSelect,
+                    `/api/contract-agreements/${currentProjectId}`,
+                    '_id',
+                    'description',
+                    'اختر اتفاق مقاول',
+                    null, // No custom filter
+                    (item) => `${item.contractor.contractorName || 'مقاول غير معروف'} - ${item.description || 'اتفاقية بدون وصف'} (المبلغ: ${item.agreedAmount.toFixed(2)} ج.م, المدفوع: ${item.paidAmount.toFixed(2)} ج.م)` // Custom text display
+                );
+
+                await populateDropdown(paymentTreasurySelect, '/api/treasuries', '_id', 'name', 'اختر خزينة');
+                // إخفاء رسالة دفعة المقاول القديمة
+                contractPaymentMessage.style.display = 'none';
+                contractPaymentMessage.textContent = '';
+            });
+
+            // Handle Expense Form Submission
+
+            expenseForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // Create FormData for file upload
+                const formData = new FormData();
+                formData.append('project', new URLSearchParams(window.location.search).get('id'));
+                formData.append('type', 'مصروف');
+                formData.append('amount', expenseAmountInput.value);
+                formData.append('description', expenseDescriptionInput.value);
+                formData.append('category', expenseCategorySelect.value);
+                formData.append('date', expenseDateInput.value);
+                formData.append('vendor', expenseVendorInput.value);
+                formData.append('treasury', expenseTreasurySelect.value);
+
+                // Add attachments if any
+                const attachmentFiles = document.getElementById('expenseAttachment').files;
+                console.log('=== Frontend File Upload ===');
+                console.log('Attachment files:', attachmentFiles);
+                console.log('File count:', attachmentFiles.length);
+                
+                for (let i = 0; i < attachmentFiles.length; i++) {
+                    console.log(`File ${i}:`, attachmentFiles[i]);
+                    formData.append('attachments', attachmentFiles[i]);
+                }
+
+                // Log FormData contents
+                for (let [key, value] of formData.entries()) {
+                    console.log(`${key}:`, value);
+                }
+
+                try {
+                    console.log('=== Sending Request ===');
+                    console.log('URL:', `${BASE_URL}/api/transactions`);
+                    console.log('Token:', localStorage.getItem('token') ? 'Token exists' : 'No token');
+                    console.log('FormData entries:');
+                    for (let [key, value] of formData.entries()) {
+                        console.log(`${key}:`, value);
+                    }
+                    
+                    const response = await fetch(`${BASE_URL}/api/transactions`, {
+                        method: 'POST',
+                        headers: {
+                            'x-auth-token': localStorage.getItem('token')
+                        },
+                        body: formData // Use FormData instead of JSON
+                    });
+                    
+                    console.log('=== Response Received ===');
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+                    
+                    const data = await response.json();
+                    console.log('Response data:', data);
+
+                    if (response.ok) {
+                        expenseModalMessage.className = 'modal-message success';
+                        expenseModalMessage.textContent = data.message || 'تم حفظ المصروف بنجاح.';
+                        expenseModalMessage.style.display = 'block';
+                        fetchProjectDetails(); // Refresh project details and tables
+                        setTimeout(() => expenseModal.style.display = 'none', 1500);
+                    } else {
+                        expenseModalMessage.className = 'modal-message error';
+                        expenseModalMessage.textContent = data.message || 'فشل في حفظ المصروف.';
+                        expenseModalMessage.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error saving expense:', error);
+                    expenseModalMessage.className = 'modal-message error';
+                    expenseModalMessage.textContent = 'حدث خطأ أثناء الاتصال بالخادم.';
+                    expenseModalMessage.style.display = 'block';
+                }
+            });
+
+            // Handle Revenue Form Submission
+            revenueForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // Create FormData for file upload
+                const formData = new FormData();
+                formData.append('project', revenueProjectIdInput.value);
+                formData.append('type', 'إيداع');
+                formData.append('amount', revenueAmountInput.value);
+                formData.append('description', revenueDescriptionInput.value);
+                formData.append('date', revenueDateInput.value);
+                formData.append('paymentMethod', revenuePaymentMethodSelect.value);
+                formData.append('treasury', revenueTreasurySelect.value);
+
+                // Add attachments if any
+                const attachmentFiles = document.getElementById('revenueAttachment').files;
+                console.log('=== Frontend File Upload ===');
+                console.log('Attachment files:', attachmentFiles);
+                console.log('File count:', attachmentFiles.length);
+                
+                for (let i = 0; i < attachmentFiles.length; i++) {
+                    console.log(`File ${i}:`, attachmentFiles[i]);
+                    formData.append('attachments', attachmentFiles[i]);
+                }
+
+                // Log FormData contents
+                for (let [key, value] of formData.entries()) {
+                    console.log(`${key}:`, value);
+                }
+
+                try {
+                    console.log('=== Sending Request ===');
+                    console.log('URL:', `${BASE_URL}/api/transactions`);
+                    console.log('Token:', localStorage.getItem('token') ? 'Token exists' : 'No token');
+                    console.log('FormData entries:');
+                    for (let [key, value] of formData.entries()) {
+                        console.log(`${key}:`, value);
+                    }
+                    
+                    const response = await fetch(`${BASE_URL}/api/transactions`, {
+                        method: 'POST',
+                        headers: {
+                            'x-auth-token': localStorage.getItem('token')
+                        },
+                        body: formData // Use FormData instead of JSON
+                    });
+                    
+                    console.log('=== Response Received ===');
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+                    
+                    const data = await response.json();
+                    console.log('Response data:', data);
+
+                    if (response.ok) {
+                        revenueModalMessage.className = 'modal-message success';
+                        revenueModalMessage.textContent = data.message || 'تم حفظ الإيراد بنجاح.';
+                        revenueModalMessage.style.display = 'block';
+                        fetchProjectDetails(); // Refresh project details and tables
+                        setTimeout(() => revenueModal.style.display = 'none', 1500);
+                    } else {
+                        revenueModalMessage.className = 'modal-message error';
+                        revenueModalMessage.textContent = data.message || 'فشل في حفظ الإيراد.';
+                        revenueModalMessage.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error saving revenue:', error);
+                    revenueModalMessage.className = 'modal-message error';
+                    revenueModalMessage.textContent = 'خطأ في الاتصال بالخادم.';
+                    revenueModalMessage.style.display = 'block';
+                }
+            });
+
+            // Handle Contract Agreement Form Submission
+            contractAgreementForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const agreementData = {
+                    project: agreementProjectIdInput.value,
+                    contractor: agreementContractorSelect.value,
+                    agreedAmount: parseFloat(agreementAmountInput.value),
+                    description: agreementDescriptionInput.value || undefined
+                };
+
+                Object.keys(agreementData).forEach(key => {
+                    if (agreementData[key] === undefined) {
+                        delete agreementData[key];
+                    }
+                });
+
+                try {
+                    const response = await fetch(`${BASE_URL}/api/contract-agreements`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-auth-token': localStorage.getItem('token')
+                        },
+                        body: JSON.stringify(agreementData)
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        contractAgreementMessage.className = 'modal-message success';
+                        contractAgreementMessage.textContent = data.message || 'تم حفظ اتفاق المقاول بنجاح.';
+                        contractAgreementMessage.style.display = 'block';
+                        fetchProjectDetails(); // Refresh project details and tables
+                        setTimeout(() => contractAgreementModal.style.display = 'none', 1500);
+                    } else {
+                        contractAgreementMessage.className = 'modal-message error';
+                        contractAgreementMessage.textContent = data.message || 'فشل في حفظ اتفاق المقاول.';
+                        contractAgreementMessage.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error saving contract agreement:', error);
+                    contractAgreementMessage.className = 'modal-message error';
+                    contractAgreementMessage.textContent = 'خطأ في الاتصال بالخادم.';
+                    contractAgreementMessage.style.display = 'block';
+                }
+            });
+
+            // Handle Contract Payment Form Submission
+            contractPaymentForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // Create FormData for file upload
+                const formData = new FormData();
+                formData.append('contractAgreementId', paymentContractAgreementSelect.value);
+                formData.append('amount', paymentAmountInput.value);
+                formData.append('date', paymentDateInput.value);
+                formData.append('treasuryId', paymentTreasurySelect.value);
+                if (paymentDescriptionInput.value) {
+                    formData.append('description', paymentDescriptionInput.value);
+                }
+
+                // Add attachments if any
+                const attachmentFiles = document.getElementById('paymentAttachment').files;
+                console.log('=== Frontend File Upload ===');
+                console.log('Attachment files:', attachmentFiles);
+                console.log('File count:', attachmentFiles.length);
+                
+                for (let i = 0; i < attachmentFiles.length; i++) {
+                    console.log(`File ${i}:`, attachmentFiles[i]);
+                    formData.append('attachments', attachmentFiles[i]);
+                }
+
+                // Log FormData contents
+                for (let [key, value] of formData.entries()) {
+                    console.log(`${key}:`, value);
+                }
+
+                try {
+                    console.log('=== Sending Request ===');
+                    console.log('URL:', `${BASE_URL}/api/contract-payments`);
+                    console.log('Token:', localStorage.getItem('token') ? 'Token exists' : 'No token');
+                    console.log('FormData entries:');
+                    for (let [key, value] of formData.entries()) {
+                        console.log(`${key}:`, value);
+                    }
+                    
+                    const response = await fetch(`${BASE_URL}/api/contract-payments`, {
+                        method: 'POST',
+                        headers: {
+                            'x-auth-token': localStorage.getItem('token')
+                        },
+                        body: formData // Use FormData instead of JSON
+                    });
+                    
+                    console.log('=== Response Received ===');
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+                    
+                    const data = await response.json();
+                    console.log('Response data:', data);
+                    document.getElementById('exportProjectExcelBtn').style.display = 'inline-block';
+
+                    if (response.ok) {
+                        contractPaymentMessage.className = 'modal-message success';
+                        contractPaymentMessage.textContent = data.message || 'تم حفظ دفعة المقاول بنجاح.';
+                        contractPaymentMessage.style.display = 'block';
+                        fetchProjectDetails(); // Refresh project details and tables
+                        setTimeout(() => contractPaymentModal.style.display = 'none', 1500);
+                    } else {
+                        contractPaymentMessage.className = 'modal-message error';
+                        contractPaymentMessage.textContent = data.message || 'فشل في حفظ دفعة المقاول.';
+                        contractPaymentMessage.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error saving contract payment:', error);
+                    contractPaymentMessage.className = 'modal-message error';
+                    contractPaymentMessage.textContent = 'خطأ في الاتصال بالخادم.';
+                    contractPaymentMessage.style.display = 'block';
+                }
+            });
+
+            // Handle Delete buttons for Expenses, Revenues, and Contract Payments
+            document.addEventListener('click', async (event) => {
+                const target = event.target.closest('button');
+                if (!target) return;
+
+                const transactionId = target.dataset.id;
+
+                // Determine the action based on the button's class
+                let deleteApiUrl = '';
+                let confirmationMessage = '';
+                let successMessage = '';
+                let errorMessage = '';
+
+                if (target.classList.contains('delete-expense')) {
+                    deleteApiUrl = `/api/transactions/${transactionId}`;
+                    confirmationMessage = 'هل أنت متأكد أنك تريد حذف هذا المصروف؟ سيتم عكس تأثيره على الخزينة والمشروع.';
+                    successMessage = 'تم حذف المصروف بنجاح.';
+                    errorMessage = 'فشل في حذف المصروف.';
+                } else if (target.classList.contains('delete-revenue')) {
+                    deleteApiUrl = `/api/transactions/${transactionId}`;
+                    confirmationMessage = 'هل أنت متأكد أنك تريد حذف هذا الإيراد؟ سيتم عكس تأثيره على الخزينة والمشروع.';
+                    successMessage = 'تم حذف الإيراد بنجاح.';
+                    errorMessage = 'فشل في حذف الإيراد.';
+                } else if (target.classList.contains('delete-contract-payment')) {
+                    deleteApiUrl = `/api/contract-payments/${transactionId}`;
+                    confirmationMessage = 'هل أنت متأكد أنك تريد حذف دفعة المقاول هذه؟ سيتم عكس تأثيرها على اتفاق المقاول والمقاول والخزينة والمشروع.';
+                    successMessage = 'تم حذف دفعة المقاول بنجاح.';
+                    errorMessage = 'فشل في حذف دفعة المقاول.';
+                } else {
+                    return; // Not a delete button for these sections
+                }
+
+                if (confirm(confirmationMessage)) {
+                    try {
+                        const response = await fetch(deleteApiUrl, {
+                            method: 'DELETE',
+                            headers: {
+                                'x-auth-token': localStorage.getItem('token')
+                            }
+                        });
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            pageMessage.className = 'modal-message success';
+                            pageMessage.textContent = data.message || successMessage;
+                            pageMessage.style.display = 'block';
+                            fetchProjectDetails(); // Refresh project details and tables
+                            setTimeout(() => pageMessage.style.display = 'none', 3000);
+                        } else {
+                            pageMessage.className = 'modal-message error';
+                            pageMessage.textContent = data.message || errorMessage;
+                            pageMessage.style.display = 'block';
+                            setTimeout(() => pageMessage.style.display = 'none', 3000);
+                        }
+                    } catch (error) {
+                        console.error(`Error deleting item from ${deleteApiUrl}:`, error);
+                        pageMessage.className = 'modal-message error';
+                        pageMessage.textContent = 'خطأ في الاتصال بالخادم أثناء عملية الحذف.';
+                        pageMessage.style.display = 'block';
+                        setTimeout(() => pageMessage.style.display = 'none', 3000);
+                    }
+                }
+
+
+            });
+
+            // فتح المودال عند الضغط على الزر
+            showContractorStatementBtn.addEventListener('click', async () => {
+                contractorStatementModal.style.display = 'flex';
+                // تفريغ القائمة أولاً
+                statementContractorSelect.innerHTML = '<option value="">اختر المقاول</option>';
+                // جلب اتفاقيات المقاولين لهذا المشروع
+                try {
+                    const response = await fetch(`${BASE_URL}/api/contract-agreements/${currentProjectId}`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    const agreements = await response.json();
+                    // استخراج المقاولين بدون تكرار
+                    const uniqueContractors = {};
+                    agreements.forEach(ag => {
+                        if (ag.contractor && ag.contractor._id && !uniqueContractors[ag.contractor._id]) {
+                            uniqueContractors[ag.contractor._id] = ag.contractor;
+                        }
+                    });
+                    Object.values(uniqueContractors).forEach(contractor => {
+                        const option = document.createElement('option');
+                        option.value = contractor._id;
+                        option.textContent = contractor.contractorName; // بدون الرصيد
+                        statementContractorSelect.appendChild(option);
+                    });
+                } catch (error) {
+                    statementContractorSelect.innerHTML = '<option value="">فشل في تحميل المقاولين</option>';
+                }
+                // إفراغ كشف الحساب عند كل فتح
+                document.getElementById('contractorStatementTableContainer').innerHTML = '';
+            });
+
+            // زر تصدير المصروفات Excel
+            const expensesTable = document.getElementById('projectExpensesTableBody');
+            const expensesExportBtn = document.createElement('button');
+            expensesExportBtn.className = 'action-button';
+            expensesExportBtn.style.margin = '10px 0 0 0';
+            expensesExportBtn.innerHTML = '<i class="fas fa-file-excel"></i> تصدير المصروفات Excel';
+            expensesTable.parentElement.parentElement.insertBefore(expensesExportBtn, expensesTable.parentElement.nextSibling);
+            expensesExportBtn.addEventListener('click', function () {
+                try {
+                    const expensesData = [['المبلغ', 'الوصف', 'التصنيف', 'التاريخ', 'البائع', 'الخزينة']];
+                    let total = 0;
+                    for (let row of expensesTable.rows) {
+                        if (row.cells.length >= 6) {
+                            const amount = parseFloat(row.cells[0].textContent.trim()) || 0;
+                            total += amount;
+                            expensesData.push([
+                                row.cells[0].textContent.trim(),
+                                row.cells[1].textContent.trim(),
+                                row.cells[2].textContent.trim(),
+                                row.cells[3].textContent.trim(),
+                                row.cells[4].textContent.trim(),
+                                row.cells[5].textContent.trim()
+                            ]);
+                        }
+                    }
+                    expensesData.push(['', '', '', '', 'الإجمالي:', total.toFixed(2) + ' ج.م']);
+                    const wb = XLSX.utils.book_new();
+                    const sheet = XLSX.utils.aoa_to_sheet(expensesData);
+                    XLSX.utils.book_append_sheet(wb, sheet, 'Expenses');
+                    XLSX.writeFile(wb, 'مصروفات_المشروع.xlsx');
+                    showDashboardMessage('تم تصدير المصروفات بنجاح!', 'success', 2000);
+                } catch (err) {
+                    showDashboardMessage('فشل في تصدير المصروفات: ' + (err.message || ''), 'error', 2500);
+                }
+            });
+            // زر تصدير الإيرادات Excel
+            const revenueTable = document.getElementById('projectRevenuesTableBody');
+            const revenuesExportBtn = document.createElement('button');
+            revenuesExportBtn.className = 'action-button';
+            revenuesExportBtn.style.margin = '10px 0 0 0';
+            revenuesExportBtn.innerHTML = '<i class="fas fa-file-excel"></i> تصدير الإيرادات Excel';
+            revenueTable.parentElement.parentElement.insertBefore(revenuesExportBtn, revenueTable.parentElement.nextSibling);
+            revenuesExportBtn.addEventListener('click', function () {
+                try {
+                    const revenueData = [['المبلغ', 'الوصف', 'التاريخ', 'طريقة التحويل', 'الخزينة']];
+                    let total = 0;
+                    for (let row of revenueTable.rows) {
+                        if (row.cells.length >= 5) {
+                            const amount = parseFloat(row.cells[0].textContent.trim()) || 0;
+                            total += amount;
+                            revenueData.push([
+                                row.cells[0].textContent.trim(),
+                                row.cells[1].textContent.trim(),
+                                row.cells[2].textContent.trim(),
+                                row.cells[3].textContent.trim(),
+                                row.cells[4].textContent.trim()
+                            ]);
+                        }
+                    }
+                    revenueData.push(['', '', '', 'الإجمالي:', total.toFixed(2) + ' ج.م']);
+                    const wb = XLSX.utils.book_new();
+                    const sheet = XLSX.utils.aoa_to_sheet(revenueData);
+                    XLSX.utils.book_append_sheet(wb, sheet, 'Revenues');
+                    XLSX.writeFile(wb, 'ايرادات_المشروع.xlsx');
+                    showDashboardMessage('تم تصدير الإيرادات بنجاح!', 'success', 2000);
+                } catch (err) {
+                    showDashboardMessage('فشل في تصدير الإيرادات: ' + (err.message || ''), 'error', 2500);
+                }
+            });
+
+            // في جافاسكريبت بعد تحديد الدور
+            // احذف أو علق السطرين التاليين:
+            // const pettyExpensesLink = document.getElementById('sidebarPettyExpensesLink');
+            // pettyExpensesLink.style.display = 'block';
+
+            // --- Live Search for Expenses Table ---
+            const expenseSearchInput = document.getElementById('expenseSearchInput');
+            const expensesTableBody = document.getElementById('projectExpensesTableBody');
+            if (expenseSearchInput && expensesTableBody) {
+                expenseSearchInput.addEventListener('input', function() {
+                    const searchValue = this.value.trim().toLowerCase();
+                    for (let row of expensesTableBody.rows) {
+                        // Ignore the 'no data' row
+                        if (row.cells.length < 6) continue;
+                        let rowText = '';
+                        for (let cell of row.cells) {
+                            rowText += cell.textContent.trim().toLowerCase() + ' ';
+                        }
+                        if (rowText.includes(searchValue)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    }
+                });
+            }
+
+            function renderExpensesByCategoryChart(expenses) {
+    const categoryTotals = {};
+    expenses.forEach(exp => {
+        const cat = exp.category && exp.category.name ? exp.category.name : 'غير محدد';
+        categoryTotals[cat] = (categoryTotals[cat] || 0) + exp.amount;
+    });
+
+    const labels = Object.keys(categoryTotals);
+    const data = Object.values(categoryTotals);
+    const colors = labels.map((_, i) => `hsl(${i * 360 / labels.length}, 70%, 60%)`);
+
+    if (window.expensesByCategoryChart && typeof window.expensesByCategoryChart.destroy === 'function') {
+        window.expensesByCategoryChart.destroy();
+    }
+
+    const ctx = document.getElementById('expensesByCategoryChart').getContext('2d');
+    window.expensesByCategoryChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors,
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed} ج.م` } }
+            }
+        }
+    });
+}
+
+            
+            
+          
+        }) 
+    </script>
+
+
+
+<script>
+window.toggleAccordion = function(header) {
+  const section = header.parentElement;
+  section.classList.toggle('open');
+  // غير علامة + إلى - والعكس
+  const icon = header.querySelector('.accordion-icon');
+  icon.textContent = section.classList.contains('open') ? '-' : '+';
+}
+
+// دالة عرض المرفقات - متاحة عالمياً
+window.showAttachment = function(filename, mimetype, originalName) {
+    const BASE_URL = window.location.origin;
+    const currentAttachmentUrl = `${BASE_URL}/api/files/${filename}`;
+    
+    // إنشاء مودال ديناميكي لعرض المرفق
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.style.position = 'fixed';
+    modal.style.zIndex = '1002';
+    modal.style.left = '0';
+    modal.style.top = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
+    modal.style.justifyContent = 'center';
+    modal.style.alignItems = 'center';
+    
+    const modalContent = document.createElement('div');
+    modalContent.className = 'modal-content';
+    modalContent.style.maxWidth = '90%';
+    modalContent.style.maxHeight = '90%';
+    modalContent.style.overflow = 'auto';
+    modalContent.style.position = 'relative';
+    
+    const closeButton = document.createElement('span');
+    closeButton.className = 'close-button';
+    closeButton.innerHTML = '&times;';
+    closeButton.style.position = 'absolute';
+    closeButton.style.right = '15px';
+    closeButton.style.top = '10px';
+    closeButton.style.fontSize = '28px';
+    closeButton.style.fontWeight = 'bold';
+    closeButton.style.cursor = 'pointer';
+    closeButton.style.color = '#aaa';
+    
+    const title = document.createElement('h3');
+    title.textContent = `عرض المرفق: ${originalName || filename}`;
+    title.style.textAlign = 'center';
+    title.style.marginBottom = '20px';
+    title.style.color = 'var(--primary-color)';
+    
+    const content = document.createElement('div');
+    content.style.textAlign = 'center';
+    
+    const isImage = mimetype && mimetype.startsWith('image/');
+    const isPdf = mimetype && mimetype === 'application/pdf';
+    
+    if (isImage) {
+        const img = document.createElement('img');
+        img.src = currentAttachmentUrl;
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '70vh';
+        img.style.borderRadius = '8px';
+        img.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+        img.alt = 'صورة المرفق';
+        content.appendChild(img);
+    } else if (isPdf) {
+        const iframe = document.createElement('iframe');
+        iframe.src = currentAttachmentUrl;
+        iframe.style.width = '100%';
+        iframe.style.height = '70vh';
+        iframe.style.border = 'none';
+        iframe.style.borderRadius = '8px';
+        content.appendChild(iframe);
+    } else {
+        content.innerHTML = `
+            <div style="padding: 40px;">
+                <i class="fas fa-file" style="font-size: 64px; color: #6c757d; margin-bottom: 20px;"></i>
+                <p style="font-size: 18px; color: #666;">لا يمكن عرض هذا النوع من الملفات</p>
+                <p style="font-size: 14px; color: #999;">يمكنك تحميل الملف لعرضه</p>
+            </div>
+        `;
+    }
+    
+    const buttonsDiv = document.createElement('div');
+    buttonsDiv.className = 'modal-buttons';
+    buttonsDiv.style.display = 'flex';
+    buttonsDiv.style.justifyContent = 'center';
+    buttonsDiv.style.gap = '15px';
+    buttonsDiv.style.marginTop = '20px';
+    
+    const downloadBtn = document.createElement('button');
+    downloadBtn.className = 'modal-button';
+    downloadBtn.innerHTML = '<i class="fas fa-download"></i> تحميل';
+    downloadBtn.onclick = () => {
+        const link = document.createElement('a');
+        link.href = currentAttachmentUrl;
+        link.download = '';
+        link.click();
+    };
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-button cancel';
+    closeBtn.textContent = 'إغلاق';
+    closeBtn.onclick = () => {
+        document.body.removeChild(modal);
+    };
+    
+    buttonsDiv.appendChild(downloadBtn);
+    buttonsDiv.appendChild(closeBtn);
+    
+    closeButton.onclick = () => {
+        document.body.removeChild(modal);
+    };
+    
+    modal.onclick = (event) => {
+        if (event.target === modal) {
+            document.body.removeChild(modal);
+        }
+    };
+    
+    modalContent.appendChild(closeButton);
+    modalContent.appendChild(title);
+    modalContent.appendChild(content);
+    modalContent.appendChild(buttonsDiv);
+    modal.appendChild(modalContent);
+    
+    document.body.appendChild(modal);
+};
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+
+</html>

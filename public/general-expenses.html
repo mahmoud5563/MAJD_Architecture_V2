@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المصروفات العامة - MAJD Architecture</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #014C47;
+            --primary-dark: #003a35;
+            --secondary-bg: #e6e6e6;
+            --text-color: #333;
+            --light-text-color: #f4f4f4;
+            --border-color: #ddd;
+            --sidebar-width: 250px;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            direction: rtl;
+            text-align: right;
+        }
+        .header {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .header .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        .header .user-info {
+            display: flex;
+            align-items: center;
+        }
+        .header .user-info span {
+            margin-right: 15px;
+        }
+        .header .logout-button {
+            background-color: var(--primary-dark);
+            color: var(--light-text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .header .logout-button:hover {
+            background-color: #002b28;
+        }
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--light-text-color);
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .main-container {
+            display: flex;
+            flex: 1;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 1000;
+        }
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar ul li {
+            margin-bottom: 5px;
+        }
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--light-text-color);
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+        .sidebar ul li a i {
+            margin-left: 10px;
+            font-size: 18px;
+        }
+        .sidebar ul li a:hover,
+        .sidebar ul li.active a {
+            background-color: var(--primary-dark);
+            border-radius: 0 20px 20px 0;
+        }
+        .content-area {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .page-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 28px;
+        }
+        .add-button {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .add-button:hover {
+            background-color: var(--primary-dark);
+        }
+        .table-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .data-table th,
+        .data-table td {
+            padding: 12px 15px;
+            border: 1px solid #eee;
+            text-align: right;
+            white-space: nowrap;
+        }
+        .data-table th {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: var(--light-text-color);
+            margin: auto;
+            padding: 0;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            max-width: 100vw;
+            overflow-x: hidden;
+        }
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            border-radius: 8px 8px 0 0;
+        }
+        .modal-header h2 {
+            margin: 0;
+            color: var(--light-text-color);
+        }
+        .close-button {
+            color: var(--light-text-color);
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            opacity: 0.8;
+        }
+        .close-button:hover {
+            opacity: 1;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            padding: 0 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: #f9f9f9;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: var(--light-text-color);
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .form-group input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+        .form-group input[type="file"]:hover {
+            border-color: var(--primary-color);
+        }
+        .form-group input[type="file"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(1, 76, 71, 0.2);
+        }
+        .form-actions {
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            background-color: #f9f9f9;
+            border-radius: 0 0 8px 8px;
+        }
+        .modal-message {
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            display: none;
+        }
+        .modal-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .modal-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        @media (max-width: 768px) {
+            .header .user-info span {
+                display: none;
+            }
+            .menu-toggle {
+                display: block;
+            }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                right: 0;
+                height: 100vh;
+                width: var(--sidebar-width);
+                transform: translateX(100%);
+                z-index: 999;
+                box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+                padding-top: 70px;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .content-area {
+                margin-right: 0;
+            }
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 998;
+            }
+            .overlay.active {
+                display: block;
+            }
+            .filter-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .date-range-filter {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+        @media (max-width: 700px) {
+            .filter-controls {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+                padding: 12px 8px;
+            }
+            .filter-controls .top-buttons {
+                display: flex;
+                flex-direction: row;
+                gap: 10px;
+                width: 100%;
+            }
+            .date-range-filter {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            .filter-controls button,
+            .filter-controls input[type="date"] {
+                width: 100%;
+                min-width: 0;
+            }
+            .top-buttons button {
+                width: 50%;
+            }
+        }
+        .filter-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            margin-bottom: 20px;
+        }
+        .filter-controls button,
+        .filter-controls input[type="date"] {
+            height: 40px;
+            font-size: 15px;
+            border-radius: 6px;
+        }
+        .filter-controls button {
+            padding: 0 18px;
+        }
+        .date-range-filter {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .date-range-filter label {
+            margin: 0 5px;
+            font-weight: 500;
+            color: #333;
+        }
+        /* تحسين حقول الإدخال والأزرار في مودال إضافة المصروف */
+        #addExpenseModal .form-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            margin-top: 20px;
+            margin-bottom: 30px;
+            max-width: 100vw;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+        #addExpenseModal .form-container h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        #addExpenseModal .form-group {
+            margin-bottom: 20px;
+            text-align: right;
+        }
+        #addExpenseModal .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+            font-size: 16px;
+        }
+        #addExpenseModal .form-group input[type="text"],
+        #addExpenseModal .form-group input[type="number"],
+        #addExpenseModal .form-group input[type="date"],
+        #addExpenseModal .form-group textarea,
+        #addExpenseModal .form-group select {
+            width: calc(100% - 20px);
+            padding: 12px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+        }
+        #addExpenseModal .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        #addExpenseModal .form-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 40px;
+        }
+        #addExpenseModal .form-button {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #addExpenseModal .form-button.cancel {
+            background-color: #6c757d;
+        }
+        #addExpenseModal .form-button:hover {
+            background-color: var(--primary-dark);
+        }
+        #addExpenseModal .form-button.cancel:hover {
+            background-color: #5a6268;
+        }
+        #addExpenseModal .form-message {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+            text-align: center;
+            font-size: 16px;
+        }
+        #addExpenseModal .form-message.error {
+            background-color: #ffe6e6;
+            color: #cc0000;
+            border: 1px solid #cc0000;
+        }
+        #addExpenseModal .form-message.success {
+            background-color: #e6ffe6;
+            color: #008000;
+            border: 1px solid #008000;
+        }
+        
+        /* مودال عرض المرفقات */
+        #attachmentViewerModal .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            width: 90%;
+            max-width: 500px;
+            animation-name: animatetop;
+            animation-duration: 0.4s;
+            text-align: right;
+        }
+
+        @keyframes animatetop {
+            from {
+                top: -300px;
+                opacity: 0
+            }
+            to {
+                top: 0;
+                opacity: 1
+            }
+        }
+
+        #attachmentViewerModal .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        #attachmentViewerModal .modal-button {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #attachmentViewerModal .modal-button.cancel {
+            background-color: #6c757d;
+        }
+
+        #attachmentViewerModal .modal-button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        #attachmentViewerModal .modal-button.cancel:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="logo">
+            MAJD Architecture
+        </div>
+        <div class="user-info">
+            <span id="loggedInUser"></span>
+            <button class="logout-button" id="logoutButton">تسجيل الخروج</button>
+        </div>
+    </div>
+    <div class="main-container">
+        <div class="overlay" id="sidebarOverlay"></div>
+        <div class="sidebar" id="sidebar">
+            <ul>
+                <li><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i> الرئيسية</a></li>
+                <li><a href="/add-project.html" data-page="add-project"><i class="fas fa-plus-circle"></i> إضافة مشروع</a></li>
+                <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a></li>
+                <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
+                <li><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a></li>
+                <li><a href="/add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i> إضافة خزينة</a></li>
+                <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
+                <li><a href="/general-expenses.html" data-page="general-expenses"><i class="fas fa-money-bill-wave"></i> المصروفات العامة</a></li>
+                <li><a href="/employees.html" data-page="employees"><i class="fas fa-user-tie"></i> الموظفين</a></li>
+                <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
+                <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a></li>
+                <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
+            </ul>
+        </div>
+        <div class="content-area" id="contentArea">
+            <div class="page-header">
+                <h1>المصروفات العامة</h1>
+                <button class="add-button" id="addExpenseBtn"><i class="fas fa-plus"></i> إضافة مصروف</button>
+            </div>
+            <div class="filter-controls">
+                <div class="top-buttons">
+                    <button id="filterTodayBtn" class="btn btn-secondary">فرز اليوم</button>
+                    <button id="filterMonthBtn" class="btn btn-secondary">فرز الشهر</button>
+                </div>
+                <div class="date-range-filter">
+                    <label>من تاريخ:</label>
+                    <input type="date" id="startDateInput">
+                    <label>إلى تاريخ:</label>
+                    <input type="date" id="endDateInput">
+                    <button id="filterDateRangeBtn" class="btn btn-secondary">تطبيق</button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>المبلغ</th>
+                            <th>السبب</th>
+                            <th>التصنيف</th>
+                            <th>الخزينة</th>
+                            <th>التاريخ</th>
+                            <th>تم الإنشاء بواسطة</th>
+                            <th>المرفقات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expensesTableBody">
+                        <tr>
+                            <td colspan="7" style="text-align: center;">جاري تحميل المصروفات...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="total-display">
+                <h3>إجمالي المصروفات: <span id="totalAmount">0.00</span> ج.م</h3>
+            </div>
+            <div id="pageMessage" class="modal-message" style="display: none;"></div>
+        </div>
+    </div>
+    <!-- Add Expense Modal -->
+    <div id="addExpenseModal" class="modal">
+        <div class="modal-content">
+            <div class="form-container">
+                <h1 style="text-align:center; color:var(--primary-color); font-size:28px; margin-bottom:30px;">إضافة مصروف جديد</h1>
+                <form id="addExpenseForm">
+                    <div class="form-group">
+                        <label for="expenseAmount">المبلغ *</label>
+                        <input type="number" id="expenseAmount" name="amount" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseDescription">السبب *</label>
+                        <textarea id="expenseDescription" name="description" ></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseTreasury">الخزينة *</label>
+                        <select id="expenseTreasury" name="treasury" required>
+                            <option value="">اختر الخزينة</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseCategory">التصنيف *</label>
+                        <select id="expenseCategory" name="category" required>
+                            <option value="">اختر التصنيف</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseDate">التاريخ</label>
+                        <input type="date" id="expenseDate" name="date">
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseAttachment">المرفقات (اختياري):</label>
+                        <input type="file" id="expenseAttachment" name="attachments" accept="image/*,.pdf" multiple>
+                        <small style="color: #666; display: block; margin-top: 5px;">
+                            يمكنك رفع صور أو ملفات PDF. الحد الأقصى: 5 ميجابايت لكل ملف.
+                        </small>
+                    </div>
+                    <div class="form-message" id="addExpenseMessage" style="display: none;"></div>
+                    <div class="form-buttons">
+                        <button type="submit" class="form-button">إضافة المصروف</button>
+                        <button type="button" class="form-button cancel" id="cancelAddExpenseBtn">إلغاء</button>
+                    </div>
+                </form>
+            </div>
+            <span class="close-button" style="position:absolute;top:10px;left:15px;font-size:28px;cursor:pointer;">&times;</span>
+        </div>
+    </div>
+
+    <!-- Attachment Viewer Modal -->
+    <div id="attachmentViewerModal" class="modal">
+        <div class="modal-content" style="max-width: 90%; max-height: 90%; overflow: auto;">
+            <span class="close-button">&times;</span>
+            <h3 id="attachmentViewerTitle">عرض المرفق</h3>
+            <div id="attachmentViewerContent">
+                <!-- سيتم عرض المرفق هنا -->
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-button" id="downloadAttachmentBtn">
+                    <i class="fas fa-download"></i> تحميل
+                </button>
+                <button type="button" class="modal-button cancel" id="closeAttachmentViewerBtn">إغلاق</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const BASE_URL = "https://08e6-156-203-155-30.ngrok-free.app";
+        
+        // Global variables for user info
+        let currentUserRole = '';
+        let currentUserPayload = null;
+        
+        // DOM Elements
+        const addExpenseBtn = document.getElementById('addExpenseBtn');
+        const addExpenseModal = document.getElementById('addExpenseModal');
+        const addExpenseForm = document.getElementById('addExpenseForm');
+        const cancelAddExpenseBtn = document.getElementById('cancelAddExpenseBtn');
+        const closeAddExpenseBtn = addExpenseModal.querySelector('.close-button');
+        const addExpenseMessage = document.getElementById('addExpenseMessage');
+        
+        const expensesTableBody = document.getElementById('expensesTableBody');
+        const totalAmountSpan = document.getElementById('totalAmount');
+        const pageMessage = document.getElementById('pageMessage');
+        
+        // Filter elements
+        const filterTodayBtn = document.getElementById('filterTodayBtn');
+        const filterMonthBtn = document.getElementById('filterMonthBtn');
+        const filterDateRangeBtn = document.getElementById('filterDateRangeBtn');
+        const startDateInput = document.getElementById('startDateInput');
+        const endDateInput = document.getElementById('endDateInput');
+        
+        // Form elements
+        const expenseAmountInput = document.getElementById('expenseAmount');
+        const expenseReasonTextarea = document.getElementById('expenseDescription');
+        const expenseTreasurySelect = document.getElementById('expenseTreasury');
+        const expenseCategorySelect = document.getElementById('expenseCategory');
+        const expenseDateInput = document.getElementById('expenseDate');
+        
+        // Set today's date as default
+        expenseDateInput.value = new Date().toISOString().split('T')[0];
+        
+        // Client-side authentication check and redirection
+        document.addEventListener('DOMContentLoaded', function () {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const decodedPayload = decodeURIComponent(escape(window.atob(base64)));
+                const payload = JSON.parse(decodedPayload);
+
+                const username = payload.user.username || payload.user.id || 'مستخدم';
+                const role = payload.user.role || 'غير محدد';
+                
+                // Store in global variables
+                currentUserRole = role;
+                currentUserPayload = payload;
+
+                document.getElementById('loggedInUser').textContent = `مرحباً، ${username} (${role})`;
+
+                // Check if user has access to this page
+                if (role !== 'مدير' && role !== 'مدير الحسابات') {
+                    alert('غير مصرح لك بالوصول لهذه الصفحة');
+                    window.location.href = '/dashboard.html';
+                    return;
+                }
+
+                // Client-side authorization based on role for sidebar visibility
+                const sidebar = document.getElementById('sidebar');
+                const addProjectLink = sidebar.querySelector('[data-page="add-project"]');
+                const usersLink = sidebar.querySelector('[data-page="users"]');
+                const categoriesLink = sidebar.querySelector('[data-page="categories"]');
+                const addTreasuryLink = sidebar.querySelector('[data-page="add-treasury"]');
+                const treasuriesLink = sidebar.querySelector('[data-page="treasuries"]');
+                const contractorsLink = sidebar.querySelector('[data-page="contractors"]');
+                const clientsLink = sidebar.querySelector('[data-page="clients"]');
+                const generalExpensesLink = sidebar.querySelector('[data-page="general-expenses"]');
+
+                if (role === 'مهندس') {
+                    // Hide restricted elements for engineer
+                    if (addProjectLink) addProjectLink.style.display = 'none';
+                    if (usersLink) usersLink.style.display = 'none';
+                    if (addTreasuryLink) addTreasuryLink.style.display = 'none';
+                    if (contractorsLink) contractorsLink.style.display = 'none';
+                    if (clientsLink) clientsLink.style.display = 'none';
+                    if (generalExpensesLink) generalExpensesLink.style.display = 'none';
+                }
+
+                // Set active link in sidebar
+                const currentPageLink = document.querySelector(`.sidebar ul li a[data-page="general-expenses"]`);
+                if (currentPageLink) {
+                    currentPageLink.parentElement.classList.add('active');
+                }
+                
+                // Load initial data
+                loadTreasuries();
+                loadCategories();
+                fetchExpenses();
+                
+            } catch (e) {
+                console.error("Failed to decode token:", e);
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            }
+        });
+
+        // Load treasuries for dropdown
+        const loadTreasuries = async () => {
+            try {
+                const response = await fetch(`${BASE_URL}/api/treasuries`, {
+                    headers: {
+                        'x-auth-token': localStorage.getItem('token')
+                    }
+                });
+                const treasuries = await response.json();
+                
+                expenseTreasurySelect.innerHTML = '<option value="">اختر الخزينة</option>';
+                treasuries.forEach(treasury => {
+                    const option = document.createElement('option');
+                    option.value = treasury._id;
+                    option.textContent = `${treasury.name} (${treasury.currentBalance.toFixed(2)} ج.م)`;
+                    expenseTreasurySelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading treasuries:', error);
+            }
+        };
+
+        // Load categories for dropdown
+        const loadCategories = async () => {
+            try {
+                const response = await fetch(`${BASE_URL}/api/categories`, {
+                    headers: {
+                        'x-auth-token': localStorage.getItem('token')
+                    }
+                });
+                const categories = await response.json();
+                
+                expenseCategorySelect.innerHTML = '<option value="">اختر التصنيف</option>';
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category._id;
+                    option.textContent = category.name;
+                    expenseCategorySelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        };
+
+        // Fetch expenses with optional filtering
+        const fetchExpenses = async (filter = null, startDate = null, endDate = null) => {
+            expensesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">جاري تحميل المصروفات...</td></tr>';
+            pageMessage.style.display = 'none';
+
+            try {
+                let url = `${BASE_URL}/api/general-expenses`;
+                const params = new URLSearchParams();
+                
+                if (filter) {
+                    params.append('filter', filter);
+                } else if (startDate && endDate) {
+                    params.append('startDate', startDate);
+                    params.append('endDate', endDate);
+                }
+                
+                if (params.toString()) {
+                    url += '?' + params.toString();
+                }
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'x-auth-token': localStorage.getItem('token')
+                    }
+                });
+                const expenses = await response.json();
+
+                if (response.ok) {
+                    expensesTableBody.innerHTML = '';
+                    if (expenses.length === 0) {
+                        expensesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">لا توجد مصروفات لعرضها.</td></tr>';
+                        totalAmountSpan.textContent = '0.00';
+                        return;
+                    }
+
+                    expenses.forEach(expense => {
+                        const row = expensesTableBody.insertRow();
+                        
+                        // Create attachments display
+                        let attachmentsHtml = '';
+                        if (expense.attachments && expense.attachments.length > 0) {
+                            expense.attachments.forEach(attachment => {
+                                const isImage = attachment.mimeType && attachment.mimeType.startsWith('image/');
+                                const isPdf = attachment.mimeType && attachment.mimeType === 'application/pdf';
+                                
+                                if (isImage) {
+                                    attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                        <i class="fas fa-image" style="color: #007bff; font-size: 16px;" title="صورة"></i>
+                                    </button>`;
+                                } else if (isPdf) {
+                                    attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                        <i class="fas fa-file-pdf" style="color: #dc3545; font-size: 16px;" title="PDF"></i>
+                                    </button>`;
+                                } else {
+                                    attachmentsHtml += `<button onclick="showAttachment('${attachment.filename}', '${attachment.mimeType}', '${attachment.originalName || attachment.filename}')" style="margin: 2px; background: none; border: none; cursor: pointer; padding: 5px; border-radius: 3px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'">
+                                        <i class="fas fa-file" style="color: #6c757d; font-size: 16px;" title="ملف"></i>
+                                    </button>`;
+                                }
+                            });
+                        } else {
+                            attachmentsHtml = '<span style="color: #999;">لا توجد مرفقات</span>';
+                        }
+                        
+                        row.innerHTML = `
+                            <td>${expense.amount.toFixed(2)} ج.م</td>
+                            <td>${expense.reason}</td>
+                            <td>${expense.category ? expense.category.name : '---'}</td>
+                            <td>${expense.treasury ? expense.treasury.name : '---'}</td>
+                            <td>${new Date(expense.date).toLocaleDateString('en-GB')}</td>
+                            <td>${expense.createdBy ? expense.createdBy.username : '---'}</td>
+                            <td>${attachmentsHtml}</td>
+                        `;
+                    });
+                    
+                    // Fetch and display total
+                    await fetchTotal(filter, startDate, endDate);
+                } else {
+                    expensesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">فشل في جلب المصروفات.</td></tr>';
+                    pageMessage.className = 'modal-message error';
+                    pageMessage.textContent = expenses.message || 'حدث خطأ أثناء جلب المصروفات.';
+                    pageMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error fetching expenses:', error);
+                expensesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">خطأ في الاتصال بالخادم.</td></tr>';
+                pageMessage.className = 'modal-message error';
+                pageMessage.textContent = 'حدث خطأ في الاتصال بالخادم أثناء جلب المصروفات.';
+                pageMessage.style.display = 'block';
+            }
+        };
+
+        // Fetch total expenses
+        const fetchTotal = async (filter = null, startDate = null, endDate = null) => {
+            try {
+                let url = `${BASE_URL}/api/general-expenses/total`;
+                const params = new URLSearchParams();
+                
+                if (filter) {
+                    params.append('filter', filter);
+                } else if (startDate && endDate) {
+                    params.append('startDate', startDate);
+                    params.append('endDate', endDate);
+                }
+                
+                if (params.toString()) {
+                    url += '?' + params.toString();
+                }
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'x-auth-token': localStorage.getItem('token')
+                    }
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    totalAmountSpan.textContent = data.total.toFixed(2);
+                }
+            } catch (error) {
+                console.error('Error fetching total:', error);
+            }
+        };
+
+        // Modal functions
+        const openAddExpenseModal = () => {
+            addExpenseModal.style.display = 'flex';
+            addExpenseMessage.style.display = 'none';
+            addExpenseForm.reset();
+            expenseDateInput.value = new Date().toISOString().split('T')[0];
+            loadCategories(); // تحميل التصنيفات عند فتح المودال
+        };
+
+        const closeAddExpenseModal = () => {
+            addExpenseModal.style.display = 'none';
+            addExpenseMessage.style.display = 'none';
+        };
+
+        // Event listeners
+        addExpenseBtn.addEventListener('click', openAddExpenseModal);
+        closeAddExpenseBtn.addEventListener('click', closeAddExpenseModal);
+        cancelAddExpenseBtn.addEventListener('click', closeAddExpenseModal);
+        
+        window.addEventListener('click', (event) => {
+            if (event.target == addExpenseModal) {
+                closeAddExpenseModal();
+            }
+        });
+
+        // Filter event listeners
+        filterTodayBtn.addEventListener('click', () => {
+            fetchExpenses('today');
+        });
+
+        filterMonthBtn.addEventListener('click', () => {
+            fetchExpenses('month');
+        });
+
+        filterDateRangeBtn.addEventListener('click', () => {
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+            
+            if (!startDate || !endDate) {
+                alert('يرجى تحديد تاريخ البداية والنهاية');
+                return;
+            }
+            
+            if (new Date(startDate) > new Date(endDate)) {
+                alert('تاريخ البداية يجب أن يكون قبل تاريخ النهاية');
+                return;
+            }
+            
+            fetchExpenses(null, startDate, endDate);
+        });
+
+        // Form submission
+        addExpenseForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            // Create FormData for file upload
+            const formData = new FormData();
+            formData.append('amount', expenseAmountInput.value);
+            formData.append('description', expenseReasonTextarea.value);
+            formData.append('treasury', expenseTreasurySelect.value);
+            formData.append('category', expenseCategorySelect.value);
+            formData.append('date', expenseDateInput.value);
+
+            // Add attachments if any
+            const attachmentFiles = document.getElementById('expenseAttachment').files;
+            console.log('=== Frontend File Upload ===');
+            console.log('Attachment files:', attachmentFiles);
+            console.log('File count:', attachmentFiles.length);
+            
+            for (let i = 0; i < attachmentFiles.length; i++) {
+                console.log(`File ${i}:`, attachmentFiles[i]);
+                formData.append('attachments', attachmentFiles[i]);
+            }
+
+            // Log FormData contents
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}:`, value);
+            }
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/general-expenses`, {
+                    method: 'POST',
+                    headers: {
+                        'x-auth-token': localStorage.getItem('token')
+                    },
+                    body: formData // Use FormData instead of JSON
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addExpenseMessage.className = 'modal-message success';
+                    addExpenseMessage.textContent = 'تم إضافة المصروف بنجاح';
+                    addExpenseMessage.style.display = 'block';
+                    
+                    closeAddExpenseModal();
+                    fetchExpenses(); // Refresh the list
+                    loadTreasuries(); // Refresh treasuries to update balances
+                    
+                    setTimeout(() => {
+                        addExpenseMessage.style.display = 'none';
+                    }, 3000);
+                } else {
+                    addExpenseMessage.className = 'modal-message error';
+                    addExpenseMessage.textContent = data.message || 'فشل في إضافة المصروف';
+                    addExpenseMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error adding expense:', error);
+                addExpenseMessage.className = 'modal-message error';
+                addExpenseMessage.textContent = 'خطأ في الاتصال بالخادم';
+                addExpenseMessage.style.display = 'block';
+            }
+        });
+
+        // Logout functionality
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        });
+
+        // Menu toggle functionality
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+
+        // Close sidebar when clicking outside
+        document.addEventListener('click', (event) => {
+            if (!sidebar.contains(event.target) && !menuToggle.contains(event.target)) {
+                sidebar.classList.remove('active');
+            }
+        });
+
+        // مودال عرض المرفقات
+        const attachmentViewerModal = document.getElementById('attachmentViewerModal');
+        const attachmentViewerTitle = document.getElementById('attachmentViewerTitle');
+        const attachmentViewerContent = document.getElementById('attachmentViewerContent');
+        const downloadAttachmentBtn = document.getElementById('downloadAttachmentBtn');
+        const closeAttachmentViewerBtn = document.getElementById('closeAttachmentViewerBtn');
+        let currentAttachmentUrl = '';
+
+        // دالة عرض المرفق
+        window.showAttachment = function(filename, mimetype, originalName) {
+            currentAttachmentUrl = `${BASE_URL}/api/files/${filename}`;
+            console.log('Opening attachment:', currentAttachmentUrl);
+            attachmentViewerTitle.textContent = `عرض المرفق: ${originalName || filename}`;
+            
+            const isImage = mimetype && mimetype.startsWith('image/');
+            const isPdf = mimetype && mimetype === 'application/pdf';
+            
+            if (isImage) {
+                attachmentViewerContent.innerHTML = `
+                    <div style="text-align: center;">
+                        <img src="${currentAttachmentUrl}" style="max-width: 100%; max-height: 70vh; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" alt="صورة المرفق" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <div style="display: none; padding: 20px; color: #666;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ffc107; margin-bottom: 10px;"></i>
+                            <p>لا يمكن تحميل الصورة</p>
+                            <p>يمكنك استخدام زر التحميل أدناه</p>
+                        </div>
+                    </div>
+                `;
+            } else if (isPdf) {
+                attachmentViewerContent.innerHTML = `
+                    <div style="text-align: center;">
+                        <iframe src="${currentAttachmentUrl}" style="width: 100%; height: 70vh; border: none; border-radius: 8px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"></iframe>
+                        <div style="display: none; padding: 20px; color: #666;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ffc107; margin-bottom: 10px;"></i>
+                            <p>لا يمكن عرض PDF</p>
+                            <p>يمكنك استخدام زر التحميل أدناه</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                attachmentViewerContent.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-file" style="font-size: 64px; color: #6c757d; margin-bottom: 20px;"></i>
+                        <p style="font-size: 18px; color: #666;">لا يمكن عرض هذا النوع من الملفات</p>
+                        <p style="font-size: 14px; color: #999;">يمكنك تحميل الملف لعرضه</p>
+                    </div>
+                `;
+            }
+            
+            attachmentViewerModal.style.display = 'flex';
+        };
+
+        // زر تحميل المرفق
+        downloadAttachmentBtn.addEventListener('click', () => {
+            if (currentAttachmentUrl) {
+                const link = document.createElement('a');
+                link.href = currentAttachmentUrl;
+                link.download = '';
+                link.click();
+            }
+        });
+
+        // إغلاق مودال المرفقات
+        closeAttachmentViewerBtn.addEventListener('click', () => {
+            attachmentViewerModal.style.display = 'none';
+        });
+
+        attachmentViewerModal.querySelector('.close-button').addEventListener('click', () => {
+            attachmentViewerModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target === attachmentViewerModal) {
+                attachmentViewerModal.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html> 

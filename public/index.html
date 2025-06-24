@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - MAJD Architecture</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #014C47;
+            /* اللون المفضل الجديد للخلفية */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #f4f4f4;
+            /* تعديل لون النص ليناسب الخلفية الداكنة */
+            direction: rtl;
+            /* لضمان الاتجاه من اليمين لليسار */
+        }
+
+        .login-container {
+            background-color: rgba(255, 255, 255, 0.95);
+            /* خلفية بيضاء شبه شفافة للحاوية */
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            /* ظل أغمق قليلاً */
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-container h2 {
+            color: #014C47;
+            /* اللون المفضل */
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: right;
+            /* محاذاة النص داخل المجموعة لليمين */
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .input-group input[type="text"],
+        .input-group input[type="password"] {
+            width: calc(100% - 20px);
+            /* Adjust for padding */
+            padding: 12px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+            /* Include padding in width */
+        }
+
+        .login-button {
+            background-color: #014C47;
+            /* اللون المفضل */
+            color: #fff;
+            padding: 14px 25px;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+
+        .login-button:hover {
+            background-color: #003a35;
+            /* درجة أغمق من اللون المفضل */
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+            /* Hide by default */
+        }
+
+        .message.error {
+            background-color: #ffe6e6;
+            color: #cc0000;
+            border: 1px solid #cc0000;
+        }
+
+        .message.success {
+            background-color: #e6ffe6;
+            color: #008000;
+            border: 1px solid #008000;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .login-container {
+                margin: 20px;
+                padding: 30px;
+            }
+
+            .login-container h2 {
+                font-size: 24px;
+            }
+
+            .input-group input {
+                font-size: 14px;
+            }
+
+            .login-button {
+                font-size: 16px;
+                padding: 12px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <h2>تسجيل الدخول - MAJD Architecture</h2>
+        <form id="loginForm">
+            <div class="input-group">
+                <label for="username">اسم المستخدم:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="input-group">
+                <label for="password">كلمة المرور:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="login-button">تسجيل الدخول</button>
+        </form>
+        <div id="message" class="message"></div>
+    </div>
+
+    <script>
+        const BASE_URL = "https://08e6-156-203-155-30.ngrok-free.app";
+        document.getElementById('loginForm').addEventListener('submit', async function (event) {
+            event.preventDefault(); // منع إعادة تحميل الصفحة
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const messageDiv = document.getElementById('message');
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    messageDiv.className = 'message success';
+                    messageDiv.textContent = data.message;
+                    messageDiv.style.display = 'block';
+                    // في حالة النجاح، قم بتخزين التوكن وتحويل المستخدم
+                    localStorage.setItem('token', data.token);
+                    // حفظ بيانات المستخدم
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    // إعادة التوجيه إلى صفحة الداش بورد
+                    window.location.href = '/dashboard.html';
+                } else {
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = data.message || 'حدث خطأ غير معروف.';
+                    messageDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                messageDiv.className = 'message error';
+                messageDiv.textContent = 'حدث خطأ أثناء الاتصال بالخادم. الرجاء المحاولة لاحقاً.';
+                messageDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+
+</html>
