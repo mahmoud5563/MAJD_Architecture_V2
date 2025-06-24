@@ -14,7 +14,7 @@ const salaryTransactionSchema = new mongoose.Schema({
     type: {
         type: String,
         required: true,
-        enum: ['salary', 'bonus', 'deduction', 'allowance', 'commission'],
+        enum: ['salary', 'bonus', 'deduction', 'allowance', 'commission', 'advance', 'overtime'],
         default: 'salary'
     },
     amount: {

@@ -31,7 +31,7 @@ router.get('/employee/:employeeId', auth, async (req, res) => {
         res.json(transactions);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('حدث خطأ في الخادم أثناء جلب معاملات المرتب.');
+        res.status(500).json({ message: 'حدث خطأ في الخادم أثناء جلب معاملات المرتب.', error: err.message });
     }
 });
 
@@ -123,7 +123,7 @@ router.post('/', auth, async (req, res) => {
         });
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('حدث خطأ في الخادم أثناء إضافة معاملة المرتب.');
+        res.status(500).json({ message: 'حدث خطأ في الخادم أثناء إضافة معاملة المرتب.', error: err.message });
     }
 });
 
@@ -182,7 +182,7 @@ router.put('/:id', auth, async (req, res) => {
         });
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('حدث خطأ في الخادم أثناء تحديث معاملة المرتب.');
+        res.status(500).json({ message: 'حدث خطأ في الخادم أثناء تحديث معاملة المرتب.', error: err.message });
     }
 });
 
@@ -221,7 +221,7 @@ router.delete('/:id', auth, async (req, res) => {
         res.json({ message: 'تم حذف معاملة المرتب بنجاح.' });
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('حدث خطأ في الخادم أثناء حذف معاملة المرتب.');
+        res.status(500).json({ message: 'حدث خطأ في الخادم أثناء حذف معاملة المرتب.', error: err.message });
     }
 });
 

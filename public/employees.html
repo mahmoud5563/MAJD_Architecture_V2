@@ -634,6 +634,7 @@
                 if (response.ok) {
                     employees = await response.json();
                     displayEmployees(employees);
+                    
                 } else {
                     console.error('Failed to load employees');
                 }

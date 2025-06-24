@@ -19,6 +19,8 @@ const employeesRoutes = require('./routes/employees'); // استيراد مسا�
 const salaryTransactionsRoutes = require('./routes/salaryTransactions'); // استيراد مسار معاملات المرتبات
 const generalExpensesRoutes = require('./routes/generalExpenses'); // استيراد مسار المصروفات العامة
 const filesRoutes = require('./routes/files'); // استيراد مسار الملفات
+const employeeAdvancesRoutes = require('./routes/employeeAdvances');
+const employeeOvertimesRoutes = require('./routes/employeeOvertimes');
 
 const { auth, authorizeRoles } = require('./middleware/authMiddleware');
 
@@ -48,6 +50,8 @@ app.use('/api/employees', employeesRoutes); // استخدام مسار المو�
 app.use('/api/salary-transactions', salaryTransactionsRoutes); // استخدام مسار معاملات المرتبات
 app.use('/api/general-expenses', generalExpensesRoutes); // استخدام مسار المصروفات العامة
 app.use('/api/files', filesRoutes); // استخدام مسار الملفات
+app.use('/api/employee-advances', employeeAdvancesRoutes);
+app.use('/api/employee-overtimes', employeeOvertimesRoutes);
 app.use('/api/backup', require('./routes/backup'));
 
 // تقديم ملفات الصور من مجلد uploads

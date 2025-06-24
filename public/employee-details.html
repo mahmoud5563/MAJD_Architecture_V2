@@ -362,6 +362,8 @@
         .type-deduction { background-color: #f8d7da; color: #721c24; }
         .type-allowance { background-color: #fff3cd; color: #856404; }
         .type-commission { background-color: #e2e3e5; color: #383d41; }
+        .type-advance { background-color: #ffe5b4; color: #b8860b; }
+        .type-overtime { background-color: #e3f0ff; color: #007bff; }
         .modal {
             display: none;
             position: fixed;
@@ -722,7 +724,6 @@
                             <button type="submit" class="modal-button save">حفظ التغييرات</button>
                         </div>
                     </form>
-<<<<<<< HEAD
                     <hr>
                     <div id="employeeImagesSection">
                         <h4>صور الموظف</h4>
@@ -739,8 +740,6 @@
                             </div>
                         </form>
                     </div>
-=======
->>>>>>> 0e3867fc6451404f4e635b2b1c37d908b0398db6
                 </div>
             </div>
 
@@ -1056,7 +1055,9 @@
             'bonus': 'مكافأة',
             'deduction': 'خصم',
             'allowance': 'بدل',
-            'commission': 'عمولة'
+            'commission': 'عمولة',
+            'advance': 'سلفة',
+            'overtime': 'أوفر تايم'
         };
         return types[type] || type;
     }
@@ -1238,6 +1239,12 @@
                 <button class="salary-btn" onclick="openSalaryModal('commission')">
                     <i class="fas fa-percentage"></i> إضافة عمولة
                 </button>
+                <button class="salary-btn" onclick="openSalaryModal('advance')">
+                    <i class="fas fa-hand-holding-usd"></i> إضافة سلفة
+                </button>
+                <button class="salary-btn" onclick="openSalaryModal('overtime')">
+                    <i class="fas fa-clock"></i> إضافة أوفر تايم
+                </button>
             </div>
             <div class="table-container" style="overflow-x:auto; margin-top:20px;">
                 <table class="transactions-table">
@@ -1314,7 +1321,7 @@
         const formData = new FormData(e.target);
         let amount = parseFloat(formData.get('transactionAmount'));
         let type = window.currentSalaryType || 'salary';
-        if (type === 'salary' || type === 'deduction') {
+        if (type === 'salary' || type === 'deduction' || type === 'advance') {
             amount = -Math.abs(amount);
         } else {
             amount = Math.abs(amount);
