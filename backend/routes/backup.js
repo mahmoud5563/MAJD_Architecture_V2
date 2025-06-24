@@ -11,8 +11,11 @@ const Category = require('../models/Category');
 const Treasury = require('../models/Treasury');
 const Client = require('../models/Client');
 const GeneralExpense = require('../models/GeneralExpense');
+<<<<<<< HEAD
 const Employee = require('../models/Employee');
 const SalaryTransaction = require('../models/SalaryTransaction');
+=======
+>>>>>>> 0e3867fc6451404f4e635b2b1c37d908b0398db6
 
 // Function to clean data and remove invalid references
 const cleanDataForImport = (data) => {
@@ -50,8 +53,11 @@ router.get('/export', auth, authorizeRoles('Manager', 'مدير'), async (req, r
       treasuries: await Treasury.find({}),
       clients: await Client.find({}),
       generalExpenses: await GeneralExpense.find({}),
+<<<<<<< HEAD
       employees: await Employee.find({}),
       salaryTransactions: await SalaryTransaction.find({}),
+=======
+>>>>>>> 0e3867fc6451404f4e635b2b1c37d908b0398db6
     };
     res.setHeader('Content-Disposition', 'attachment; filename=backup.json');
     res.setHeader('Content-Type', 'application/json');
@@ -91,8 +97,11 @@ router.post('/import', auth, authorizeRoles('Manager', 'مدير'), async (req, 
       Treasury.deleteMany({}),
       Client.deleteMany({}),
       GeneralExpense.deleteMany({}),
+<<<<<<< HEAD
       Employee.deleteMany({}),
       SalaryTransaction.deleteMany({}),
+=======
+>>>>>>> 0e3867fc6451404f4e635b2b1c37d908b0398db6
     ]);
     
     // استيراد البيانات الجديدة بالترتيب الصحيح للمراجع
@@ -142,6 +151,7 @@ router.post('/import', auth, authorizeRoles('Manager', 'مدير'), async (req, 
         const result = await GeneralExpense.insertMany(cleanedData.generalExpenses);
         importResults.generalExpenses = result.length;
       }
+<<<<<<< HEAD
       if (cleanedData.employees && cleanedData.employees.length > 0) {
         const result = await Employee.insertMany(cleanedData.employees);
         importResults.employees = result.length;
@@ -150,6 +160,8 @@ router.post('/import', auth, authorizeRoles('Manager', 'مدير'), async (req, 
         const result = await SalaryTransaction.insertMany(cleanedData.salaryTransactions);
         importResults.salaryTransactions = result.length;
       }
+=======
+>>>>>>> 0e3867fc6451404f4e635b2b1c37d908b0398db6
       
       console.log('Import completed successfully:', importResults);
       

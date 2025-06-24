@@ -2,10 +2,13 @@ const express = require('express');
 const router = express.Router();
 const Employee = require('../models/Employee');
 const { auth } = require('../middleware/authMiddleware');
+<<<<<<< HEAD
 const XLSX = require('xlsx');
 const { upload, handleUploadError } = require('../middleware/uploadMiddleware');
 const fs = require('fs');
 const path = require('path');
+=======
+>>>>>>> 0e3867fc6451404f4e635b2b1c37d908b0398db6
 
 // @route   GET /api/employees
 // @desc    Get all employees
@@ -231,6 +234,7 @@ router.get('/department/:department', auth, async (req, res) => {
     }
 });
 
+<<<<<<< HEAD
 // @route   GET /api/employees/:id/export-salary-sheet
 // @desc    Export employee salary sheet as Excel
 // @access  Private
@@ -369,4 +373,6 @@ router.put('/:id/images/:filename', auth, async (req, res) => {
     }
 });
 
+=======
+>>>>>>> 0e3867fc6451404f4e635b2b1c37d908b0398db6
 module.exports = router; 

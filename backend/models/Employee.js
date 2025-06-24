@@ -81,6 +81,7 @@ const employeeSchema = new mongoose.Schema({
         type: String,
         required: false,
         trim: true
+<<<<<<< HEAD
     },
     images: [
         {
@@ -89,6 +90,9 @@ const employeeSchema = new mongoose.Schema({
             path: { type: String, required: true }
         }
     ]
+=======
+    }
+>>>>>>> 0e3867fc6451404f4e635b2b1c37d908b0398db6
 }, { timestamps: true });
 
 // إنشاء index للبحث السريع
