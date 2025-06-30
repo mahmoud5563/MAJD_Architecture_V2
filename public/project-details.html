@@ -639,24 +639,18 @@
     <div class="main-container">
         <div class="overlay" id="sidebarOverlay"></div>
         <div class="sidebar" id="sidebar">
-
             <ul>
-                <li><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>
-                        الرئيسية</a></li>
-                <li><a href="/add-project.html" data-page="add-project"><i class="fas fa-plus-circle"></i> إضافة
-                        مشروع</a></li>
-                <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a>
-                </li>
+                <li><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>الرئيسية</a></li>
+                <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a></li>
                 <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
                 <li><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a></li>
-                <li><a href="/add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i> إضافة
-                        خزينة</a></li>
                 <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
                 <li><a href="/general-expenses.html" data-page="general-expenses"><i class="fas fa-money-bill-wave"></i> المصروفات العامة</a></li>
                 <li><a href="/employees.html" data-page="employees"><i class="fas fa-user-tie"></i> الموظفين</a></li>
                 <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
-                <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a>
-                </li>
+                <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a></li>
+                <li><a href="/warehouses.html" data-page="warehouses"><i class="fas fa-warehouse"></i> المخازن</a></li>
+                <li><a href="/sales.html" data-page="sales"><i class="fas fa-shopping-cart"></i> المبيعات</a></li>
                 <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
             </ul>
         </div>
@@ -1144,7 +1138,7 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                 <input type="hidden" id="paymentAgreementId">
                 <div class="modal-form-group">
                     <label for="paymentContractAgreement">اتفاق المقاول:</label>
-                    <select id="paymentContractAgreement" name="contractorAgreementId" required>
+                    <select id="paymentContractAgreement" name="contractAgreementId" required>
                         <option value="">اختر اتفاق مقاول</option>
                         <!-- Contractor agreements for this project will be loaded here -->
                     </select>
@@ -1170,7 +1164,7 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                 </div>
                 <div class="modal-form-group">
                     <label for="paymentAttachment">المرفقات (اختياري):</label>
-                    <input type="file" id="paymentAttachment" name="attachment" accept="image/*,.pdf" multiple>
+                    <input type="file" id="paymentAttachment" name="attachments" accept="image/*,.pdf" multiple>
                     <small style="color: #666; display: block; margin-top: 5px;">
                         يمكنك رفع صور أو ملفات PDF. الحد الأقصى: 5 ميجابايت لكل ملف.
                     </small>
@@ -1223,7 +1217,9 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
     </div>
 
     <script>
-        const BASE_URL = "https://e562-156-203-155-30.ngrok-free.app";
+        const BASE_URL = window.location.origin === 'http://localhost:3000' 
+            ? 'http://localhost:3000' 
+            : "https://6504-156-203-155-30.ngrok-free.app";
         // Client-side authentication check and redirection
         document.addEventListener('DOMContentLoaded', function () {
             const token = localStorage.getItem('token');
@@ -1336,13 +1332,6 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
             const projectEngineerSelect = document.getElementById('projectEngineer');
 
 
-
-
-               
-
-
-
-            
             const summaryTotalRevenueSpan = document.getElementById('summaryTotalRevenue');
             const summaryTotalExpensesSpan = document.getElementById('summaryTotalExpenses');
             const summaryNetProfitLossSpan = document.getElementById('summaryNetProfitLoss');
@@ -1550,7 +1539,8 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                         } else {
                             html += '<div style="color:#888; margin:10px 0;">لا توجد دفعات لهذه الاتفاقية.</div>';
                         }
-                        html += `<div style="margin-top:8px;"><strong>المتبقي من الاتفاقية:</strong> <span>${(ag.agreedAmount - (ag.paidAmount || 0)).toFixed(2)} ج.م</span></div>`;
+                        const totalPaid = agPayments.reduce((sum, pay) => sum + (pay.amount || 0), 0);
+                        html += `<div style="margin-top:8px;"><strong>المتبقي من الاتفاقية:</strong> <span>${(ag.agreedAmount - totalPaid).toFixed(2)} ج.م</span></div>`;
                         html += '</div>';
                     });
                     // زر تصدير Excel
@@ -1565,7 +1555,7 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                                 const sheetData = [];
                                 sheetData.push([`الاتفاقية: ${(ag.description || 'اتفاقية بدون وصف')} (${idx+1})`]);
                                 sheetData.push(['المبلغ المتفق عليه', ag.agreedAmount.toFixed(2) + ' ج.م']);
-                                sheetData.push(['المتبقي من الاتفاقية', (ag.agreedAmount - (ag.paidAmount || 0)).toFixed(2) + ' ج.م']);
+                                sheetData.push(['المتبقي من الاتفاقية', (ag.agreedAmount - totalPaid).toFixed(2) + ' ج.م']);
                                 sheetData.push([]);
                                 sheetData.push(['التاريخ', 'المبلغ', 'الخزينة', 'الوصف']);
                                 if (agPayments.length > 0) {
@@ -1642,14 +1632,17 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                     console.error(`Error fetching items from ${apiUrl}:`, error);
                 }
             }
+            
 
             // Function to fetch and display project details and related financial data
             const fetchProjectDetails = async () => {
+                console.log('=== fetchProjectDetails called ===');
                 pageMessage.style.display = 'none';
                 projectTitleSpan.textContent = 'جاري التحميل...';
 
                 // Fetch project details
                 try {
+                    console.log('Fetching project details for ID:', currentProjectId);
                     const projectResponse = await fetch(`${BASE_URL}/api/projects/${currentProjectId}/details`, { // Use details endpoint for summary
                         headers: {
                             'x-auth-token': localStorage.getItem('token')
@@ -1659,6 +1652,7 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                     document.getElementById('exportProjectExcelBtn').style.display = 'inline-block';
 
                     if (projectResponse.ok) {
+                        console.log('Project details fetched successfully:', projectData);
                         if (projectTitleSpan) projectTitleSpan.textContent = projectData.projectName;
                         if (detailProjectNameSpan) detailProjectNameSpan.textContent = projectData.projectName;
                         if (detailProjectAddressSpan) detailProjectAddressSpan.textContent = projectData.address;
@@ -1697,6 +1691,7 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                         contractorRemainingAmountSpan.textContent = (projectData.totalRemainingContractorAmount || 0).toFixed(2) + ' ج.م';
 
                     } else {
+                        console.error('Failed to fetch project details:', projectData);
                         pageMessage.className = 'modal-message error';
                         pageMessage.textContent = projectData.message || 'فشل في جلب تفاصيل المشروع.';
                         pageMessage.style.display = 'block';
@@ -1712,15 +1707,18 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
 
                 // Fetch Expenses for this project
                 try {
+                    console.log('Fetching expenses for project:', currentProjectId);
                     const expensesResponse = await fetch(`${BASE_URL}/api/transactions?project=${currentProjectId}&type=مصروف`, {
                         headers: { 'x-auth-token': localStorage.getItem('token') }
                     });
                     const expenses = await expensesResponse.json();
+                    console.log('Expenses fetched:', expenses);
                     renderExpensesByCategoryChart(expenses);
                     document.getElementById('exportProjectExcelBtn').style.display = 'inline-block';
 
                     projectExpensesTableBody.innerHTML = '';
                     if (expenses.length > 0) {
+                        console.log('Rendering', expenses.length, 'expenses');
                         let totalExpenses = 0;
                         expenses.forEach(exp => {
                             const row = projectExpensesTableBody.insertRow();
@@ -1763,6 +1761,7 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                                 <td>${exp.treasury ? exp.treasury.name : '-'}</td>
                                 <td>${attachmentsHtml}</td>
                                 <td class="action-buttons">
+                                    <button class="edit-expense" data-id="${exp._id}"><i class="fas fa-edit"></i> تعديل</button>
                                     <button class="delete-expense" data-id="${exp._id}"><i class="fas fa-trash-alt"></i> حذف</button>
                                 </td>
                             `;
@@ -1772,9 +1771,11 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                             }
                         });
                         document.getElementById('expensesTotal').textContent = totalExpenses.toFixed(2) + ' ج.م';
+                        console.log('Total expenses:', totalExpenses);
                     } else {
                         projectExpensesTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">لا توجد مصروفات حالياً لهذا المشروع.</td></tr>';
                         document.getElementById('expensesTotal').textContent = '0.00 ج.م';
+                        console.log('No expenses found');
                     }
                     if (typeof filterExpensesTable === 'function') filterExpensesTable();
                 } catch (error) {
@@ -1833,6 +1834,7 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                                 <td>${rev.treasury ? rev.treasury.name : '-'}</td>
                                 <td>${attachmentsHtml}</td>
                                 <td class="action-buttons">
+                                    <button class="edit-revenue" data-id="${rev._id}"><i class="fas fa-edit"></i> تعديل</button>
                                     <button class="delete-revenue" data-id="${rev._id}"><i class="fas fa-trash-alt"></i> حذف</button>
                                 </td>
                             `;
@@ -1906,6 +1908,7 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                                 <td>${pay.description || '-'}</td>
                                 <td>${attachmentsHtml}</td>
                                 <td class="action-buttons">
+                                    <button class="edit-contract-payment" data-id="${pay._id}"><i class="fas fa-edit"></i> تعديل</button>
                                     <button class="delete-contract-payment" data-id="${pay._id}"><i class="fas fa-trash-alt"></i> حذف</button>
                                 </td>
                             `;
@@ -2215,6 +2218,14 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                 // إخفاء رسالة المصروف القديمة
                 expenseModalMessage.style.display = 'none';
                 expenseModalMessage.textContent = '';
+                
+                // إعادة تعيين عنوان المودال وزر الحفظ للإضافة الجديدة
+                document.getElementById('expenseModalTitle').textContent = 'إضافة مصروف';
+                const submitButton = expenseForm.querySelector('button[type="submit"]');
+                submitButton.textContent = 'حفظ المصروف';
+                
+                // مسح حقل ID المصروف
+                document.getElementById('expenseId').value = '';
             });
 
             // Open Revenue Modal
@@ -2227,6 +2238,14 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                 // إخفاء رسالة الإيراد القديمة
                 revenueModalMessage.style.display = 'none';
                 revenueModalMessage.textContent = '';
+                
+                // إعادة تعيين عنوان المودال وزر الحفظ للإضافة الجديدة
+                document.getElementById('revenueModalTitle').textContent = 'إضافة إيراد';
+                const submitButton = revenueForm.querySelector('button[type="submit"]');
+                submitButton.textContent = 'حفظ الإيراد';
+                
+                // مسح حقل ID الإيراد
+                document.getElementById('revenueId').value = '';
             });
 
             // Open Contract Agreement Modal
@@ -2254,11 +2273,13 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                     '_id',
                     'description',
                     'اختر اتفاق مقاول',
-                    null, // No custom filter
-                    (item) => `${item.contractor.contractorName || 'مقاول غير معروف'} - ${item.description || 'اتفاقية بدون وصف'} (المبلغ: ${item.agreedAmount.toFixed(2)} ج.م, المدفوع: ${item.paidAmount.toFixed(2)} ج.م)` // Custom text display
+                    null,
+                    (item) => `${item.contractor.contractorName || 'مقاول غير معروف'} - ${item.description || 'اتفاقية بدون وصف'} (المبلغ: ${item.agreedAmount.toFixed(2)} ج.م, المدفوع: ${item.paidAmount.toFixed(2)} ج.م)`
                 );
 
+                // Populate treasuries dropdown
                 await populateDropdown(paymentTreasurySelect, '/api/treasuries', '_id', 'name', 'اختر خزينة');
+
                 // إخفاء رسالة دفعة المقاول القديمة
                 contractPaymentMessage.style.display = 'none';
                 contractPaymentMessage.textContent = '';
@@ -2268,7 +2289,19 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
 
             expenseForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
+
+                const expenseId = document.getElementById('expenseId').value;
+                const isEdit = !!expenseId;
+                const url = isEdit
+                    ? `${BASE_URL}/api/transactions/${expenseId}`
+                    : `${BASE_URL}/api/transactions`;
+                const method = isEdit ? 'PUT' : 'POST';
+
+                console.log('=== Expense Form Submission ===');
+                console.log('Is Edit:', isEdit);
+                console.log('URL:', url);
+                console.log('Method:', method);
+
                 // Create FormData for file upload
                 const formData = new FormData();
                 formData.append('project', new URLSearchParams(window.location.search).get('id'));
@@ -2285,7 +2318,6 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                 console.log('=== Frontend File Upload ===');
                 console.log('Attachment files:', attachmentFiles);
                 console.log('File count:', attachmentFiles.length);
-                
                 for (let i = 0; i < attachmentFiles.length; i++) {
                     console.log(`File ${i}:`, attachmentFiles[i]);
                     formData.append('attachments', attachmentFiles[i]);
@@ -2298,19 +2330,15 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
 
                 try {
                     console.log('=== Sending Request ===');
-                    console.log('URL:', `${BASE_URL}/api/transactions`);
+                    console.log('URL:', url);
                     console.log('Token:', localStorage.getItem('token') ? 'Token exists' : 'No token');
-                    console.log('FormData entries:');
-                    for (let [key, value] of formData.entries()) {
-                        console.log(`${key}:`, value);
-                    }
                     
-                    const response = await fetch(`${BASE_URL}/api/transactions`, {
-                        method: 'POST',
+                    const response = await fetch(url, {
+                        method,
                         headers: {
                             'x-auth-token': localStorage.getItem('token')
                         },
-                        body: formData // Use FormData instead of JSON
+                        body: formData
                     });
                     
                     console.log('=== Response Received ===');
@@ -2321,11 +2349,23 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                     console.log('Response data:', data);
 
                     if (response.ok) {
-                        expenseModalMessage.className = 'modal-message success';
-                        expenseModalMessage.textContent = data.message || 'تم حفظ المصروف بنجاح.';
-                        expenseModalMessage.style.display = 'block';
-                        fetchProjectDetails(); // Refresh project details and tables
-                        setTimeout(() => expenseModal.style.display = 'none', 1500);
+                       expenseModalMessage.className = 'modal-message success';
+
+                        if (isEdit) {
+        expenseModalMessage.textContent = 'تم تعديل المصروف بنجاح.';
+    } else {
+        expenseModalMessage.textContent = 'تم إضافة المصروف بنجاح.';
+    }
+
+    expenseModalMessage.style.display = 'block';
+    
+    fetchProjectDetails();
+
+    setTimeout(() => {
+        expenseModal.style.display = 'none';
+        document.getElementById('expenseId').value = '';
+    }, 1500);
+
                     } else {
                         expenseModalMessage.className = 'modal-message error';
                         expenseModalMessage.textContent = data.message || 'فشل في حفظ المصروف.';
@@ -2342,6 +2382,18 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
             // Handle Revenue Form Submission
             revenueForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                
+                const revenueId = document.getElementById('revenueId').value;
+                const isEdit = !!revenueId;
+                const url = isEdit
+                    ? `${BASE_URL}/api/transactions/${revenueId}`
+                    : `${BASE_URL}/api/transactions`;
+                const method = isEdit ? 'PUT' : 'POST';
+
+                console.log('=== Revenue Form Submission ===');
+                console.log('Is Edit:', isEdit);
+                console.log('URL:', url);
+                console.log('Method:', method);
                 
                 // Create FormData for file upload
                 const formData = new FormData();
@@ -2371,19 +2423,15 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
 
                 try {
                     console.log('=== Sending Request ===');
-                    console.log('URL:', `${BASE_URL}/api/transactions`);
+                    console.log('URL:', url);
                     console.log('Token:', localStorage.getItem('token') ? 'Token exists' : 'No token');
-                    console.log('FormData entries:');
-                    for (let [key, value] of formData.entries()) {
-                        console.log(`${key}:`, value);
-                    }
                     
-                    const response = await fetch(`${BASE_URL}/api/transactions`, {
-                        method: 'POST',
+                    const response = await fetch(url, {
+                        method,
                         headers: {
                             'x-auth-token': localStorage.getItem('token')
                         },
-                        body: formData // Use FormData instead of JSON
+                        body: formData
                     });
                     
                     console.log('=== Response Received ===');
@@ -2395,10 +2443,20 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
 
                     if (response.ok) {
                         revenueModalMessage.className = 'modal-message success';
-                        revenueModalMessage.textContent = data.message || 'تم حفظ الإيراد بنجاح.';
+                        
+                        if (isEdit) {
+                            revenueModalMessage.textContent = 'تم تعديل الإيراد بنجاح.';
+                        } else {
+                            revenueModalMessage.textContent = 'تم إضافة الإيراد بنجاح.';
+                        }
+                        
                         revenueModalMessage.style.display = 'block';
                         fetchProjectDetails(); // Refresh project details and tables
-                        setTimeout(() => revenueModal.style.display = 'none', 1500);
+                        
+                        setTimeout(() => {
+                            revenueModal.style.display = 'none';
+                            document.getElementById('revenueId').value = '';
+                        }, 1500);
                     } else {
                         revenueModalMessage.className = 'modal-message error';
                         revenueModalMessage.textContent = data.message || 'فشل في حفظ الإيراد.';
@@ -2458,85 +2516,182 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                 }
             });
 
-            // Handle Contract Payment Form Submission
+            // Handle Contract Payment Form Submission and Edit
+
             contractPaymentForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                // Create FormData for file upload
-                const formData = new FormData();
-                formData.append('contractAgreementId', paymentContractAgreementSelect.value);
-                formData.append('amount', paymentAmountInput.value);
-                formData.append('date', paymentDateInput.value);
-                formData.append('treasuryId', paymentTreasurySelect.value);
-                if (paymentDescriptionInput.value) {
-                    formData.append('description', paymentDescriptionInput.value);
-                }
+    e.preventDefault();
 
-                // Add attachments if any
-                const attachmentFiles = document.getElementById('paymentAttachment').files;
-                console.log('=== Frontend File Upload ===');
-                console.log('Attachment files:', attachmentFiles);
-                console.log('File count:', attachmentFiles.length);
-                
-                for (let i = 0; i < attachmentFiles.length; i++) {
-                    console.log(`File ${i}:`, attachmentFiles[i]);
-                    formData.append('attachments', attachmentFiles[i]);
-                }
+    const isEdit = contractPaymentForm.hasAttribute('data-edit-id');
+    const paymentId = contractPaymentForm.getAttribute('data-edit-id');
 
-                // Log FormData contents
-                for (let [key, value] of formData.entries()) {
-                    console.log(`${key}:`, value);
-                }
+    const formData = new FormData(contractPaymentForm);
+    // Remove redundant appending since form already contains these fields
 
-                try {
-                    console.log('=== Sending Request ===');
-                    console.log('URL:', `${BASE_URL}/api/contract-payments`);
-                    console.log('Token:', localStorage.getItem('token') ? 'Token exists' : 'No token');
-                    console.log('FormData entries:');
-                    for (let [key, value] of formData.entries()) {
-                        console.log(`${key}:`, value);
-                    }
-                    
-                    const response = await fetch(`${BASE_URL}/api/contract-payments`, {
-                        method: 'POST',
-                        headers: {
-                            'x-auth-token': localStorage.getItem('token')
-                        },
-                        body: formData // Use FormData instead of JSON
-                    });
-                    
-                    console.log('=== Response Received ===');
-                    console.log('Response status:', response.status);
-                    console.log('Response headers:', response.headers);
-                    
-                    const data = await response.json();
-                    console.log('Response data:', data);
-                    document.getElementById('exportProjectExcelBtn').style.display = 'inline-block';
+    const url = isEdit
+        ? `${BASE_URL}/api/contract-payments/payment/${paymentId}`
+        : `${BASE_URL}/api/contract-payments`;
 
-                    if (response.ok) {
-                        contractPaymentMessage.className = 'modal-message success';
-                        contractPaymentMessage.textContent = data.message || 'تم حفظ دفعة المقاول بنجاح.';
-                        contractPaymentMessage.style.display = 'block';
-                        fetchProjectDetails(); // Refresh project details and tables
-                        setTimeout(() => contractPaymentModal.style.display = 'none', 1500);
-                    } else {
-                        contractPaymentMessage.className = 'modal-message error';
-                        contractPaymentMessage.textContent = data.message || 'فشل في حفظ دفعة المقاول.';
-                        contractPaymentMessage.style.display = 'block';
-                    }
-                } catch (error) {
-                    console.error('Error saving contract payment:', error);
-                    contractPaymentMessage.className = 'modal-message error';
-                    contractPaymentMessage.textContent = 'خطأ في الاتصال بالخادم.';
-                    contractPaymentMessage.style.display = 'block';
-                }
-            });
+    const method = isEdit ? 'PUT' : 'POST';
 
-            // Handle Delete buttons for Expenses, Revenues, and Contract Payments
+    try {
+        console.log('=== Contract Payment Request Debug ===');
+        console.log('URL:', url);
+        console.log('Method:', method);
+        console.log('FormData contents:');
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}:`, value);
+        }
+        
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'x-auth-token': localStorage.getItem('token')
+            },
+            body: formData
+        });
+
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        const data = await response.json();
+
+        if (response.ok) {
+            contractPaymentMessage.className = 'modal-message success';
+            contractPaymentMessage.textContent = data.message || (isEdit ? 'تم تعديل الدفعة بنجاح.' : 'تمت إضافة الدفعة بنجاح.');
+            contractPaymentMessage.style.display = 'block';
+
+            fetchProjectDetails(); // جدد الجدول بعد الحفظ
+
+            setTimeout(() => {
+                contractPaymentModal.style.display = 'none';
+                contractPaymentForm.removeAttribute('data-edit-id');
+                contractPaymentForm.reset();
+            }, 1500);
+        } else {
+            contractPaymentMessage.className = 'modal-message error';
+            contractPaymentMessage.textContent = data.message || 'فشل في حفظ دفعة المقاول.';
+            contractPaymentMessage.style.display = 'block';
+        }
+    } catch (error) {
+        console.error('=== Contract Payment Error ===');
+        console.error('Error saving contract payment:', error);
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        
+        contractPaymentMessage.className = 'modal-message error';
+        contractPaymentMessage.textContent = `حدث خطأ أثناء الاتصال بالسيرفر: ${error.message}`;
+        contractPaymentMessage.style.display = 'block';
+    }
+});
+
+            
+
+            // Handle Delete and Edit buttons for Expenses, Revenues, and Contract Payments
             document.addEventListener('click', async (event) => {
                 const target = event.target.closest('button');
                 if (!target) return;
 
+                // 1. شرط التعديل أولاً
+                if (target.classList.contains('edit-expense')) {
+                    const expenseId = target.dataset.id;
+                    console.log('=== Edit Expense Button Clicked ===');
+                    console.log('Expense ID:', expenseId);
+                    
+                    try {
+                        const response = await fetch(`${BASE_URL}/api/transactions/${expenseId}`, {
+                            headers: { 'x-auth-token': localStorage.getItem('token') }
+                        });
+                        const exp = await response.json();
+                        console.log('Expense data fetched for edit:', exp);
+
+                        // تحميل التصنيفات أولاً
+                        await populateDropdown(expenseCategorySelect, '/api/categories', '_id', 'name', 'اختر تصنيف');
+                        // تحميل الخزائن بعد التصنيفات
+                        await populateDropdown(expenseTreasurySelect, '/api/treasuries', '_id', 'name', 'اختر خزينة');
+
+                        // فتح المودال وتعبئة البيانات
+                        expenseModal.style.display = 'flex';
+                        expenseModalMessage.style.display = 'none';
+                        expenseModalMessage.textContent = '';
+                        expenseForm.reset();
+                        expenseProjectIdInput.value = currentProjectId;
+                        document.getElementById('expenseId').value = exp._id;
+                        expenseAmountInput.value = exp.amount;
+                        expenseDescriptionInput.value = exp.description || '';
+                        expenseCategorySelect.value = exp.category?._id || '';
+                        expenseDateInput.value = exp.date ? new Date(exp.date).toISOString().split('T')[0] : '';
+                        expenseVendorInput.value = exp.vendor || '';
+                        expenseTreasurySelect.value = exp.treasury?._id || '';
+                        
+                        // تغيير عنوان المودال وزر الحفظ
+                        document.getElementById('expenseModalTitle').textContent = 'تعديل مصروف';
+                        const submitButton = expenseForm.querySelector('button[type="submit"]');
+                        submitButton.textContent = 'حفظ التعديلات';
+                        
+                        console.log('Modal populated with expense data');
+                        console.log('Expense ID in form:', document.getElementById('expenseId').value);
+                        console.log('Amount in form:', expenseAmountInput.value);
+                        console.log('Description in form:', expenseDescriptionInput.value);
+                        console.log('Category in form:', expenseCategorySelect.value);
+                        console.log('Date in form:', expenseDateInput.value);
+                        console.log('Vendor in form:', expenseVendorInput.value);
+                        console.log('Treasury in form:', expenseTreasurySelect.value);
+                    } catch (error) {
+                        console.error('Error loading expense for edit:', error);
+                        alert('فشل في تحميل بيانات المصروف للتعديل');
+                    }
+                    return;
+                }
+
+                // 2. شرط تعديل الإيرادات
+                if (target.classList.contains('edit-revenue')) {
+                    const revenueId = target.dataset.id;
+                    console.log('=== Edit Revenue Button Clicked ===');
+                    console.log('Revenue ID:', revenueId);
+                    
+                    try {
+                        const response = await fetch(`${BASE_URL}/api/transactions/${revenueId}`, {
+                            headers: { 'x-auth-token': localStorage.getItem('token') }
+                        });
+                        const rev = await response.json();
+                        console.log('Revenue data fetched for edit:', rev);
+
+                        // تحميل الخزائن
+                        await populateDropdown(revenueTreasurySelect, '/api/treasuries', '_id', 'name', 'اختر خزينة');
+
+                        // فتح المودال وتعبئة البيانات
+                        revenueModal.style.display = 'flex';
+                        revenueModalMessage.style.display = 'none';
+                        revenueModalMessage.textContent = '';
+                        revenueForm.reset();
+                        revenueProjectIdInput.value = currentProjectId;
+                        document.getElementById('revenueId').value = rev._id;
+                        revenueAmountInput.value = rev.amount;
+                        revenueDescriptionInput.value = rev.description || '';
+                        revenueDateInput.value = rev.date ? new Date(rev.date).toISOString().split('T')[0] : '';
+                        revenuePaymentMethodSelect.value = rev.paymentMethod || '';
+                        revenueTreasurySelect.value = rev.treasury?._id || '';
+                        
+                        console.log('Modal populated with revenue data');
+                        console.log('Revenue ID in form:', document.getElementById('revenueId').value);
+                        console.log('Amount in form:', revenueAmountInput.value);
+                        console.log('Description in form:', revenueDescriptionInput.value);
+                        console.log('Date in form:', revenueDateInput.value);
+                        console.log('Payment method in form:', revenuePaymentMethodSelect.value);
+                        console.log('Treasury in form:', revenueTreasurySelect.value);
+                        
+                        // تغيير عنوان المودال وزر الحفظ
+                        document.getElementById('revenueModalTitle').textContent = 'تعديل إيراد';
+                        const submitButton = revenueForm.querySelector('button[type="submit"]');
+                        submitButton.textContent = 'حفظ التعديلات';
+                    } catch (error) {
+                        console.error('Error loading revenue for edit:', error);
+                        alert('فشل في تحميل بيانات الإيراد للتعديل');
+                    }
+                    return;
+                }
+
+                // باقي الشروط كما هي
                 const transactionId = target.dataset.id;
 
                 // Determine the action based on the button's class
@@ -2594,8 +2749,6 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
                         setTimeout(() => pageMessage.style.display = 'none', 3000);
                     }
                 }
-
-
             });
 
             // فتح المودال عند الضغط على الزر
@@ -2760,16 +2913,72 @@ document.getElementById('exportProjectExcelBtn').addEventListener('click', funct
     });
 }
 
-            
-            
-          
-        }) 
-    </script>
+ // منطق زر تعديل دفعة المقاول
+ contractorPaymentsTableBody.addEventListener('click', async function(event) {
+    
+        const editBtn = event.target.closest('.edit-contract-payment');
+        if (editBtn) {
+            const paymentId = editBtn.getAttribute('data-id');
+            try {
+                // جلب بيانات الدفعة
+                const response = await fetch(`${BASE_URL}/api/contract-payments/payment/${paymentId}`, {
+                    headers: { 'x-auth-token': localStorage.getItem('token') }
+                });
+                if (!response.ok) throw new Error('فشل في جلب بيانات الدفعة');
+                const payment = await response.json();
+                // تعبئة الحقول
+                paymentProjectIdInput.value = payment.projectId || currentProjectId;
+                paymentAgreementIdInput.value = payment.contractAgreementId;
+                // تعبئة قائمة الاتفاقيات
+                await populateDropdown(
+                    paymentContractAgreementSelect,
+                    `/api/contract-agreements/${currentProjectId}`,
+                    '_id',
+                    'description',
+                    'اختر اتفاق مقاول',
+                    null,
+                    (item) => `${item.contractor.contractorName || 'مقاول غير معروف'} - ${item.description || 'اتفاقية بدون وصف'} (المبلغ: ${item.agreedAmount.toFixed(2)} ج.م, المدفوع: ${item.paidAmount.toFixed(2)} ج.م)`
+                );
+                paymentContractAgreementSelect.value = payment.contractAgreementId;
+                paymentAmountInput.value = payment.amount;
+                paymentDescriptionInput.value = payment.description || '';
+                paymentDateInput.value = payment.date ? payment.date.split('T')[0] : '';
+                // تعبئة قائمة الخزائن
+                await populateDropdown(paymentTreasurySelect, '/api/treasuries', '_id', 'name', 'اختر خزينة');
+                paymentTreasurySelect.value = payment.treasuryId || '';
+                // تغيير عنوان المودال وزر الحفظ
+                contractPaymentModal.querySelector('h3').textContent = 'تعديل دفعة مقاول';
+                contractPaymentForm.querySelector('.modal-button').textContent = 'حفظ التعديلات';
+                contractPaymentModal.style.display = 'flex';
+                // تخزين معرف الدفعة
+                contractPaymentForm.setAttribute('data-edit-id', paymentId);
+                contractPaymentMessage.style.display = 'none';
+                contractPaymentMessage.textContent = '';
+            } catch (err) {
+                showDashboardMessage('فشل في تحميل بيانات الدفعة للتعديل', 'error', 2500);
+            }
+        }
+    });
 
 
 
-<script>
-window.toggleAccordion = function(header) {
+    
+    // إعادة تعيين المودال عند الإغلاق أو الإلغاء
+    contractPaymentModal.querySelector('.close-button').addEventListener('click', () => {
+        contractPaymentForm.removeAttribute('data-edit-id');
+        contractPaymentForm.querySelector('.modal-button').textContent = 'إضافة الدفعة';
+        contractPaymentModal.querySelector('h3').textContent = 'إضافة دفعة مقاول';
+        contractPaymentForm.reset();
+    });
+    cancelContractPaymentButton.addEventListener('click', () => {
+        contractPaymentForm.removeAttribute('data-edit-id');
+        contractPaymentForm.querySelector('.modal-button').textContent = 'إضافة الدفعة';
+        contractPaymentModal.querySelector('h3').textContent = 'إضافة دفعة مقاول';
+        contractPaymentForm.reset();
+    });
+
+
+    window.toggleAccordion = function(header) {
   const section = header.parentElement;
   section.classList.toggle('open');
   // غير علامة + إلى - والعكس
@@ -2898,7 +3107,24 @@ window.showAttachment = function(filename, mimetype, originalName) {
     
     document.body.appendChild(modal);
 };
-</script>
+
+
+
+            
+            
+          
+        }) 
+    </script>
+
+
+
+   
+
+
+
+
+
+
 
 
 

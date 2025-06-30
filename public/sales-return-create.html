@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إنشاء مرتجع مبيعات</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f4f4; margin: 0; }
+        .container { max-width: 900px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 30px; }
+        h1 { color: #014C47; margin-bottom: 30px; }
+        .back-btn { background: #6c757d; color: #fff; border: none; padding: 7px 15px; border-radius: 5px; cursor: pointer; margin-bottom: 20px; }
+        .details-table, .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { padding: 10px 8px; border: 1px solid #eee; text-align: right; }
+        th { background: #014C47; color: #fff; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .input-qty { width: 60px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; text-align: center; }
+        .reason-input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 15px; }
+        .save-btn { background: #014C47; color: #fff; border: none; padding: 10px 30px; border-radius: 6px; font-size: 17px; cursor: pointer; margin-top: 10px; }
+        .save-btn:hover { background: #003a35; }
+        .msg { margin: 15px 0; padding: 10px; border-radius: 5px; text-align: center; display: none; }
+        .msg.success { background: #e6ffe6; color: #008000; border: 1px solid #008000; }
+        .msg.error { background: #ffe6e6; color: #cc0000; border: 1px solid #cc0000; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="back-btn" onclick="window.history.back()"><i class="fas fa-arrow-right"></i> عودة</button>
+        <h1>إنشاء مرتجع مبيعات</h1>
+        <div id="msgBox" class="msg"></div>
+        <div id="invoiceDetails"></div>
+        <form id="returnForm">
+            <table class="items-table" id="itemsTable">
+                <thead>
+                    <tr>
+                        <th>الصنف</th>
+                        <th>الكمية الأصلية</th>
+                        <th>الكمية المرتجعة</th>
+                        <th>سعر الوحدة</th>
+                        <th>الإجمالي</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <label for="reason">سبب المرتجع (اختياري):</label>
+            <input type="text" id="reason" class="reason-input" placeholder="سبب المرتجع أو ملاحظات...">
+            <div class="form-group">
+                <label>المخزن</label>
+                <select id="warehouseSelect" class="form-control" required></select>
+            </div>
+            <div class="form-group">
+                <label>الخزينة</label>
+                <select id="treasurySelect" class="form-control" required></select>
+            </div>
+            <div style="text-align:center;">
+                <button type="submit" class="save-btn"><i class="fas fa-save"></i> حفظ المرتجع</button>
+            </div>
+        </form>
+    </div>
+    <script>
+    const BASE_URL = "https://6504-156-203-155-30.ngrok-free.app";
+    const urlParams = new URLSearchParams(window.location.search);
+    const invoiceId = urlParams.get('invoice');
+    const invoiceDetailsDiv = document.getElementById('invoiceDetails');
+    const itemsTableBody = document.querySelector('#itemsTable tbody');
+    const msgBox = document.getElementById('msgBox');
+    const returnForm = document.getElementById('returnForm');
+
+    let warehousesList = [];
+    let treasuriesList = [];
+    async function fetchWarehousesAndTreasuries(selectedWarehouse, selectedTreasury) {
+        try {
+            const resW = await fetch(`${BASE_URL}/api/warehouses`, { headers: { 'x-auth-token': localStorage.getItem('token') } });
+            const dataW = await resW.json();
+            if (resW.ok) {
+                warehousesList = dataW;
+                const select = document.getElementById('warehouseSelect');
+                select.innerHTML = dataW.map(w => `<option value="${w._id}" ${selectedWarehouse===w._id?'selected':''}>${w.name}</option>`).join('');
+            }
+            const resT = await fetch(`${BASE_URL}/api/treasuries`, { headers: { 'x-auth-token': localStorage.getItem('token') } });
+            const dataT = await resT.json();
+            if (resT.ok) {
+                treasuriesList = dataT;
+                const selectT = document.getElementById('treasurySelect');
+                selectT.innerHTML = dataT.map(t => `<option value="${t._id}" ${selectedTreasury===t._id?'selected':''}>${t.name}</option>`).join('');
+            }
+        } catch {}
+    }
+
+    if (!invoiceId) {
+        invoiceDetailsDiv.innerHTML = '<div class="msg error">لم يتم تحديد الفاتورة.</div>';
+        returnForm.style.display = 'none';
+    } else {
+        fetch(`${BASE_URL}/api/sales/${invoiceId}`, {
+            headers: { 'x-auth-token': localStorage.getItem('token') }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data || data.message) {
+                invoiceDetailsDiv.innerHTML = `<div class='msg error'>${data.message || 'فشل في جلب بيانات الفاتورة.'}</div>`;
+                returnForm.style.display = 'none';
+                return;
+            }
+            // عرض بيانات الفاتورة
+            invoiceDetailsDiv.innerHTML = `
+                <table class='details-table'>
+                    <tr><th>رقم الفاتورة</th><td>${data.invoiceNumber || data._id}</td></tr>
+                    <tr><th>اسم العميل</th><td>${data.clientName || '-'}</td></tr>
+                    <tr><th>التاريخ</th><td>${data.date ? new Date(data.date).toLocaleDateString('ar-EG') : '-'}</td></tr>
+                    <tr><th>الإجمالي</th><td>${data.total || '-'}</td></tr>
+                </table>
+            `;
+            // عرض الأصناف
+            itemsTableBody.innerHTML = '';
+            (data.items || []).forEach(item => {
+                itemsTableBody.innerHTML += `
+                    <tr>
+                        <td>${item.name || '-'}</td>
+                        <td>${item.quantity}</td>
+                        <td><input type='number' class='input-qty' name='returnQty' min='0' max='${item.quantity}' value='0' data-product='${item.product}' data-name='${item.name}' data-unitprice='${item.unitPrice}'></td>
+                        <td>${item.unitPrice || '-'}</td>
+                        <td>${item.total || '-'}</td>
+                    </tr>
+                `;
+            });
+            fetchWarehousesAndTreasuries(data.warehouse, data.treasury);
+        })
+        .catch(() => {
+            invoiceDetailsDiv.innerHTML = `<div class='msg error'>فشل في جلب بيانات الفاتورة.</div>`;
+            returnForm.style.display = 'none';
+        });
+    }
+
+    returnForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        msgBox.style.display = 'none';
+        // جمع الأصناف المرتجعة
+        const items = [];
+        let total = 0;
+        document.querySelectorAll('input[name="returnQty"]').forEach(input => {
+            const qty = parseFloat(input.value);
+            if (qty > 0) {
+                const unitPrice = parseFloat(input.getAttribute('data-unitprice')) || 0;
+                const itemTotal = qty * unitPrice;
+                items.push({
+                    product: input.getAttribute('data-product'),
+                    name: input.getAttribute('data-name'),
+                    quantity: qty,
+                    unitPrice: unitPrice,
+                    total: itemTotal
+                });
+                total += itemTotal;
+            }
+        });
+        if (items.length === 0) {
+            msgBox.textContent = 'يجب تحديد كمية مرتجعة لصنف واحد على الأقل.';
+            msgBox.className = 'msg error';
+            msgBox.style.display = 'block';
+            return;
+        }
+        // إرسال المرتجع للباك اند
+        const reason = document.getElementById('reason').value;
+        const warehouseId = document.getElementById('warehouseSelect').value;
+        const treasuryId = document.getElementById('treasurySelect').value;
+        try {
+            const res = await fetch(`${BASE_URL}/api/sales/sale-returns`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-auth-token': localStorage.getItem('token')
+                },
+                body: JSON.stringify({
+                    sale: invoiceId,
+                    clientName: document.querySelector('.details-table tr:nth-child(2) td').textContent,
+                    items,
+                    total,
+                    reason,
+                    warehouse: warehouseId,
+                    treasury: treasuryId
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                msgBox.textContent = data.message || 'تم حفظ المرتجع بنجاح.';
+                msgBox.className = 'msg success';
+                msgBox.style.display = 'block';
+                setTimeout(() => { window.location.href = 'sales-returns.html'; }, 1200);
+            } else {
+                msgBox.textContent = data.message || 'فشل في حفظ المرتجع.';
+                msgBox.className = 'msg error';
+                msgBox.style.display = 'block';
+            }
+        } catch (err) {
+            msgBox.textContent = 'حدث خطأ أثناء الاتصال بالخادم.';
+            msgBox.className = 'msg error';
+            msgBox.style.display = 'block';
+        }
+    });
+    </script>
+</body>
+</html> 

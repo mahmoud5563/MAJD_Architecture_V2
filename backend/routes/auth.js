@@ -46,11 +46,20 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ message: 'اسم المستخدم أو كلمة المرور غير صحيحة.' });
         }
 
+        // منع الدخول إذا كان المستخدم غير مفعل
+        if (user.isActive === false) {
+            return res.status(403).json({ message: 'تم إيقافك مؤقتًا بواسطة المدير. يرجى التواصل مع الإدارة.' });
+        }
+
         const isMatch = await user.comparePassword(password);
 
         if (!isMatch) {
             return res.status(400).json({ message: 'اسم المستخدم أو كلمة المرور غير صحيحة.' });
         }
+
+        // تحديث آخر ظهور
+        user.lastLogin = new Date();
+        await user.save();
 
         const payload = {
             user: {

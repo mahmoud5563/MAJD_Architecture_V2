@@ -514,24 +514,18 @@
 
         <div class="overlay" id="sidebarOverlay"></div>
         <div class="sidebar" id="sidebar">
-
             <ul>
-                <li><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>
-                        الرئيسية</a></li>
-                <li><a href="/add-project.html" data-page="add-project"><i class="fas fa-plus-circle"></i> إضافة
-                        مشروع</a></li>
-                <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a>
-                </li>
+                <li><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>الرئيسية</a></li>
+                <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a></li>
                 <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
                 <li><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a></li>
-                <li><a href="/add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i> إضافة
-                        خزينة</a></li>
                 <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
                 <li><a href="/general-expenses.html" data-page="general-expenses"><i class="fas fa-money-bill-wave"></i> المصروفات العامة</a></li>
                 <li><a href="/employees.html" data-page="employees"><i class="fas fa-user-tie"></i> الموظفين</a></li>
                 <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
-                <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a>
-                </li>
+                <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a></li>
+                <li><a href="/warehouses.html" data-page="warehouses"><i class="fas fa-warehouse"></i> المخازن</a></li>
+                <li><a href="/sales.html" data-page="sales"><i class="fas fa-shopping-cart"></i> المبيعات</a></li>
                 <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
             </ul>
         </div>
@@ -545,9 +539,11 @@
             <div class="table-container">
                 <table class="data-table">
                     <thead>
-                        <tr>
+                        <tr id="usersTableHeaderRow">
                             <th>اسم المستخدم</th>
                             <th>الدور</th>
+                            <th class="last-login-header">آخر ظهور</th>
+                            <th class="active-header">الحالة</th>
                             <th>الإجراءات</th>
                         </tr>
                     </thead>
@@ -597,7 +593,7 @@
     </div>
 
     <script>
-        const BASE_URL = "https://e562-156-203-155-30.ngrok-free.app";
+        const BASE_URL = "https://6504-156-203-155-30.ngrok-free.app";
 
         // Client-side authentication check and redirection
         document.addEventListener('DOMContentLoaded', function () {
@@ -614,7 +610,7 @@
                 const payload = JSON.parse(decodedPayload);
 
                 const username = payload.user.username || payload.user.id || 'مستخدم';
-                const role = payload.user.role || 'غير محدد';
+                role = payload.user.role || 'غير محدد';
 
                 document.getElementById('loggedInUser').textContent = `مرحباً، ${username} (${role})`;
 
@@ -712,27 +708,49 @@
                     const data = await response.json();
 
                     if (response.ok) {
-                        usersTableBody.innerHTML = ''; // Clear loading message
+                        usersTableBody.innerHTML = '';
+                        // إضافة عمود آخر ظهور للرأس إذا كان المدير
+                        const headerRow = document.getElementById('usersTableHeaderRow');
+                        if (role === 'مدير') {
+                            if (!headerRow.querySelector('.last-login-header')) {
+                                const lastLoginTh = document.createElement('th');
+                                lastLoginTh.textContent = 'آخر ظهور';
+                                lastLoginTh.className = 'last-login-header';
+                                headerRow.insertBefore(lastLoginTh, headerRow.children[2]);
+                            }
+                        } else {
+                            const exist = headerRow.querySelector('.last-login-header');
+                            if (exist) exist.remove();
+                        }
                         if (data.length === 0) {
-                            usersTableBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">لا توجد مستخدمين لعرضهم.</td></tr>';
+                            usersTableBody.innerHTML = `<tr><td colspan="${role === 'مدير' ? 4 : 3}" style="text-align: center;">لا توجد مستخدمين لعرضهم.</td></tr>`;
                             return;
                         }
-
                         data.forEach(user => {
                             const row = usersTableBody.insertRow();
+                            // عمود آخر ظهور
+                            let lastLogin = user.lastLogin ? new Date(user.lastLogin).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : '-';
+                            // زر التفعيل/إلغاء التفعيل
+                            let activeBtn = '';
+                            if (role === 'مدير') {
+                                activeBtn = `<button class="active-toggle" data-id="${user._id}" data-active="${user.isActive}">${user.isActive ? 'إلغاء التفعيل' : 'تفعيل'}</button>`;
+                            } else {
+                                activeBtn = user.isActive ? '<span style="color:green">مفعل</span>' : '<span style="color:red">غير مفعل</span>';
+                            }
+                            let actions = '';
+                            if (role !== 'مهندس') {
+                                actions = `<button class="edit" data-id="${user._id}"><i class="fas fa-edit"></i> تعديل</button> <button class="delete" data-id="${user._id}"><i class="fas fa-trash-alt"></i> حذف</button>`;
+                            }
                             row.innerHTML = `
                                 <td>${user.username}</td>
                                 <td>${user.role}</td>
-                                <td class="action-buttons">
-                                    ${role !== 'مهندس' ? 
-                                        `<button class="edit" data-id="${user._id}"><i class="fas fa-edit"></i> تعديل</button>
-                                         <button class="delete" data-id="${user._id}"><i class="fas fa-trash-alt"></i> حذف</button>` : 
-                                        ''}
-                                </td>
+                                <td>${lastLogin}</td>
+                                <td>${activeBtn}</td>
+                                <td class="action-buttons">${actions}</td>
                             `;
                         });
                     } else {
-                        usersTableBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">فشل في جلب المستخدمين.</td></tr>';
+                        usersTableBody.innerHTML = `<tr><td colspan="${role === 'مدير' ? 4 : 3}" style="text-align: center;">فشل في جلب المستخدمين.</td></tr>`;
                         usersPageMessage.className = 'modal-message error';
                         usersPageMessage.textContent = data.message || 'حدث خطأ أثناء جلب المستخدمين.';
                         usersPageMessage.style.display = 'block';
@@ -776,13 +794,13 @@
                 }
             });
 
-            // Handle Edit/Delete buttons on table
+            // Handle Edit/Delete/Activate buttons on table
             usersTableBody.addEventListener('click', async (event) => {
                 const target = event.target.closest('button');
                 if (!target) return;
 
                 const userId = target.dataset.id;
-                const action = target.classList[0]; // 'edit', 'delete'
+                const action = target.classList[0]; // 'edit', 'delete', 'active-toggle'
 
                 if (action === 'edit') {
                     userModalMessage.style.display = 'none'; // Hide previous messages
@@ -838,6 +856,31 @@
                         } catch (error) {
                             console.error('Error deleting user:', error);
                             showDashboardMessage('خطأ في الاتصال بالخادم أثناء حذف المستخدم.', 'error');
+                        }
+                    }
+                } else if (action === 'active-toggle') {
+                    // زر تفعيل/إلغاء تفعيل
+                    const currentActive = target.getAttribute('data-active') === 'true';
+                    const confirmMsg = currentActive ? 'هل أنت متأكد أنك تريد إلغاء تفعيل هذا المستخدم؟' : 'هل تريد تفعيل هذا المستخدم؟';
+                    if (confirm(confirmMsg)) {
+                        try {
+                            const response = await fetch(`${BASE_URL}/api/users/${userId}/activate`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'x-auth-token': localStorage.getItem('token')
+                                },
+                                body: JSON.stringify({ isActive: !currentActive })
+                            });
+                            const data = await response.json();
+                            if (response.ok) {
+                                showDashboardMessage(data.message || 'تم تحديث حالة المستخدم بنجاح', 'success');
+                                fetchUsers();
+                            } else {
+                                showDashboardMessage(data.message || 'فشل في تحديث حالة المستخدم.', 'error');
+                            }
+                        } catch (error) {
+                            showDashboardMessage('خطأ في الاتصال بالخادم أثناء تحديث حالة المستخدم.', 'error');
                         }
                     }
                 }

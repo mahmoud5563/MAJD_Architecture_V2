@@ -6,6 +6,9 @@ const XLSX = require('xlsx');
 const { upload, handleUploadError } = require('../middleware/uploadMiddleware');
 const fs = require('fs');
 const path = require('path');
+const SalaryTransaction = require('../models/SalaryTransaction');
+const EmployeeAdvance = require('../models/EmployeeAdvance');
+const EmployeeOvertime = require('../models/EmployeeOvertime');
 
 // @route   GET /api/employees
 // @desc    Get all employees
@@ -17,6 +20,105 @@ router.get('/', auth, async (req, res) => {
     } catch (err) {
         console.error(err.message);
         res.status(500).send('حدث خطأ في الخادم أثناء جلب الموظفين.');
+    }
+});
+
+// @route   GET /api/employees/export-payroll-sheet?month=5&year=2025
+// @desc    Export payroll sheet for all employees for a specific month/year
+// @access  Private
+router.get('/export-payroll-sheet', auth, async (req, res) => {
+    try {
+        const month = parseInt(req.query.month);
+        const year = parseInt(req.query.year);
+        if (!month || !year) {
+            return res.status(400).json({ message: 'يجب تحديد الشهر والسنة.' });
+        }
+        // جلب كل الموظفين
+        const employees = await Employee.find({});
+        // تجهيز بيانات كل موظف
+        const data = [];
+        let index = 1;
+        for (const emp of employees) {
+            // الراتب الأساسي
+            const baseSalary = emp.baseSalary || emp.salary || 0;
+            // بدل
+            let allowance = 0;
+            // حوافز (مكافأة)
+            let bonus = 0;
+            // أوفر تايم
+            let overtime = 0;
+            // خصومات
+            let deduction = 0;
+            // سلف
+            let advance = 0;
+            // جلب كل معاملات الموظف لهذا الشهر والسنة
+            const startDate = new Date(year, month - 1, 1);
+            const endDate = new Date(year, month, 0, 23, 59, 59);
+            const transactions = await SalaryTransaction.find({
+                employeeId: emp._id,
+                date: { $gte: startDate, $lte: endDate }
+            });
+            for (const t of transactions) {
+                if (t.type === 'allowance') allowance += t.amount;
+                if (t.type === 'bonus') bonus += t.amount;
+                if (t.type === 'deduction') deduction += Math.abs(t.amount);
+                if (t.type === 'overtime') overtime += t.amount;
+                if (t.type === 'advance') advance += Math.abs(t.amount);
+            }
+            // جلب كل السلف لهذا الشهر
+            const advances = await EmployeeAdvance.find({
+                employee: emp._id,
+                month,
+                year
+            });
+            for (const a of advances) advance += Math.abs(a.amount);
+            // جلب كل الأوفر تايم لهذا الشهر
+            const overtimes = await EmployeeOvertime.find({
+                employee: emp._id,
+                month,
+                year
+            });
+            for (const o of overtimes) overtime += o.amount;
+            // صافي الراتب
+            const netSalary = baseSalary + allowance + bonus + overtime - deduction;
+            data.push({
+                '#': index++,
+                'الاسم': emp.name,
+                'الاداره': emp.department,
+                'الراتب': baseSalary,
+                'بدل': allowance,
+                'حوافز': bonus,
+                'اوفر تايم': overtime,
+                'خصومات': deduction,
+                'سلف عاملين': advance,
+                'صافي الراتب': netSalary
+            });
+        }
+        // إضافة صف الإجمالي
+        const totalRow = {
+            '#': 'الإجمالي',
+            'الاسم': '',
+            'الاداره': '',
+            'الراتب': data.reduce((a, b) => a + b['الراتب'], 0),
+            'بدل': data.reduce((a, b) => a + b['بدل'], 0),
+            'حوافز': data.reduce((a, b) => a + b['حوافز'], 0),
+            'اوفر تايم': data.reduce((a, b) => a + b['اوفر تايم'], 0),
+            'خصومات': data.reduce((a, b) => a + b['خصومات'], 0),
+            'سلف عاملين': data.reduce((a, b) => a + b['سلف عاملين'], 0),
+            'صافي الراتب': data.reduce((a, b) => a + b['صافي الراتب'], 0)
+        };
+        data.push(totalRow);
+        // إنشاء ملف Excel
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'كشف الرواتب');
+        const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+        res.setHeader('Content-Disposition', `attachment; filename=payroll_sheet_${month}_${year}.xlsx`);
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.send(buffer);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'حدث خطأ أثناء تصدير كشف الرواتب المجمع', error: err.message });
     }
 });
 
@@ -241,7 +343,6 @@ router.get('/:id/export-salary-sheet', auth, async (req, res) => {
             return res.status(404).json({ message: 'الموظف غير موجود.' });
         }
         // جلب كل الحركات المرتبطة بالموظف
-        const SalaryTransaction = require('../models/SalaryTransaction');
         const transactions = await SalaryTransaction.find({ employeeId: employee._id }).sort({ date: 1, createdAt: 1 });
 
         // حماية ضد نقص البيانات

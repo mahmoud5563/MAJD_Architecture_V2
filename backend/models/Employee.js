@@ -26,13 +26,13 @@ const employeeSchema = new mongoose.Schema({
     position: {
         type: String,
         required: true,
-        enum: ['مدير', 'مهندس', 'محاسب', 'سكرتير', 'عامل', 'سائق', 'حارس', 'أخرى'],
+        enum: ['مدير', 'مهندس', 'محاسب', 'سكرتير', 'عامل', 'سائق', 'حارس', 'اوفيس بوي', 'أخرى'],
         default: 'عامل'
     },
     department: {
         type: String,
         required: true,
-        enum: ['إدارة', 'هندسة', 'محاسبة', 'أمن', 'صيانة', 'أخرى'],
+        enum: ['إدارة', 'هندسة', 'محاسبة', 'مخازن', 'أمن', 'صيانة', 'أخرى'],
         default: 'أخرى'
     },
     salary: {

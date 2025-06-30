@@ -187,6 +187,11 @@ router.get('/:id', auth, async (req, res) => {
 // @desc    Get full project details including associated financials
 // @access  Private (Manager, Accountant Manager, Engineer (if assigned))
 router.get('/:id/details', auth, async (req, res) => {
+    console.log('=== Project Details GET Request START ===');
+    console.log('Project ID:', req.params.id);
+    console.log('User role:', req.user.role);
+    console.log('User ID:', req.user.id);
+    
     try {
         const projectId = req.params.id;
         const project = await Project.findById(projectId)
@@ -194,8 +199,11 @@ router.get('/:id/details', auth, async (req, res) => {
             .populate('client', 'clientName');
 
         if (!project) {
+            console.log('Project not found with ID:', projectId);
             return res.status(404).json({ message: 'المشروع غير موجود.' });
         }
+
+        console.log('Found project:', project);
 
         // إذا كان المستخدم مهندسًا، تأكد من أنه المهندس المسؤول عن المشروع
         if (req.user.role === 'مهندس' && project.engineer && project.engineer._id.toString() !== req.user.id) {
@@ -209,6 +217,11 @@ router.get('/:id/details', auth, async (req, res) => {
             ContractAgreement.find({ project: projectId })
         ]);
 
+        console.log('Financial data found:');
+        console.log('- Expenses count:', expenses.length);
+        console.log('- Revenues count:', revenues.length);
+        console.log('- Contractor agreements count:', contractorAgreements.length);
+
         // حساب إجمالي الإيرادات
         const totalRevenue = revenues.reduce((sum, r) => sum + r.amount, 0);
 
@@ -220,6 +233,9 @@ router.get('/:id/details', auth, async (req, res) => {
         if (contractorAgreements.length > 0) {
             const agreementIds = contractorAgreements.map(ag => ag._id);
             contractorPayments = await ContractPayment.find({ contractAgreement: { $in: agreementIds } });
+            console.log('Contractor payments found:', contractorPayments.length);
+        } else {
+            console.log('No contractor agreements found, no payments to fetch');
         }
 
         // حساب إجمالي المبلغ المدفوع للمقاولين
@@ -228,9 +244,26 @@ router.get('/:id/details', auth, async (req, res) => {
         // حساب إجمالي المصروفات (يشمل المصروفات العادية ودفعات المقاولين)
         const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0) + totalPaidContractorAmount;
 
+        console.log('Expenses details:');
+        expenses.forEach((exp, index) => {
+            console.log(`- Expense ${index + 1}:`, {
+                id: exp._id,
+                amount: exp.amount,
+                description: exp.description,
+                date: exp.date
+            });
+        });
+
         const netProfitLoss = totalRevenue - totalExpenses;
 
-        res.json({
+        console.log('Calculated financial data:');
+        console.log('- Total revenue:', totalRevenue);
+        console.log('- Total expenses:', totalExpenses);
+        console.log('- Net profit/loss:', netProfitLoss);
+        console.log('- Total agreed contractor amount:', totalAgreedContractorAmount);
+        console.log('- Total paid contractor amount:', totalPaidContractorAmount);
+
+        const responseData = {
             ...project.toObject(), // تحويل مستند Mongoose إلى كائن JavaScript عادي
             totalRevenue,
             totalExpenses, // الآن يشمل دفعات المقاولين
@@ -238,10 +271,18 @@ router.get('/:id/details', auth, async (req, res) => {
             totalAgreedContractorAmount,
             totalPaidContractorAmount,
             totalRemainingContractorAmount: totalAgreedContractorAmount - totalPaidContractorAmount
-        });
+        };
+
+        console.log('Project details response data:', responseData);
+        console.log('=== Project Details GET Request END ===');
+
+        res.json(responseData);
 
     } catch (err) {
-        console.error(err.message);
+        console.error('=== Project Details GET Error ===');
+        console.error('Error message:', err.message);
+        console.error('Error stack:', err.stack);
+        
         if (err.kind === 'ObjectId') {
             return res.status(400).json({ message: 'معرف المشروع غير صالح.' });
         }

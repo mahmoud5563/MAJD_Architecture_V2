@@ -17,9 +17,15 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['مدير', 'مدير حسابات', 'مهندس'], // الأدوار المسموح بها
         default: 'مهندس' // دور افتراضي
+    },
+    lastLogin: {
+        type: Date,
+        default: null
+    },
+    isActive: {
+        type: Boolean,
+        default: true
     }
-    
-    
 }, { timestamps: true }); // إضافة حقول createdAt و updatedAt تلقائيًا
 
 // Hash the plain text password before saving

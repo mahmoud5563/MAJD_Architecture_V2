@@ -167,6 +167,8 @@ router.delete('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'),
         }
         res.status(500).json({ message: 'حدث خطأ في الخادم أثناء حذف اتفاق المقاول.' });
     }
-});
+})
+;
+
 
 module.exports = router;

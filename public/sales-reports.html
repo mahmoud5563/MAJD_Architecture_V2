@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقارير المبيعات</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #014C47;
+            --primary-dark: #003a35;
+            --secondary-bg: #e6e6e6;
+            --text-color: #333;
+            --light-text-color: #f4f4f4;
+            --border-color: #ddd;
+            --sidebar-width: 250px;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
+            display: flex;
+            min-height: 100vh;
+            direction: rtl;
+            text-align: right;
+        }
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+            position: relative;
+            flex-shrink: 0;
+            height: 100vh;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar ul li {
+            margin-bottom: 5px;
+        }
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--light-text-color);
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+        .sidebar ul li a i {
+            margin-left: 10px;
+            font-size: 18px;
+        }
+        .sidebar ul li a:hover,
+        .sidebar ul li.active a {
+            background-color: var(--primary-dark);
+            border-radius: 0 20px 20px 0;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 30px 20px 20px 20px;
+            background: var(--secondary-bg);
+            min-height: 100vh;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .page-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 28px;
+        }
+        .btn {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin: 2px;
+        }
+        .btn-primary { background-color: var(--primary-color); }
+        .btn-primary:hover { background-color: var(--primary-dark); }
+        .btn-secondary { background-color: #6c757d; }
+        .btn-secondary:hover { background-color: #495057; }
+        .btn-info { background-color: #17a2b8; }
+        .btn-info:hover { background-color: #117a8b; }
+        .btn-sm { padding: 5px 12px; font-size: 14px; }
+        .table-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+        .table th, .table td {
+            padding: 10px 12px;
+            border: 1px solid #eee;
+            text-align: right;
+        }
+        .table th {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+        }
+        .table td {
+            background: #fff;
+        }
+        @media (max-width: 900px) {
+            .main-content { padding: 10px; }
+            .table-container { padding: 10px; }
+        }
+        @media (max-width: 600px) {
+            .sidebar { width: 60px; padding-top: 10px; }
+            .sidebar ul li a span { display: none; }
+            .sidebar ul li a i { margin-left: 0; }
+            .main-content { padding: 5px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <ul>
+            <li><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>الرئيسية</a></li>
+            <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a></li>
+            <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
+            <li><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a></li>
+            <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
+            <li><a href="/general-expenses.html" data-page="general-expenses"><i class="fas fa-money-bill-wave"></i> المصروفات العامة</a></li>
+            <li><a href="/employees.html" data-page="employees"><i class="fas fa-user-tie"></i> الموظفين</a></li>
+            <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
+            <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a></li>
+            <li><a href="/warehouses.html" data-page="warehouses"><i class="fas fa-warehouse"></i> المخازن</a></li>
+            <li><a href="/sales.html" data-page="sales"><i class="fas fa-shopping-cart"></i> المبيعات</a></li>
+            <li><a href="index.html" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <div class="page-header">
+            <h1>تقارير المبيعات</h1>
+            <button id="backToSales" class="btn btn-secondary"><i class="fas fa-arrow-right"></i> رجوع للمبيعات</button>
+        </div>
+        <div class="table-container">
+            <div class="filters" style="margin-bottom:20px;display:flex;flex-wrap:wrap;gap:15px;align-items:center;">
+                <input type="text" id="filterInvoice" class="form-control" placeholder="بحث برقم الفاتورة" style="max-width:140px;">
+                <input type="text" id="filterClient" class="form-control" placeholder="بحث باسم العميل" style="max-width:160px;">
+                <select id="filterType" class="form-control" style="max-width:120px;">
+                    <option value="">كل الأنواع</option>
+                    <option value="بضاعة">بضاعة</option>
+                    <option value="خدمة">خدمة</option>
+                    <option value="مختلط">مختلط</option>
+                </select>
+                <label style="font-size:15px;">من</label>
+                <input type="date" id="filterFrom" class="form-control" style="max-width:130px;">
+                <label style="font-size:15px;">إلى</label>
+                <input type="date" id="filterTo" class="form-control" style="max-width:130px;">
+            </div>
+            <table id="salesReportsTable" class="table">
+                <thead>
+                    <tr>
+                        <th>رقم الفاتورة</th>
+                        <th>التاريخ</th>
+                        <th>العميل</th>
+                        <th>النوع</th>
+                        <th>الإجمالي</th>
+                        <th>الحالة</th>
+                        <th>نوع الدفع</th>
+                        <th>طريقة الدفع</th>
+                        <th>المدفوع</th>
+                        <th>الباقي</th>
+                        <th>الأصناف</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- سيتم تعبئة الصفوف من خلال جافاسكريبت -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="overlay" id="sidebarOverlay"></div>
+    <script>
+const BASE_URL = "https://6504-156-203-155-30.ngrok-free.app";
+        document.getElementById('backToSales').onclick = function() {
+            window.location.href = '/sales.html';
+        };
+        // تفعيل السايدبار والـ overlay مثل باقي الصفحات
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        overlay.onclick = function() {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        };
+        // زر القائمة الجانبية (لو موجود)
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        if (sidebarToggle) {
+            sidebarToggle.onclick = function() {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+            };
+        }
+        // جلب بيانات المبيعات من الـ API
+        let allSales = [];
+        async function fetchSalesReports() {
+            try {
+                const res = await fetch(`${BASE_URL}/api/sales`, { headers: { 'x-auth-token': localStorage.getItem('token') } });
+                allSales = await res.json();
+                console.log('allSales:', allSales);
+                renderSalesTable();
+            } catch (err) {
+                alert('حدث خطأ أثناء جلب تقارير المبيعات');
+            }
+        }
+        function renderSalesTable() {
+            const tbody = document.querySelector('#salesReportsTable tbody');
+            let filtered = allSales;
+            const invoice = document.getElementById('filterInvoice').value.trim();
+            const client = document.getElementById('filterClient').value.trim();
+            const type = document.getElementById('filterType').value;
+            const from = document.getElementById('filterFrom').value;
+            const to = document.getElementById('filterTo').value;
+            if (invoice) filtered = filtered.filter(s => s.invoiceNumber.includes(invoice));
+            if (client) filtered = filtered.filter(s => (s.client && s.client.clientName && s.client.clientName.includes(client)) || (s.clientName && s.clientName.includes(client)));
+            if (type) filtered = filtered.filter(s => s.type === type);
+            if (from) filtered = filtered.filter(s => new Date(s.date) >= new Date(from));
+            if (to) filtered = filtered.filter(s => new Date(s.date) <= new Date(to));
+            tbody.innerHTML = '';
+            if (!Array.isArray(filtered) || filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#888;">لا توجد نتائج مطابقة</td></tr>';
+                return;
+            }
+            filtered.forEach(sale => {
+                const tr = document.createElement('tr');
+                const invoiceDisplay = sale.status === 'عرض سعر'
+                  ? (sale.invoiceNumber.startsWith('Q-') ? sale.invoiceNumber : 'Q-' + sale.invoiceNumber)
+                  : sale.invoiceNumber;
+                let itemsDetails = '';
+                if (Array.isArray(sale.items)) {
+                    itemsDetails = sale.items.map(item =>
+                        `<div><b>${item.name || (item.product && item.product.name) || ''}</b> - ${item.quantity} × ${item.unitPrice} = ${item.total}${item.details ? `<br><span style='color:#888;font-size:13px;'>تفاصيل: ${item.details}</span>` : ''}</div>`
+                    ).join('');
+                }
+                const typeLabel = sale.status === 'عرض سعر' ? 'عرض سعر' : 'فاتورة';
+                tr.innerHTML = `
+                    <td>${invoiceDisplay}</td>
+                    <td>${new Date(sale.date).toLocaleDateString('en-GB')}</td>
+                    <td>${sale.client ? sale.client.clientName : (sale.clientName || '-')}</td>
+                    <td>${typeLabel}</td>
+                    <td>${sale.total?.toLocaleString() || 0}</td>
+                    <td>${sale.status}</td>
+                    <td>${sale.paymentType || '-'}</td>
+                    <td>${sale.paymentMethod || '-'}</td>
+                    <td>${sale.paidAmount != null ? sale.paidAmount.toLocaleString() : '-'}</td>
+                    <td>${sale.balance != null ? sale.balance.toLocaleString() : '-'}</td>
+                    <td>${itemsDetails}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="deleteSale('${sale._id}')">حذف</button>
+                        <button class="btn btn-sm btn-primary" onclick="editSale('${sale._id}')">تعديل</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        // ربط الفلاتر
+        document.getElementById('filterInvoice').oninput = renderSalesTable;
+        document.getElementById('filterClient').oninput = renderSalesTable;
+        document.getElementById('filterType').onchange = renderSalesTable;
+        document.getElementById('filterFrom').onchange = renderSalesTable;
+        document.getElementById('filterTo').onchange = renderSalesTable;
+        // دالة عرض التفاصيل (سيتم تطويرها لاحقاً)
+        function showSaleDetails(id) {
+            alert('تفاصيل الفاتورة: ' + id);
+        }
+        // دالة حذف الفاتورة
+        async function deleteSale(id) {
+            if (!confirm('هل أنت متأكد أنك تريد حذف هذه الفاتورة؟')) return;
+            const token = localStorage.getItem('token');
+            try {
+                const res = await fetch(`${BASE_URL}/api/sales/${id}`, { method: 'DELETE', headers: { 'x-auth-token': token } });
+                const result = await res.json();
+                if (res.ok) {
+                    alert('تم حذف الفاتورة بنجاح');
+                    fetchSalesReports();
+                } else {
+                    alert(result.message || 'حدث خطأ أثناء الحذف');
+                }
+            } catch (err) {
+                alert('حدث خطأ أثناء الحذف');
+            }
+        }
+        // دالة التعديل (placeholder)
+        function editSale(id) {
+            window.location.href = `edit-sale.html?id=${id}`;
+        }
+        fetchSalesReports();
+
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+                sidebarOverlay.classList.toggle('active');
+                document.body.classList.toggle('sidebar-open');
+            });
+        }
+
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            document.body.classList.remove('sidebar-open');
+        });
+
+        // تنقل مباشر لما المستخدم يضغط على لينك
+        sidebar.addEventListener('click', (event) => {
+            const link = event.target.closest('a');
+            if (link && link.href && link.id !== 'sidebarLogoutButton') {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+                document.body.classList.remove('sidebar-open');
+            }
+        });
+    </script>
+</body>
+</html> 

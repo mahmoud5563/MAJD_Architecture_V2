@@ -153,6 +153,11 @@ router.post('/', auth, authorizeRoles('مدير', 'مدير حسابات'), uplo
 // @desc    Get all transactions (with filters)
 // @access  Private (Manager, Accountant Manager, Engineer sees project-related transactions)
 router.get('/', auth, async (req, res) => {
+    console.log('=== Transaction GET Request START ===');
+    console.log('Request query:', req.query);
+    console.log('User role:', req.user.role);
+    console.log('User ID:', req.user.id);
+    
     try {
         const { project, treasury, type, category, startDate, endDate } = req.query;
         let query = {};
@@ -211,6 +216,8 @@ router.get('/', auth, async (req, res) => {
             if (endDate) query.date.$lte = new Date(endDate);
         }
 
+        console.log('Final query:', JSON.stringify(query, null, 2));
+
         const transactions = await Transaction.find(query)
                                             .populate('treasury', 'name')
                                             .populate('project', 'projectName')
@@ -218,9 +225,14 @@ router.get('/', auth, async (req, res) => {
                                             .populate('targetTreasury', 'name')
                                             .sort({ date: -1, createdAt: -1 }); // فرز حسب التاريخ الأحدث ثم تاريخ الإنشاء
 
+        console.log('Found transactions count:', transactions.length);
+        console.log('=== Transaction GET Request END ===');
+
         res.json(transactions);
     } catch (err) {
-        console.error(err.message);
+        console.error('=== Transaction GET Error ===');
+        console.error('Error message:', err.message);
+        console.error('Error stack:', err.stack);
         res.status(500).json({  message : 'حدث خطأ في الخادم أثناء جلب المعاملات.'});
     }
 });
@@ -229,6 +241,9 @@ router.get('/', auth, async (req, res) => {
 // @desc    Get a single transaction by ID
 // @access  Private (any authenticated user)
 router.get('/:id', auth, async (req, res) => {
+    console.log('=== Transaction GET by ID Request START ===');
+    console.log('Transaction ID:', req.params.id);
+    
     try {
         const transaction = await Transaction.findById(req.params.id)
                                                 .populate('treasury', 'name')
@@ -237,11 +252,19 @@ router.get('/:id', auth, async (req, res) => {
                                                 .populate('targetTreasury', 'name');
 
         if (!transaction) {
+            console.log('Transaction not found with ID:', req.params.id);
             return res.status(404).json({ message: 'المعاملة غير موجودة.' });
         }
+        
+        console.log('Found transaction:', transaction);
+        console.log('=== Transaction GET by ID Request END ===');
+        
         res.json(transaction);
     } catch (err) {
-        console.error(err.message);
+        console.error('=== Transaction GET by ID Error ===');
+        console.error('Error message:', err.message);
+        console.error('Error stack:', err.stack);
+        
         if (err.kind === 'ObjectId') {
             return res.status(400).json({ message: 'معرف المعاملة غير صالح.' });
         }
@@ -249,39 +272,116 @@ router.get('/:id', auth, async (req, res) => {
     }
 });
 
-// @route   PUT /api/transactions/:id
-// @desc    Update a transaction (complex: requires careful handling of old/new amounts/treasuries)
-// @access  Private (any authenticated user)
-router.put('/:id', auth, async (req, res) => {
-    const { description, date, category, vendor, paymentMethod } = req.body;
+/// @route PUT /api/transactions/:id
+// @desc Update a transaction and adjust treasury/project balances if needed
+router.put('/:id', auth, upload.array('attachments', 5), handleUploadError, async (req, res) => {
+    console.log('=== Transaction PUT Request START ===');
+    console.log('Request method:', req.method);
+    console.log('Request URL:', req.url);
+    console.log('Request params:', req.params);
+    console.log('Request body:', req.body);
+    console.log('Request files:', req.files);
+    
+    const { amount, description, date, category, vendor, paymentMethod } = req.body;
 
     try {
-        let transaction = await Transaction.findById(req.params.id);
+        const transaction = await Transaction.findById(req.params.id);
         if (!transaction) {
+            console.log('Transaction not found with ID:', req.params.id);
             return res.status(404).json({ message: 'المعاملة غير موجودة.' });
         }
 
-        // السماح بتعديل حقول لا تؤثر على الرصيد مباشرة
-        transaction.description = description !== undefined ? description : transaction.description;
-        transaction.date = date !== undefined ? date : transaction.date;
+        console.log('Found transaction:', transaction);
+        console.log('Transaction type:', transaction.type);
+
+        const oldAmount = transaction.amount;
+        const newAmount = parseFloat(amount);
+        const difference = newAmount - oldAmount;
+
+        console.log('Amount comparison:');
+        console.log('- Old amount:', oldAmount);
+        console.log('- New amount:', newAmount);
+        console.log('- Difference:', difference);
+
+        const sourceTreasury = await Treasury.findById(transaction.treasury);
+        const associatedProject = transaction.project ? await Project.findById(transaction.project) : null;
+
+        console.log('Source treasury:', sourceTreasury ? sourceTreasury.name : 'Not found');
+        console.log('Associated project:', associatedProject ? associatedProject.projectName : 'Not found');
+
+        // تعديل الأرصدة إذا تغير المبلغ
+        if (difference !== 0) {
+            console.log('Amount changed, updating balances...');
+            if (transaction.type === 'مصروف') {
+                if (sourceTreasury.currentBalance < difference) {
+                    console.log('Insufficient balance for expense update');
+                    return res.status(400).json({ message: 'الرصيد غير كافٍ لتعديل هذا المصروف.' });
+                }
+                sourceTreasury.currentBalance -= difference;
+                if (associatedProject) {
+                    associatedProject.totalExpenses += difference;
+                    await associatedProject.save();
+                }
+                console.log('Updated expense balances');
+            } else if (transaction.type === 'إيداع') {
+                sourceTreasury.currentBalance += difference;
+                if (associatedProject) {
+                    associatedProject.totalRevenue += difference;
+                    await associatedProject.save();
+                }
+                console.log('Updated revenue balances');
+            }
+            await sourceTreasury.save();
+            console.log('Treasury balance updated');
+        } else {
+            console.log('No amount change, skipping balance updates');
+        }
+
+        // تحديث باقي الحقول
+        transaction.amount = newAmount;
+        transaction.description = description ?? transaction.description;
+        transaction.date = date ?? transaction.date;
 
         if (transaction.type === 'مصروف') {
-            transaction.category = category !== undefined ? category : transaction.category;
-            transaction.vendor = vendor !== undefined ? vendor : transaction.vendor;
+            transaction.category = category ?? transaction.category;
+            transaction.vendor = vendor ?? transaction.vendor;
         } else if (transaction.type === 'إيداع') {
-            transaction.paymentMethod = paymentMethod !== undefined ? paymentMethod : transaction.paymentMethod;
+            transaction.paymentMethod = paymentMethod ?? transaction.paymentMethod;
         }
 
-        await transaction.save();
-        res.json({ message: 'تم تحديث تفاصيل المعاملة بنجاح.', transaction });
-    } catch (err) {
-        console.error(err.message);
-        if (err.kind === 'ObjectId') {
-            return res.status(400).json({ message: 'معرف المعاملة غير صالح.' });
+        if (req.files && req.files.length > 0) {
+            transaction.attachments = req.files.map(file => ({
+                filename: file.filename,
+                originalName: file.originalname,
+                mimeType: file.mimetype,
+                size: file.size,
+                path: file.path
+            }));
         }
-        res.status(500).json({  message : 'حدث خطأ في الخادم أثناء تحديث المعاملة.'});
+
+        console.log('Transaction before save:', transaction);
+
+        await transaction.save();
+        console.log('Transaction saved successfully');
+
+        const populatedTransaction = await Transaction.findById(transaction._id)
+            .populate('treasury', 'name')
+            .populate('project', 'projectName')
+            .populate('category', 'name')
+            .populate('targetTreasury', 'name')
+            .populate('recordedBy', 'username');
+
+        console.log('Populated transaction:', populatedTransaction);
+        console.log('=== Transaction PUT Request END ===');
+
+        res.json({ message: 'تم تعديل المعاملة بنجاح.', transaction: populatedTransaction });
+
+    } catch (err) {
+        console.error('=== Transaction PUT Error ===', err);
+        res.status(500).json({ message: 'حدث خطأ أثناء تعديل المعاملة.' });
     }
 });
+
 
 // @route   DELETE /api/transactions/:id
 // @desc    Delete a transaction (and reverse its effect on treasury/project balances)

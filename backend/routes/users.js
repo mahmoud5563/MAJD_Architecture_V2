@@ -139,4 +139,30 @@ router.delete('/:id', auth, async (req, res) => {
     }
 });
 
+// @route   PUT /api/users/:id/activate
+// @desc    Activate or deactivate a user (admin only)
+// @access  Private (admin only)
+router.put('/:id/activate', auth, async (req, res) => {
+    try {
+        // السماح فقط للمدير
+        if (req.user.role !== 'مدير') {
+            return res.status(403).json({ message: 'غير مصرح لك بتنفيذ هذا الإجراء.' });
+        }
+        const { isActive } = req.body;
+        if (typeof isActive !== 'boolean') {
+            return res.status(400).json({ message: 'يجب إرسال قيمة isActive (true أو false).' });
+        }
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: 'المستخدم غير موجود.' });
+        }
+        user.isActive = isActive;
+        await user.save();
+        res.json({ message: `تم ${isActive ? 'تفعيل' : 'إلغاء تفعيل'} المستخدم بنجاح.`, user: { _id: user._id, username: user.username, isActive: user.isActive } });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('حدث خطأ في الخادم أثناء تحديث حالة التفعيل.');
+    }
+});
+
 module.exports = router;

@@ -471,22 +471,17 @@
 
         <div class="sidebar" id="sidebar">
             <ul>
-                <li><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>
-                        الرئيسية</a></li>
-                <li><a href="/add-project.html" data-page="add-project"><i class="fas fa-plus-circle"></i> إضافة
-                        مشروع</a></li>
-                <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a>
-                </li>
+                <li><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>الرئيسية</a></li>
+                <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a></li>
                 <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
                 <li><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a></li>
-                <li><a href="/add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i> إضافة
-                        خزينة</a></li>
                 <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
                 <li><a href="/general-expenses.html" data-page="general-expenses"><i class="fas fa-money-bill-wave"></i> المصروفات العامة</a></li>
                 <li><a href="/employees.html" data-page="employees"><i class="fas fa-user-tie"></i> الموظفين</a></li>
                 <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
-                <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a>
-                </li>
+                <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a></li>
+                <li><a href="/warehouses.html" data-page="warehouses"><i class="fas fa-warehouse"></i> المخازن</a></li>
+                <li><a href="/sales.html" data-page="sales"><i class="fas fa-shopping-cart"></i> المبيعات</a></li>
                 <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
             </ul>
         </div>
@@ -503,9 +498,9 @@
                         <tr>
                             <th>الاسم</th>
                             <th>رقم الهاتف</th>
-                            <th>البريد الإلكتروني</th>
                             <th>تاريخ الإضافة</th>
-                            <th>الإجراءات</th>
+                            <th>الحساب</th>
+                            <th>تفاصيل</th>
                         </tr>
                     </thead>
                     <tbody id="clientsTableBody">
@@ -566,7 +561,7 @@
 
 
     <script>
-        const BASE_URL = "https://e562-156-203-155-30.ngrok-free.app";
+        const BASE_URL = "https://6504-156-203-155-30.ngrok-free.app";
 
         // Client-side authentication check and redirection
         document.addEventListener('DOMContentLoaded', function () {
@@ -681,36 +676,37 @@
             // Function to fetch and display clients
             const fetchClients = async () => {
                 clientsTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">جاري تحميل العملاء...</td></tr>';
-                clientsPageMessage.style.display = 'none'; // Hide any previous messages
-
+                clientsPageMessage.style.display = 'none';
                 try {
                     const response = await fetch(`${BASE_URL}/api/clients`, {
-                        headers: {
-                            'x-auth-token': localStorage.getItem('token')
-                        }
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
                     });
                     const data = await response.json();
-
                     if (response.ok) {
-                        clientsTableBody.innerHTML = ''; // Clear loading message
+                        clientsTableBody.innerHTML = '';
                         if (data.length === 0) {
                             clientsTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">لا يوجد عملاء لعرضهم.</td></tr>';
                             return;
                         }
-
-                        data.forEach(client => {
+                        for (const client of data) {
+                            const addedDate = new Date(client.createdAt).toLocaleDateString('en-GB');
+                            let balance = 0;
+                            try {
+                                const res = await fetch(`${BASE_URL}/api/sales?client=${client._id}`, { headers: { 'x-auth-token': localStorage.getItem('token') } });
+                                const sales = await res.json();
+                                if (Array.isArray(sales)) {
+                                    balance = sales.reduce((sum, sale) => sum + (sale.balance || 0), 0);
+                                }
+                            } catch {}
                             const row = clientsTableBody.insertRow();
                             row.innerHTML = `
                                 <td>${client.clientName}</td>
-                                <td>${client.phoneNumber || 'غير متوفر'}</td>
-                                <td>${client.email || 'غير متوفر'}</td>
-                                <td>${new Date(client.createdAt).toLocaleDateString('en-GB')}</td>
-                                <td class="action-buttons">
-                                    <button class="edit" data-id="${client._id}"><i class="fas fa-edit"></i> تعديل</button>
-                                    <button class="delete" data-id="${client._id}"><i class="fas fa-trash-alt"></i> حذف</button>
-                                </td>
+                                <td>${client.phoneNumber || '-'}</td>
+                                <td>${addedDate}</td>
+                                <td>${balance.toLocaleString()}</td>
+                                <td><button class="btn btn-outline-primary btn-sm" style="font-weight:bold;border-radius:20px;padding:6px 18px;display:flex;align-items:center;gap:6px;" onclick="window.location.href='client-invoices.html?id=${client._id}'"><i class='fas fa-file-invoice-dollar'></i> تفاصيل</button></td>
                             `;
-                        });
+                        }
                     } else {
                         clientsTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">فشل في جلب العملاء.</td></tr>';
                         clientsPageMessage.className = 'modal-message error';
@@ -888,6 +884,66 @@
             // NOTE: Replaced window.confirm with a simple JS confirm for now.
             // For a production app, you'd implement a custom modal for confirmations.
         });
+
+        // دالة عرض كشف الحساب
+        async function showClientDetails(clientId) {
+            // جلب فواتير العميل من API
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${BASE_URL}/api/sales?client=${clientId}`, { headers: { 'x-auth-token': token } });
+            const sales = await res.json();
+            let html = `<h3>كشف حساب العميل</h3>`;
+            let totalBalance = 0;
+            html += `<table class='table'><thead><tr><th>رقم الفاتورة</th><th>التاريخ</th><th>الإجمالي</th><th>المدفوع</th><th>الباقي</th></tr></thead><tbody>`;
+            sales.forEach(sale => {
+                html += `<tr><td>${sale.invoiceNumber}</td><td>${new Date(sale.date).toLocaleDateString('en-GB')}</td><td>${sale.total}</td><td>${sale.paidAmount}</td><td>${sale.balance}</td></tr>`;
+                totalBalance += sale.balance;
+            });
+            html += `</tbody></table>`;
+            html += `<div><b>إجمالي الباقي على العميل: ${totalBalance}</b></div>`;
+            html += `<button class='btn btn-success' onclick='payClientCash("${clientId}")'>تسديد نقدية</button>`;
+            // عرض في نافذة منبثقة أو modal
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100vw';
+            modal.style.height = '100vh';
+            modal.style.background = 'rgba(0,0,0,0.4)';
+            modal.style.zIndex = '9999';
+            modal.innerHTML = `<div style='background:#fff;padding:30px;max-width:600px;margin:60px auto;border-radius:10px;position:relative;'>${html}<button onclick='this.parentNode.parentNode.remove()' class='btn btn-danger' style='position:absolute;top:10px;left:10px;'>إغلاق</button></div>`;
+            document.body.appendChild(modal);
+        }
+
+        // دالة تسديد نقدية (placeholder)
+        function payClientCash(clientId) {
+            alert('سيتم فتح نافذة تسديد نقدية للعميل: ' + clientId);
+        }
+
+        async function renderClientsTable() {
+            const tbody = document.querySelector('#clientsTable tbody');
+            tbody.innerHTML = '';
+            for (const client of clientsList) {
+                const token = localStorage.getItem('token');
+                let balance = 0;
+                try {
+                    const res = await fetch(`${BASE_URL}/api/sales?client=${client._id}`, { headers: { 'x-auth-token': token } });
+                    const sales = await res.json();
+                    if (Array.isArray(sales)) {
+                        balance = sales.reduce((sum, sale) => sum + (sale.balance || 0), 0);
+                    }
+                } catch {}
+                const addedDate = new Date(client.createdAt).toLocaleDateString('en-GB');
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${client.clientName}</td>
+                    <td>${client.phoneNumber || '-'}</td>
+                    <td>${addedDate}</td>
+                    <td>${balance.toLocaleString()}</td>
+                    <td><button class="btn btn-outline-primary btn-sm" style="font-weight:bold;border-radius:20px;padding:6px 18px;display:flex;align-items:center;gap:6px;" onclick="window.location.href='client-invoices.html?id=${client._id}'"><i class='fas fa-file-invoice-dollar'></i> تفاصيل</button></td>
+                `;
+                tbody.appendChild(tr);
+            }
+        }
     </script>
 </body>
 

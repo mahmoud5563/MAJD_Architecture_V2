@@ -76,6 +76,17 @@ router.post('/', auth, authorizeRoles('مدير', 'مدير حسابات'), uplo
              return res.status(400).json({ message: `مبلغ الدفعة يتجاوز المبلغ المتبقي على اتفاقية المقاول. المبلغ المتبقي: ${remainingAmount.toFixed(2)} ج.م` });
         }
 
+        // حماية من التكرار: لا تضف دفعة إذا كانت موجودة بنفس الاتفاقية والتاريخ والمبلغ والخزنة
+        const existingPayment = await ContractPayment.findOne({
+            contractAgreement: contractAgreementId,
+            amount: parseFloat(amount),
+            date: date,
+            treasury: treasuryId
+        });
+        if (existingPayment) {
+            return res.status(400).json({ message: 'يوجد بالفعل دفعة بنفس الاتفاقية والتاريخ والمبلغ والخزنة. لا يمكن تكرار الدفعة.' });
+        }
+
         const newPayment = new ContractPayment({
             contractAgreement: contractAgreementId,
             amount: parseFloat(amount),
@@ -142,11 +153,26 @@ router.post('/', auth, authorizeRoles('مدير', 'مدير حسابات'), uplo
         res.status(201).json({ message: 'تم إضافة دفعة المقاول بنجاح.', payment: populatedPayment });
 
     } catch (err) {
-        console.error(err.message);
+        console.error('=== Contract Payment Error ===');
+        console.error('Error message:', err.message);
+        console.error('Error stack:', err.stack);
+        console.error('Error name:', err.name);
+        console.error('Error code:', err.code);
+        
         if (err.kind === 'ObjectId') {
             return res.status(400).json({ message: 'معرف غير صالح في بيانات الدفعة.' });
         }
-        res.status(500).send('حدث خطأ في الخادم أثناء إضافة دفعة المقاول.');
+        
+        // Handle specific MongoDB errors
+        if (err.name === 'ValidationError') {
+            return res.status(400).json({ message: 'بيانات غير صحيحة: ' + Object.values(err.errors).map(e => e.message).join(', ') });
+        }
+        
+        if (err.name === 'CastError') {
+            return res.status(400).json({ message: 'نوع بيانات غير صحيح في أحد الحقول.' });
+        }
+        
+        res.status(500).json({ message: 'حدث خطأ في الخادم أثناء إضافة دفعة المقاول.' });
     }
 });
 
@@ -217,7 +243,7 @@ router.get('/:projectId', auth, async (req, res) => {
         if (err.kind === 'ObjectId') {
             return res.status(400).json({ message: 'معرف المشروع غير صالح.' });
         }
-        res.status(500).send('حدث خطأ في الخادم أثناء جلب دفعات المقاولين.');
+        res.status(500).json({ message: 'حدث خطأ في الخادم أثناء جلب دفعات المقاولين.' });
     }
 });
 
@@ -266,7 +292,7 @@ router.delete('/:id', auth, authorizeRoles('مدير', 'مدير حسابات'),
         if (err.kind === 'ObjectId') {
             return res.status(400).json({ message: 'معرف الدفعة غير صالح.' });
         }
-        res.status(500).send('حدث خطأ في الخادم أثناء حذف دفعة المقاول.');
+        res.status(500).json({ message: 'حدث خطأ في الخادم أثناء حذف دفعة المقاول.' });
     }
 });
 
@@ -295,6 +321,144 @@ router.get('/debug/:paymentId', auth, authorizeRoles('مدير', 'مدير حس�
     } catch (err) {
         console.error('Error debugging payment:', err);
         res.status(500).json({ message: 'خطأ في الخادم' });
+    }
+});
+
+// @route   GET /api/contract-payments/payment/:id
+// @desc    Get a single contract payment by ID
+// @access  Private
+router.get('/payment/:id', auth, async (req, res) => {
+    try {
+        const payment = await ContractPayment.findById(req.params.id)
+            .populate({
+                path: 'contractAgreement',
+                select: 'agreedAmount paidAmount project',
+            })
+            .populate('treasury', 'name');
+        if (!payment) {
+            return res.status(404).json({ message: 'دفعة المقاول غير موجودة.' });
+        }
+        res.json({
+            _id: payment._id,
+            contractAgreementId: payment.contractAgreement._id,
+            amount: payment.amount,
+            date: payment.date,
+            treasuryId: payment.treasury._id || payment.treasury,
+            description: payment.description,
+            projectId: payment.contractAgreement.project,
+            attachments: payment.attachments || []
+        });
+    } catch (err) {
+        res.status(500).json({ message: 'خطأ في الخادم عند جلب الدفعة.' });
+    }
+});
+
+// @route   PUT /api/contract-payments/payment/:id
+// @desc    Update a contract payment by ID
+// @access  Private (Manager, Accountant Manager)
+router.put('/payment/:id', auth, authorizeRoles('مدير', 'مدير حسابات'), upload.array('attachments', 5), handleUploadError, async (req, res) => {
+    try {
+        const payment = await ContractPayment.findById(req.params.id);
+        if (!payment) {
+            return res.status(404).json({ message: 'دفعة المقاول غير موجودة.' });
+        }
+        
+        // جلب الاتفاقية القديمة والجديدة
+        const oldAgreement = await ContractAgreement.findById(payment.contractAgreement);
+        const newAgreement = await ContractAgreement.findById(req.body.contractAgreementId);
+        if (!newAgreement) {
+            return res.status(404).json({ message: 'اتفاق المقاول الجديد غير موجود.' });
+        }
+        
+        // جلب الخزينة القديمة والجديدة
+        const oldTreasury = await Treasury.findById(payment.treasury);
+        const newTreasury = await Treasury.findById(req.body.treasuryId);
+        if (!newTreasury) {
+            return res.status(404).json({ message: 'الخزينة الجديدة غير موجودة.' });
+        }
+        
+        // جلب المشروع
+        const oldProject = oldAgreement ? await Project.findById(oldAgreement.project) : null;
+        const newProject = await Project.findById(newAgreement.project);
+        if (!newProject) {
+            return res.status(404).json({ message: 'المشروع غير موجود.' });
+        }
+        
+        // جلب المقاول
+        const oldContractor = oldAgreement ? await Contractor.findById(oldAgreement.contractor) : null;
+        const newContractor = await Contractor.findById(newAgreement.contractor);
+        if (!newContractor) {
+            return res.status(404).json({ message: 'المقاول غير موجود.' });
+        }
+        
+        // حفظ القيم القديمة قبل التعديل
+        const oldAmount = payment.amount;
+        const { amount: newAmount, date, description } = req.body;
+        
+        // 1. عكس التأثير القديم أولاً
+        if (oldAgreement) {
+            oldAgreement.paidAmount -= oldAmount;
+            await oldAgreement.save();
+        }
+        if (oldTreasury) {
+            oldTreasury.currentBalance += oldAmount;
+            await oldTreasury.save();
+        }
+        if (oldProject) {
+            oldProject.totalPaidContractorAmount = (oldProject.totalPaidContractorAmount || 0) - oldAmount;
+            await oldProject.save();
+        }
+        if (oldContractor) {
+            oldContractor.balance += oldAmount;
+            await oldContractor.save();
+        }
+        
+        // 2. تحديث بيانات الدفعة
+        payment.contractAgreement = req.body.contractAgreementId;
+        payment.amount = parseFloat(newAmount);
+        payment.date = date;
+        payment.treasury = req.body.treasuryId;
+        payment.description = description;
+        
+        // المرفقات الجديدة (لو فيه)
+        if (req.files && req.files.length > 0) {
+            payment.attachments = req.files.map(file => ({
+                filename: file.filename,
+                originalName: file.originalname,
+                mimeType: file.mimetype,
+                size: file.size,
+                path: file.path
+            }));
+        }
+        
+        await payment.save();
+        
+        // 3. تطبيق التأثير الجديد
+        newAgreement.paidAmount += payment.amount;
+        await newAgreement.save();
+        newTreasury.currentBalance -= payment.amount;
+        await newTreasury.save();
+        newProject.totalPaidContractorAmount = (newProject.totalPaidContractorAmount || 0) + payment.amount;
+        await newProject.save();
+        newContractor.balance -= payment.amount;
+        await newContractor.save();
+        
+        // 4. تحديث المعاملة المالية المرتبطة
+        await Transaction.findOneAndUpdate(
+            { contractPayment: payment._id, type: 'دفعة مقاول' },
+            {
+                treasury: newTreasury._id,
+                project: newProject._id,
+                amount: payment.amount,
+                description: `دفعة مقاول: ${description || 'بدون وصف'} لاتفاقية ${newAgreement._id}`,
+                date: payment.date
+            }
+        );
+        
+        res.json({ message: 'تم تحديث دفعة المقاول بنجاح.' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ message: 'حدث خطأ في الخادم أثناء تحديث دفعة المقاول.' });
     }
 });
 

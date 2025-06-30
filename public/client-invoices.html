@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فواتير العميل</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+        .container { max-width: 800px; margin: 40px auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 30px 20px; }
+        h2 { color: #014C47; margin-bottom: 20px; }
+        .summary { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .summary .balance { font-size: 18px; color: #b30000; font-weight: bold; }
+        .btn { background: #014C47; color: #fff; border: none; padding: 8px 18px; border-radius: 5px; cursor: pointer; font-size: 15px; transition: background 0.2s; }
+        .btn-success { background: #28a745; }
+        .btn-info { background: #17a2b8; }
+        .table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        .table th, .table td { padding: 9px 10px; border: 1px solid #eee; text-align: right; }
+        .table th { background: #014C47; color: #fff; }
+        .table td { background: #fff; }
+        @media (max-width: 600px) { .container { padding: 10px 2px; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2><i class="fas fa-user"></i> فواتير العميل</h2>
+        <div class="summary">
+            <div id="clientName"></div>
+            <div class="balance">الرصيد المتبقي: <span id="clientBalance">0</span> جنيه</div>
+            <button class="btn btn-success" id="payCashBtn"><i class="fas fa-money-bill-wave"></i> تسديد نقدية</button>
+        </div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>رقم الفاتورة</th>
+                    <th>التاريخ</th>
+                    <th>الإجمالي</th>
+                    <th>نوع الدفع</th>
+                    <th>المدفوع</th>
+                    <th>الباقي</th>
+                    <th>الحالة</th>
+                    <th>النوع</th>
+                </tr>
+            </thead>
+            <tbody id="invoicesTableBody"></tbody>
+        </table>
+        <a href="clients.html" class="btn btn-info">رجوع للعملاء</a>
+    </div>
+    <!-- نافذة التسديد -->
+    <div id="payModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);z-index:1000;align-items:center;justify-content:center;">
+      <div style="background:#fff;padding:32px 22px 24px 22px;border-radius:18px;min-width:320px;max-width:95vw;box-shadow:0 8px 32px rgba(1,76,71,0.18);position:relative;display:flex;flex-direction:column;gap:12px;">
+        <button onclick="closePayModal()" style="position:absolute;left:14px;top:14px;background:none;border:none;font-size:22px;cursor:pointer;color:#014C47;">&times;</button>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <i class="fas fa-money-bill-wave" style="font-size:22px;color:#28a745;"></i>
+          <h3 style="margin:0;font-size:20px;color:#014C47;font-weight:bold;">تسديد نقدية للعميل</h3>
+        </div>
+        <label style="font-weight:500;margin-bottom:2px;">اختر الفاتورة:</label>
+        <select id="invoiceSelect" style="width:100%;margin-bottom:6px;padding:7px 8px;border-radius:6px;border:1px solid #ccc;font-size:15px;"></select>
+        <div id="selectedInvoiceBalance" style="font-size:14px;color:#b30000;margin-bottom:6px;display:none;"></div>
+        <label style="font-weight:500;margin-bottom:2px;">المبلغ:</label>
+        <input type="number" id="payAmount" style="width:100%;margin-bottom:6px;padding:7px 8px;border-radius:6px;border:1px solid #ccc;font-size:15px;" min="1">
+        <label style="font-weight:500;margin-bottom:2px;">الخزنة:</label>
+        <select id="treasurySelect" style="width:100%;margin-bottom:14px;padding:7px 8px;border-radius:6px;border:1px solid #ccc;font-size:15px;"></select>
+        <button class="btn btn-success" id="confirmPayBtn" style="width:100%;font-size:16px;padding:10px 0;border-radius:7px;display:flex;align-items:center;justify-content:center;gap:7px;"><i class="fas fa-check-circle"></i> تسديد</button>
+      </div>
+    </div>
+    <script>
+    const BASE_URL = "https://6504-156-203-155-30.ngrok-free.app";
+    const urlParams = new URLSearchParams(window.location.search);
+    const clientId = urlParams.get('id');
+    let sales = [];
+    let treasuries = [];
+    async function loadClientInvoices() {
+        if (!clientId) {
+            document.getElementById('clientName').textContent = 'لم يتم تحديد عميل.';
+            return;
+        }
+        // جلب بيانات العميل
+        const token = localStorage.getItem('token');
+        const clientRes = await fetch(`${BASE_URL}/api/clients/${clientId}`, { headers: { 'x-auth-token': token } });
+        const client = await clientRes.json();
+        document.getElementById('clientName').textContent = client.clientName || '-';
+        // جلب فواتير العميل
+        const salesRes = await fetch(`${BASE_URL}/api/sales?client=${clientId}`, { headers: { 'x-auth-token': token } });
+        sales = await salesRes.json();
+        let totalBalance = 0;
+        const tbody = document.getElementById('invoicesTableBody');
+        tbody.innerHTML = '';
+        sales.forEach(sale => {
+            totalBalance += sale.balance || 0;
+            let status = 'مدفوع';
+            if (sale.paymentType === 'أجل' && sale.balance > 0) {
+                status = 'أجل';
+            }
+            const typeLabel = sale.status === 'عرض سعر' ? 'عرض سعر' : 'فاتورة';
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${sale.invoiceNumber}</td>
+                <td>${new Date(sale.date).toLocaleDateString('en-GB')}</td>
+                <td>${sale.total?.toLocaleString() || 0}</td>
+                <td>${sale.paymentType || '-'}</td>
+                <td>${sale.paidAmount != null ? sale.paidAmount.toLocaleString() : '-'}</td>
+                <td>${sale.balance != null ? sale.balance.toLocaleString() : '-'}</td>
+                <td>${status}</td>
+                <td>${typeLabel}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+        document.getElementById('clientBalance').textContent = totalBalance.toLocaleString();
+    }
+    async function loadTreasuries() {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${BASE_URL}/api/treasuries`, { headers: { 'x-auth-token': token } });
+        treasuries = await res.json();
+        const select = document.getElementById('treasurySelect');
+        select.innerHTML = '';
+        treasuries.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t._id;
+            opt.textContent = t.name;
+            select.appendChild(opt);
+        });
+    }
+    document.getElementById('payCashBtn').onclick = function() {
+        // عرض نافذة التسديد
+        const modal = document.getElementById('payModal');
+        modal.style.display = 'flex';
+        // تعبئة الفواتير الآجلة فقط
+        const invoiceSelect = document.getElementById('invoiceSelect');
+        invoiceSelect.innerHTML = '';
+        const eligibleSales = sales.filter(s => s.paymentType === 'أجل' && s.balance > 0);
+        eligibleSales.forEach(sale => {
+            const opt = document.createElement('option');
+            opt.value = sale._id;
+            opt.textContent = `فاتورة #${sale.invoiceNumber} - الباقي: ${sale.balance}`;
+            invoiceSelect.appendChild(opt);
+        });
+        document.getElementById('payAmount').value = '';
+        loadTreasuries();
+        // عرض الرصيد المتبقي للفاتورة المختارة
+        const selectedInvoiceBalance = document.getElementById('selectedInvoiceBalance');
+        function updateBalanceLabel() {
+            const selectedId = invoiceSelect.value;
+            const sale = sales.find(s => s._id === selectedId);
+            if (sale) {
+                selectedInvoiceBalance.textContent = `الرصيد المتبقي على الفاتورة: ${sale.balance.toLocaleString()} جنيه`;
+                selectedInvoiceBalance.style.display = 'block';
+            } else {
+                selectedInvoiceBalance.style.display = 'none';
+            }
+        }
+        invoiceSelect.onchange = updateBalanceLabel;
+        updateBalanceLabel();
+    };
+    function closePayModal() {
+        document.getElementById('payModal').style.display = 'none';
+    }
+    document.getElementById('confirmPayBtn').onclick = async function() {
+        const invoiceId = document.getElementById('invoiceSelect').value;
+        const amount = Number(document.getElementById('payAmount').value);
+        const treasuryId = document.getElementById('treasurySelect').value;
+        if (!invoiceId || !amount || amount <= 0 || !treasuryId) {
+            alert('يرجى اختيار الفاتورة والمبلغ والخزنة.');
+            return;
+        }
+        // جلب الفاتورة
+        const sale = sales.find(s => s._id === invoiceId);
+        if (!sale) return alert('فاتورة غير موجودة!');
+        if (amount > sale.balance) return alert('المبلغ أكبر من الباقي على الفاتورة!');
+        // إرسال طلب تسديد (ستحتاج backend route)
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${BASE_URL}/api/sales/${invoiceId}/pay`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+            body: JSON.stringify({ amount, treasury: treasuryId })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            alert('تم التسديد بنجاح!');
+            closePayModal();
+            loadClientInvoices();
+        } else {
+            alert(data.message || 'حدث خطأ أثناء التسديد');
+        }
+    };
+    loadClientInvoices();
+    </script>
+</body>
+</html> 

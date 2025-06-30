@@ -443,27 +443,33 @@
         <div class="overlay" id="sidebarOverlay"></div>
         <div class="sidebar" id="sidebar">
             <ul>
-                <li><a href="dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>الرئيسية</a></li>
-                <li><a href="add-project.html" data-page="add-project"><i class="fas fa-plus-circle"></i>إضافة مشروع</a></li>
-                <li><a href="projects.html" data-page="projects"><i class="fas fa-project-diagram"></i>المشاريع</a></li>
-                <li><a href="clients.html" data-page="clients"><i class="fas fa-users"></i>العملاء</a></li>
-                <li><a href="contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i>المقاولون</a></li>
-                <li><a href="add-treasury.html" data-page="add-treasury"><i class="fas fa-cash-register"></i>إضافة خزينة</a></li>
-                <li><a href="treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i>عرض الخزائن</a></li>
-                <li><a href="general-expenses.html" data-page="general-expenses"><i class="fas fa-money-bill-wave"></i>المصروفات العامة</a></li>
-                <li class="active"><a href="employees.html" data-page="employees"><i class="fas fa-user-tie"></i>الموظفين</a></li>
-                <li><a href="users.html" data-page="users"><i class="fas fa-user-friends"></i>المستخدمون</a></li>
-                <li><a href="categories.html" data-page="categories"><i class="fas fa-tags"></i>إدارة التصنيفات</a></li>
-                <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i>تسجيل الخروج</a></li>
+                <li><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>الرئيسية</a></li>
+                <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a></li>
+                <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
+                <li><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a></li>
+                <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
+                <li><a href="/general-expenses.html" data-page="general-expenses"><i class="fas fa-money-bill-wave"></i> المصروفات العامة</a></li>
+                <li><a href="/employees.html" data-page="employees"><i class="fas fa-user-tie"></i> الموظفين</a></li>
+                <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
+                <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a></li>
+                <li><a href="/warehouses.html" data-page="warehouses"><i class="fas fa-warehouse"></i> المخازن</a></li>
+                <li><a href="/sales.html" data-page="sales"><i class="fas fa-shopping-cart"></i> المبيعات</a></li>
+                <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
             </ul>
         </div>
         <div class="content-area">
             <div class="page-header">
                 <h1><i class="fas fa-user-tie"></i> إدارة الموظفين</h1>
-                <button class="add-button" onclick="openAddModal()">
-                    <i class="fas fa-plus"></i>
-                    إضافة موظف جديد
-                </button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="add-button" onclick="openAddModal()">
+                        <i class="fas fa-plus"></i>
+                        إضافة موظف جديد
+                    </button>
+                    <button class="add-button" style="background-color:#1a8a6b;" onclick="openPayrollModal()">
+                        <i class="fas fa-file-excel"></i>
+                        كشف رواتب مجمع
+                    </button>
+                </div>
             </div>
             <div class="search-filter-section">
                 <div class="search-filter-row">
@@ -484,6 +490,7 @@
                         <option value="محاسبة">محاسبة</option>
                         <option value="أمن">أمن</option>
                         <option value="صيانة">صيانة</option>
+                        <option value="مخازن">مخازن</option>
                         <option value="أخرى">أخرى</option>
                     </select>
                 </div>
@@ -546,6 +553,7 @@
                             <option value="سكرتير">سكرتير</option>
                             <option value="سائق">سائق</option>
                             <option value="حارس">حارس</option>
+                            <option value="اوفيس بوي">اوفيس بوي</option>
                             <option value="أخرى">أخرى</option>
                         </select>
                     </div>
@@ -558,6 +566,7 @@
                             <option value="محاسبة">محاسبة</option>
                             <option value="أمن">أمن</option>
                             <option value="صيانة">صيانة</option>
+                            <option value="مخازن">مخازن</option>
                         </select>
                     </div>
                 </div>
@@ -612,6 +621,39 @@
             <div id="modalMessage" class="modal-message"></div>
         </div>
     </div>
+    <div id="payrollModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closePayrollModal()">&times;</span>
+            <h3>تصدير كشف رواتب مجمع</h3>
+            <div class="modal-form-group">
+                <label for="payrollMonth">الشهر</label>
+                <select id="payrollMonth" style="padding: 8px;">
+                    <option value="1">يناير</option>
+                    <option value="2">فبراير</option>
+                    <option value="3">مارس</option>
+                    <option value="4">أبريل</option>
+                    <option value="5">مايو</option>
+                    <option value="6">يونيو</option>
+                    <option value="7">يوليو</option>
+                    <option value="8">أغسطس</option>
+                    <option value="9">سبتمبر</option>
+                    <option value="10">أكتوبر</option>
+                    <option value="11">نوفمبر</option>
+                    <option value="12">ديسمبر</option>
+                </select>
+            </div>
+            <div class="modal-form-group">
+                <label for="payrollYear">السنة</label>
+                <select id="payrollYear" style="padding: 8px;"></select>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-button" onclick="exportPayrollSheet()">
+                    <i class="fas fa-file-excel"></i> تصدير كشف رواتب
+                </button>
+                <button class="modal-button cancel" onclick="closePayrollModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
     <script>
         let employees = [];
         let currentEmployeeId = null;
@@ -643,6 +685,26 @@
             }
         }
         function displayEmployees(employeesToShow) {
+            // ترتيب مخصص للأقسام
+            const departmentOrder = [
+                'إدارة',
+                'هندسة',
+                'محاسبة',
+                'مخازن',
+                'أمن',
+                'صيانة',
+                'أخرى'
+            ];
+            employeesToShow = employeesToShow.slice().sort((a, b) => {
+                const aIndex = departmentOrder.indexOf(a.department);
+                const bIndex = departmentOrder.indexOf(b.department);
+                if (aIndex === -1 && bIndex === -1) return 0;
+                if (aIndex === -1) return 1;
+                if (bIndex === -1) return -1;
+                if (aIndex !== bIndex) return aIndex - bIndex;
+                // إذا كان القسم متساوي، رتب بالاسم أبجديًا
+                return a.name.localeCompare(b.name, 'ar');
+            });
             const tbody = document.getElementById('employeesTableBody');
             tbody.innerHTML = '';
             employeesToShow.forEach(employee => {
@@ -897,6 +959,71 @@
                 window.location.href = '/';
             }
         });
+
+        // فتح وإغلاق مودال كشف الرواتب المجمع
+        function openPayrollModal() {
+            document.getElementById('payrollModal').style.display = 'block';
+            fillPayrollYears();
+            selectCurrentPayrollMonthYear();
+        }
+        function closePayrollModal() {
+            document.getElementById('payrollModal').style.display = 'none';
+        }
+        // تعبئة السنوات تلقائيًا
+        function fillPayrollYears() {
+            const yearSelect = document.getElementById('payrollYear');
+            const currentYear = new Date().getFullYear();
+            yearSelect.innerHTML = '';
+            for (let y = currentYear; y >= 2022; y--) {
+                const option = document.createElement('option');
+                option.value = y;
+                option.textContent = y;
+                yearSelect.appendChild(option);
+            }
+        }
+        // اختيار الشهر والسنة الحاليين تلقائياً
+        function selectCurrentPayrollMonthYear() {
+            const now = new Date();
+            document.getElementById('payrollMonth').value = (now.getMonth() + 1).toString();
+            document.getElementById('payrollYear').value = now.getFullYear().toString();
+        }
+        // عند الضغط على تصدير كشف الرواتب
+        function exportPayrollSheet() {
+            const month = document.getElementById('payrollMonth').value;
+            const year = document.getElementById('payrollYear').value;
+            if (!month || !year) {
+                alert('يرجى اختيار الشهر والسنة');
+                return;
+            }
+            fetch(`/api/employees/export-payroll-sheet?month=${month}&year=${year}`, {
+                headers: { 'x-auth-token': localStorage.getItem('token') }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('فشل في تصدير كشف الرواتب');
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `كشف_رواتب_مجمع_${year}_${month}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(err => {
+                alert('حدث خطأ أثناء تصدير كشف الرواتب المجمع');
+            });
+            closePayrollModal();
+        }
+        // إغلاق المودال عند الضغط خارج المحتوى
+        window.onclick = function(event) {
+            const modal = document.getElementById('payrollModal');
+            if (event.target === modal) {
+                closePayrollModal();
+            }
+        }
     </script>
 </body>
 </html> 

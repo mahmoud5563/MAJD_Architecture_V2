@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة المخازن - MAJD Architecture</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #014C47;
+            --primary-dark: #003a35;
+            --secondary-bg: #e6e6e6;
+            --text-color: #333;
+            --light-text-color: #f4f4f4;
+            --border-color: #ddd;
+            --sidebar-width: 250px;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            direction: rtl;
+            text-align: right;
+        }
+        .header {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .header .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        .header .user-info {
+            display: flex;
+            align-items: center;
+        }
+        .header .user-info span {
+            margin-right: 15px;
+        }
+        .header .logout-button {
+            background-color: var(--primary-dark);
+            color: var(--light-text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .header .logout-button:hover {
+            background-color: #002b28;
+        }
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--light-text-color);
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .main-container {
+            display: flex;
+            flex: 1;
+        }
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar ul li {
+            margin-bottom: 5px;
+        }
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--light-text-color);
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+        .sidebar ul li a i {
+            margin-left: 10px;
+            font-size: 18px;
+        }
+        .sidebar ul li a:hover,
+        .sidebar ul li.active a {
+            background-color: var(--primary-dark);
+            border-radius: 0 20px 20px 0;
+        }
+        .content-area {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .page-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 28px;
+        }
+        .add-button {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .add-button:hover {
+            background-color: var(--primary-dark);
+        }
+        .table-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px 15px;
+            border: 1px solid #eee;
+            text-align: right;
+        }
+        th {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+        }
+        .action-buttons button {
+            background-color: #6c757d;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            margin-right: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 14px;
+        }
+        .action-buttons button.details {
+            background-color: #17a2b8;
+        }
+        .action-buttons button.issue {
+            background-color: #dc3545;
+        }
+        .action-buttons button.add {
+            background-color: #28a745;
+        }
+        .action-buttons button.transfer {
+            background-color: #ffc107;
+            color: #333;
+        }
+        .action-buttons button:hover {
+            opacity: 0.9;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            width: 90%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation-name: animatetop;
+            animation-duration: 0.4s;
+            text-align: right;
+        }
+        @keyframes animatetop {
+            from { top: -300px; opacity: 0 }
+            to { top: 0; opacity: 1 }
+        }
+        .close-button {
+            color: #aaa;
+            float: left;
+            font-size: 28px;
+            font-weight: bold;
+            margin-left: -10px;
+            margin-top: -10px;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .modal-content h3 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+        .modal-form-group {
+            margin-bottom: 15px;
+        }
+        .modal-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+            font-size: 15px;
+        }
+        .modal-form-group input[type="text"],
+        .modal-form-group select {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 15px;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .modal-button {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .modal-button.cancel {
+            background-color: #6c757d;
+        }
+        .modal-button:hover {
+            background-color: var(--primary-dark);
+        }
+        .modal-button.cancel:hover {
+            background-color: #5a6268;
+        }
+        .modal-message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+            text-align: center;
+        }
+        .modal-message.error {
+            background-color: #ffe6e6;
+            color: #cc0000;
+            border: 1px solid #cc0000;
+        }
+        .modal-message.success {
+            background-color: #e6ffe6;
+            color: #008000;
+            border: 1px solid #008000;
+        }
+        @media (max-width: 768px) {
+            .header .user-info span { display: none; }
+            .menu-toggle { display: block; }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                right: 0;
+                height: 100%;
+                width: var(--sidebar-width);
+                transform: translateX(100%);
+                z-index: 999;
+                box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+                padding-top: 70px;
+            }
+            .sidebar.active { transform: translateX(0); }
+            .content-area { margin-right: 0; }
+        }
+        @media (max-width: 900px) {
+            .main-content, .card {
+                width: 100vw !important;
+                max-width: 100vw !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+            }
+            .sidebar {
+                z-index: 2001 !important;
+            }
+            .overlay {
+                z-index: 2000 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="logo">MAJD Architecture</div>
+        <div class="user-info">
+            <span id="loggedInUser"></span>
+            <button class="logout-button" id="logoutButton">تسجيل الخروج</button>
+        </div>
+    </div>
+    <div class="main-container">
+        <div class="overlay" id="sidebarOverlay"></div>
+        <div class="sidebar" id="sidebar">
+            <ul>
+                <li><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>الرئيسية</a></li>
+                <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a></li>
+                <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
+                <li><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a></li>
+                <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
+                <li><a href="/general-expenses.html" data-page="general-expenses"><i class="fas fa-money-bill-wave"></i> المصروفات العامة</a></li>
+                <li><a href="/employees.html" data-page="employees"><i class="fas fa-user-tie"></i> الموظفين</a></li>
+                <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
+                <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a></li>
+                <li><a href="/warehouses.html" data-page="warehouses"><i class="fas fa-warehouse"></i> المخازن</a></li>
+                <li><a href="/sales.html" data-page="sales"><i class="fas fa-shopping-cart"></i> المبيعات</a></li>
+                <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
+            </ul>
+        </div>
+        <div class="content-area">
+            <div class="page-header">
+                <h1>إدارة المخازن</h1>
+                <div>
+                    <button class="add-button" onclick="openAddModal()"><i class="fas fa-plus"></i> إضافة مخزن جديد</button>
+                    <button class="add-button" style="background:#28a745; margin-right:10px;" onclick="openAddProductModal()"><i class="fas fa-box"></i> إضافة صنف</button>
+                    <button class="add-button" style="background:#007bff; margin-right:10px;" onclick="openProductsListModal()"><i class="fas fa-list"></i> عرض الأصناف</button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>الاسم</th>
+                            <th>المكان</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="warehousesTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div id="warehouseModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <h3 id="modalTitle">إضافة مخزن جديد</h3>
+            <form id="warehouseForm">
+                <div class="modal-form-group">
+                    <label for="name">اسم المخزن *</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="modal-form-group">
+                    <label for="location">المكان</label>
+                    <input type="text" id="location" name="location">
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="modal-button cancel" onclick="closeModal()">إلغاء</button>
+                    <button type="submit" class="modal-button" id="submitButton">حفظ</button>
+                </div>
+            </form>
+            <div id="modalMessage" class="modal-message"></div>
+        </div>
+    </div>
+    <div id="stockOperationModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeStockModal()">&times;</span>
+            <h3 id="stockModalTitle">عملية مخزنية</h3>
+            <form id="stockOperationForm">
+                <div class="modal-form-group">
+                    <label for="operationProduct">الصنف *</label>
+                    <select id="operationProduct" name="product" required></select>
+                </div>
+                <div class="modal-form-group">
+                    <label for="operationQuantity">الكمية *</label>
+                    <input type="number" id="operationQuantity" name="quantity" min="1" required>
+                </div>
+                <div class="modal-form-group" id="transferToGroup" style="display:none;">
+                    <label for="operationTransferTo">تحويل إلى مخزن</label>
+                    <select id="operationTransferTo" name="transferTo"></select>
+                </div>
+                <div class="modal-form-group">
+                    <label for="operationDate">التاريخ</label>
+                    <input type="date" id="operationDate" name="date">
+                </div>
+                <div class="modal-form-group">
+                    <label for="operationNotes">ملاحظات</label>
+                    <input type="text" id="operationNotes" name="notes">
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="modal-button cancel" onclick="closeStockModal()">إلغاء</button>
+                    <button type="submit" class="modal-button" id="stockSubmitButton">تنفيذ</button>
+                </div>
+            </form>
+            <div id="stockModalMessage" class="modal-message"></div>
+        </div>
+    </div>
+    <div id="addProductModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeAddProductModal()">&times;</span>
+            <h3>إضافة صنف جديد</h3>
+            <form id="addProductForm">
+                <div class="modal-form-group">
+                    <label for="productName">اسم الصنف *</label>
+                    <input type="text" id="productName" name="name" required>
+                </div>
+                <div class="modal-form-group">
+                    <label for="productPurchasePrice">سعر الشراء</label>
+                    <input type="number" id="productPurchasePrice" name="purchasePrice" min="0" step="0.01">
+                </div>
+                <div class="modal-form-group">
+                    <label for="productSalePrice">سعر البيع</label>
+                    <input type="number" id="productSalePrice" name="salePrice" min="0" step="0.01">
+                </div>
+                <div class="modal-form-group">
+                    <label for="productInitialQty">الرصيد الافتتاحي (اختياري)</label>
+                    <input type="number" id="productInitialQty" name="initialQty" min="0">
+                </div>
+                <div class="modal-form-group" id="productWarehouseGroup" style="display:none;">
+                    <label for="productWarehouse">المخزن</label>
+                    <select id="productWarehouse" name="warehouse"></select>
+                </div>
+                <div class="modal-form-group">
+                    <label for="productBarcode">الباركود *</label>
+                    <input type="text" id="productBarcode" name="barcode" required autocomplete="off">
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="modal-button cancel" onclick="closeAddProductModal()">إلغاء</button>
+                    <button type="submit" class="modal-button">حفظ</button>
+                </div>
+            </form>
+            <div id="addProductMessage" class="modal-message"></div>
+        </div>
+    </div>
+    <div id="productsListModal" class="modal" style="align-items: flex-start;">
+        <div class="modal-content" style="max-width:900px;width:95%;">
+            <span class="close-button" onclick="closeProductsListModal()">&times;</span>
+            <h3>جدول الأصناف</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>الاسم</th>
+                            <th>الباركود</th>
+                            <th>سعر الشراء</th>
+                            <th>سعر البيع</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Responsive Sidebar Toggle
+const sidebar = document.getElementById('sidebar');
+const menuToggle = document.getElementById('menuToggle');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+menuToggle.addEventListener('click', () => {
+    sidebar.classList.toggle('active');
+    sidebarOverlay.classList.toggle('active');
+    document.body.classList.toggle('sidebar-open');
+});
+
+sidebarOverlay.addEventListener('click', () => {
+    sidebar.classList.remove('active');
+    sidebarOverlay.classList.remove('active');
+    document.body.classList.remove('sidebar-open');
+});
+
+// إغلاق السايدبار عند الضغط على أي لينك (على الموبايل)
+sidebar.addEventListener('click', (event) => {
+    const link = event.target.closest('a');
+    if (link && link.id !== 'sidebarLogoutButton') {
+        sidebar.classList.remove('active');
+        sidebarOverlay.classList.remove('active');
+        document.body.classList.remove('sidebar-open');
+    }
+});
+        const BASE_URL = "https://6504-156-203-155-30.ngrok-free.app";
+        let warehouses = [];
+        let currentWarehouseId = null;
+        let isEditMode = false;
+        let currentStockType = null;
+        let currentStockWarehouse = null;
+        let productsList = [];
+        let warehousesList = [];
+        let currentAvailableQty = 0;
+        let productsCache = [];
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWarehouses();
+        });
+        async function loadWarehouses() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/warehouses`, {
+                    headers: { 'x-auth-token': localStorage.getItem('token') }
+                });
+                if (response.ok) {
+                    warehouses = await response.json();
+                    displayWarehouses(warehouses);
+                } else {
+                    alert('فشل في تحميل المخازن');
+                }
+            } catch (error) {
+                alert('خطأ في تحميل المخازن');
+            }
+        }
+        function displayWarehouses(list) {
+            const tbody = document.getElementById('warehousesTableBody');
+            tbody.innerHTML = '';
+            list.forEach(warehouse => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${warehouse.name}</td>
+                    <td>${warehouse.location || ''}</td>
+                    <td class="action-buttons">
+                        <button class="add" onclick="openStockModal('add', '${warehouse._id}')"><i class="fas fa-plus"></i> إذن إضافة</button>
+                        <button class="issue" onclick="openStockModal('issue', '${warehouse._id}')"><i class="fas fa-minus"></i> إذن صرف</button>
+                        <button class="transfer" onclick="openStockModal('transfer', '${warehouse._id}')"><i class="fas fa-exchange-alt"></i> تحويل</button>
+                        <button class="details" onclick="goToDetails('${warehouse._id}')"><i class="fas fa-eye"></i> تفاصيل المخزن</button>
+                        <button class="edit" style="background:#ffc107;color:#333;" onclick="editWarehouse('${warehouse._id}')"><i class="fas fa-edit"></i> تعديل</button>
+                        <button class="delete" style="background:#dc3545;" onclick="deleteWarehouse('${warehouse._id}')"><i class="fas fa-trash"></i> حذف</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        function openAddModal() {
+            isEditMode = false;
+            currentWarehouseId = null;
+            document.getElementById('modalTitle').textContent = 'إضافة مخزن جديد';
+            document.getElementById('warehouseForm').reset();
+            document.getElementById('warehouseModal').style.display = 'flex';
+        }
+        function closeModal() {
+            document.getElementById('warehouseModal').style.display = 'none';
+            document.getElementById('modalMessage').style.display = 'none';
+        }
+        document.getElementById('warehouseForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                name: formData.get('name'),
+                location: formData.get('location')
+            };
+            try {
+                let url = `${BASE_URL}/api/warehouses`;
+                let method = 'POST';
+                if (isEditMode) {
+                    url += `/${currentWarehouseId}`;
+                    method = 'PUT';
+                }
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': localStorage.getItem('token')
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showModalMessage(result.message, 'success');
+                    setTimeout(() => { closeModal(); loadWarehouses(); }, 1200);
+                } else {
+                    showModalMessage(result.message, 'error');
+                }
+            } catch (error) {
+                showModalMessage('حدث خطأ أثناء حفظ بيانات المخزن', 'error');
+            }
+        });
+        function showModalMessage(message, type) {
+            const messageElement = document.getElementById('modalMessage');
+            messageElement.textContent = message;
+            messageElement.className = `modal-message ${type}`;
+            messageElement.style.display = 'block';
+        }
+        function goToDetails(id) {
+            window.location.href = `warehouse-details.html?id=${id}`;
+        }
+        async function fetchProductsAndWarehouses() {
+            // جلب الأصناف
+            const productsRes = await fetch(`${BASE_URL}/api/products`, { headers: { 'x-auth-token': localStorage.getItem('token') } });
+            productsList = await productsRes.json();
+            // جلب المخازن
+            const warehousesRes = await fetch(`${BASE_URL}/api/warehouses`, { headers: { 'x-auth-token': localStorage.getItem('token') } });
+            warehousesList = await warehousesRes.json();
+        }
+        async function openStockModal(type, warehouseId) {
+            currentStockType = type;
+            currentStockWarehouse = warehouseId;
+            await fetchProductsAndWarehouses();
+            // تعبئة الأصناف
+            const productSelect = document.getElementById('operationProduct');
+            productSelect.innerHTML = productsList.map(p => `<option value="${p._id}">${p.name}</option>`).join('');
+            // تعبئة المخازن (لتحويل فقط)
+            const transferToSelect = document.getElementById('operationTransferTo');
+            transferToSelect.innerHTML = warehousesList
+                .filter(w => w._id !== warehouseId)
+                .map(w => `<option value="${w._id}">${w.name}</option>`).join('');
+            // إظهار/إخفاء حقل التحويل
+            document.getElementById('transferToGroup').style.display = (type === 'transfer') ? 'block' : 'none';
+            // تعبئة التاريخ تلقائياً
+            const today = new Date();
+            document.getElementById('operationDate').value = today.toISOString().slice(0,10);
+            // عنوان المودال
+            document.getElementById('stockModalTitle').textContent =
+                type === 'add' ? 'إذن إضافة صنف' : type === 'issue' ? 'إذن صرف صنف' : 'تحويل صنف بين مخازن';
+            // إعادة تعيين النموذج
+            document.getElementById('stockOperationForm').reset();
+            document.getElementById('stockModalMessage').style.display = 'none';
+            document.getElementById('stockOperationModal').style.display = 'flex';
+            // تحقق من الكمية المتوفرة عند اختيار الصنف في إذن صرف أو تحويل
+            if (type === 'issue' || type === 'transfer') {
+                productSelect.addEventListener('change', checkAvailableQty);
+                document.getElementById('operationQuantity').addEventListener('input', checkQtyLimit);
+                // استدعِ أول مرة
+                checkAvailableQty();
+            } else {
+                productSelect.removeEventListener('change', checkAvailableQty);
+                document.getElementById('operationQuantity').removeEventListener('input', checkQtyLimit);
+            }
+        }
+        async function checkAvailableQty() {
+            const productId = document.getElementById('operationProduct').value;
+            if (!productId) { currentAvailableQty = 0; return; }
+            // جلب الجرد لهذا المخزن
+            const res = await fetch(`${BASE_URL}/api/stock-operations/inventory/${currentStockWarehouse}`, { headers: { 'x-auth-token': localStorage.getItem('token') } });
+            const inventory = await res.json();
+            const item = inventory.find(i => i.product._id === productId);
+            currentAvailableQty = item ? item.quantity : 0;
+            // عرض الكمية المتوفرة للمستخدم
+            let info = document.getElementById('availableQtyInfo');
+            if (!info) {
+                info = document.createElement('div');
+                info.id = 'availableQtyInfo';
+                info.style = 'color:#007bff;margin-bottom:8px;font-size:15px;';
+                document.getElementById('operationProduct').parentElement.appendChild(info);
+            }
+            info.textContent = `المتوفر في المخزن: ${currentAvailableQty}`;
+            checkQtyLimit();
+        }
+        function checkQtyLimit() {
+            const qty = Number(document.getElementById('operationQuantity').value);
+            const submitBtn = document.getElementById('stockSubmitButton');
+            let info = document.getElementById('availableQtyInfo');
+            if (!info) return;
+            if (qty > currentAvailableQty) {
+                info.textContent = `المتوفر في المخزن: ${currentAvailableQty} (لا يمكن صرف كمية أكبر من المتوفر)`;
+                info.style.color = '#dc3545';
+                submitBtn.disabled = true;
+            } else {
+                info.textContent = `المتوفر في المخزن: ${currentAvailableQty}`;
+                info.style.color = '#007bff';
+                submitBtn.disabled = false;
+            }
+        }
+        function closeStockModal() {
+            document.getElementById('stockOperationModal').style.display = 'none';
+            document.getElementById('stockModalMessage').style.display = 'none';
+        }
+        document.getElementById('stockOperationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                type: currentStockType,
+                product: formData.get('product'),
+                quantity: Number(formData.get('quantity')),
+                warehouse: currentStockWarehouse,
+                notes: formData.get('notes'),
+                date: formData.get('date') || undefined
+            };
+            if (currentStockType === 'transfer') {
+                data.transferTo = formData.get('transferTo');
+            }
+            try {
+                const response = await fetch(`${BASE_URL}/api/stock-operations`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': localStorage.getItem('token')
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showStockModalMessage(result.message, 'success');
+                    setTimeout(() => { closeStockModal(); loadWarehouses(); }, 1200);
+                } else {
+                    showStockModalMessage(result.message, 'error');
+                }
+            } catch (error) {
+                showStockModalMessage('حدث خطأ أثناء تنفيذ العملية', 'error');
+            }
+        });
+        function showStockModalMessage(message, type) {
+            const messageElement = document.getElementById('stockModalMessage');
+            messageElement.textContent = message;
+            messageElement.className = `modal-message ${type}`;
+            messageElement.style.display = 'block';
+        }
+        window.onclick = function(event) {
+            const modal = document.getElementById('warehouseModal');
+            if (event.target === modal) closeModal();
+        }
+        async function openAddProductModal() {
+            document.getElementById('addProductForm').reset();
+            document.getElementById('addProductMessage').style.display = 'none';
+            document.getElementById('addProductModal').style.display = 'flex';
+            // جلب المخازن وتعبئة القائمة
+            const warehousesRes = await fetch(`${BASE_URL}/api/warehouses`, { headers: { 'x-auth-token': localStorage.getItem('token') } });
+            const warehousesList = await warehousesRes.json();
+            const warehouseSelect = document.getElementById('productWarehouse');
+            warehouseSelect.innerHTML = warehousesList.map(w => `<option value="${w._id}">${w.name}</option>`).join('');
+            // إظهار/إخفاء اختيار المخزن حسب الرصيد الافتتاحي
+            document.getElementById('productInitialQty').addEventListener('input', function() {
+                document.getElementById('productWarehouseGroup').style.display = this.value > 0 ? 'block' : 'none';
+            });
+            document.getElementById('productWarehouseGroup').style.display = 'none';
+        }
+        function closeAddProductModal() {
+            document.getElementById('addProductModal').style.display = 'none';
+            document.getElementById('addProductMessage').style.display = 'none';
+        }
+        document.getElementById('addProductForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const barcode = (formData.get('barcode') || '').trim();
+            if (!barcode) {
+                showAddProductMessage('الرجاء إدخال الباركود', 'error');
+                return;
+            }
+            // تحقق من تكرار الباركود في الواجهة (غير حساس لحالة الأحرف والمسافات)
+            const productsRes = await fetch(`${BASE_URL}/api/products`, { headers: { 'x-auth-token': localStorage.getItem('token') } });
+            const products = await productsRes.json();
+            const normalizedBarcode = barcode.replace(/\s+/g, '').toLowerCase();
+            if (products.some(p => (p.barcode || '').replace(/\s+/g, '').toLowerCase() === normalizedBarcode)) {
+                showAddProductMessage('هذا الباركود مستخدم لصنف آخر بالفعل', 'error');
+                return;
+            }
+            const data = {
+                name: formData.get('name'),
+                purchasePrice: formData.get('purchasePrice') || undefined,
+                salePrice: formData.get('salePrice') || undefined,
+                barcode: barcode
+            };
+            try {
+                // أضف الصنف أولاً
+                const response = await fetch(`${BASE_URL}/api/products`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': localStorage.getItem('token')
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    // إذا تم إدخال رصيد افتتاحي، أضف عملية إضافة تلقائية في المخزن المختار
+                    const initialQty = Number(formData.get('initialQty'));
+                    const warehouseId = formData.get('warehouse');
+                    if (initialQty > 0 && warehouseId) {
+                        await fetch(`${BASE_URL}/api/stock-operations`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-auth-token': localStorage.getItem('token')
+                            },
+                            body: JSON.stringify({
+                                type: 'add',
+                                product: result.product._id,
+                                quantity: initialQty,
+                                warehouse: warehouseId,
+                                notes: 'رصيد افتتاحي'
+                            })
+                        });
+                    }
+                    showAddProductMessage('تم إضافة الصنف بنجاح', 'success');
+                    setTimeout(() => { closeAddProductModal(); loadWarehouses(); }, 1200);
+                } else {
+                    showAddProductMessage(result.message || 'فشل في إضافة الصنف', 'error');
+                }
+            } catch (error) {
+                showAddProductMessage('حدث خطأ أثناء إضافة الصنف', 'error');
+            }
+        });
+        function showAddProductMessage(message, type) {
+            const messageElement = document.getElementById('addProductMessage');
+            messageElement.textContent = message;
+            messageElement.className = `modal-message ${type}`;
+            messageElement.style.display = 'block';
+        }
+        async function openProductsListModal() {
+            await loadProductsTable();
+            document.getElementById('productsListModal').style.display = 'flex';
+        }
+        function closeProductsListModal() {
+            document.getElementById('productsListModal').style.display = 'none';
+        }
+        async function loadProductsTable() {
+            // جلب كل الأصناف
+            const productsRes = await fetch(`${BASE_URL}/api/products`, { headers: { 'x-auth-token': localStorage.getItem('token') } });
+            const products = await productsRes.json();
+            productsCache = products; // تحديث الكاش
+            // جلب كل المخازن
+            const warehousesRes = await fetch(`${BASE_URL}/api/warehouses`, { headers: { 'x-auth-token': localStorage.getItem('token') } });
+            const warehouses = await warehousesRes.json();
+            // جلب الجرد لكل مخزن
+            const inventories = {};
+            for (const warehouse of warehouses) {
+                const invRes = await fetch(`${BASE_URL}/api/stock-operations/inventory/${warehouse._id}`, { headers: { 'x-auth-token': localStorage.getItem('token') } });
+                inventories[warehouse._id] = await invRes.json();
+            }
+            // بناء رأس الجدول
+            let thead = `<tr><th>الاسم</th><th>الباركود</th><th>سعر الشراء</th><th>سعر البيع</th>`;
+            warehouses.forEach(w => {
+                thead += `<th>${w.name}<br>الرصيد الحالي</th>`;
+            });
+            thead += `<th>الإجراءات</th></tr>`;
+            document.querySelector('#productsListModal table thead').innerHTML = thead;
+            // بناء الصفوف
+            const tbody = document.getElementById('productsTableBody');
+            tbody.innerHTML = '';
+            products.forEach(product => {
+                let row = `<tr>`;
+                row += `<td>${product.name}</td>`;
+                row += `<td>${product.barcode || ''}</td>`;
+                row += `<td>${product.purchasePrice || '-'}</td>`;
+                row += `<td>${product.salePrice || '-'}</td>`;
+                warehouses.forEach(w => {
+                    // الرصيد الحالي: من الجرد
+                    const inv = inventories[w._id].find(i => i.product && i.product._id === product._id);
+                    const current = inv ? inv.quantity : 0;
+                    row += `<td>${current}</td>`;
+                });
+                row += `<td>
+                    <button class="modal-button" style="background:#ffc107;color:#333;z-index:1002;" onclick="editProduct('${product._id}')"><i class='fas fa-edit'></i> تعديل</button>
+                    <button class="modal-button" style="background:#dc3545;" onclick="deleteProduct('${product._id}')"><i class='fas fa-trash'></i> حذف</button>
+                </td>`;
+                row += `</tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+        async function editProduct(id) {
+            const product = productsCache.find(p => p._id === id);
+            if (!product) return;
+            // أخفِ جدول الأصناف مؤقتًا
+            document.getElementById('productsListModal').style.zIndex = 1000;
+            document.getElementById('addProductModal').style.zIndex = 2000;
+            document.getElementById('productsListModal').style.display = 'none';
+            await openAddProductModal();
+            document.getElementById('productName').value = product.name;
+            document.getElementById('productPurchasePrice').value = product.purchasePrice || '';
+            document.getElementById('productSalePrice').value = product.salePrice || '';
+            document.getElementById('productInitialQty').value = product.initialQty || '';
+            document.getElementById('productWarehouseGroup').style.display = 'none';
+            document.getElementById('addProductModal').style.display = 'flex';
+            document.getElementById('addProductModal').focus();
+            document.getElementById('addProductForm').onsubmit = async function(e) {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = {
+                    name: formData.get('name'),
+                    purchasePrice: formData.get('purchasePrice') || undefined,
+                    salePrice: formData.get('salePrice') || undefined,
+                    initialQty: formData.get('initialQty') || 0
+                };
+                try {
+                    const response = await fetch(`${BASE_URL}/api/products/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-auth-token': localStorage.getItem('token')
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    const result = await response.json();
+                    if (response.ok) {
+                        showAddProductMessage('تم تعديل الصنف بنجاح', 'success');
+                        setTimeout(() => { closeAddProductModal(); loadProductsTable(); }, 1200);
+                    } else {
+                        showAddProductMessage(result.message || 'فشل في تعديل الصنف', 'error');
+                    }
+                } catch (error) {
+                    showAddProductMessage('حدث خطأ أثناء تعديل الصنف', 'error');
+                }
+            };
+        }
+        async function deleteProduct(id) {
+            if (!confirm('هل أنت متأكد أنك تريد حذف هذا الصنف؟')) return;
+            try {
+                const response = await fetch(`${BASE_URL}/api/products/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'x-auth-token': localStorage.getItem('token') }
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    await loadProductsTable();
+                } else {
+                    alert(result.message || 'فشل في حذف الصنف');
+                }
+            } catch (error) {
+                alert('حدث خطأ أثناء حذف الصنف');
+            }
+        }
+        // دالة تعديل المخزن
+        async function editWarehouse(id) {
+            isEditMode = true;
+            currentWarehouseId = id;
+            const warehouse = warehouses.find(w => w._id === id);
+            if (!warehouse) return;
+            document.getElementById('modalTitle').textContent = 'تعديل بيانات المخزن';
+            document.getElementById('name').value = warehouse.name;
+            document.getElementById('location').value = warehouse.location || '';
+            document.getElementById('warehouseModal').style.display = 'flex';
+        }
+        // دالة حذف المخزن
+        async function deleteWarehouse(id) {
+            if (!confirm('هل أنت متأكد أنك تريد حذف هذا المخزن؟')) return;
+            try {
+                const response = await fetch(`${BASE_URL}/api/warehouses/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'x-auth-token': localStorage.getItem('token') }
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    alert('تم حذف المخزن بنجاح');
+                    loadWarehouses();
+                } else {
+                    alert(result.message || 'فشل في حذف المخزن');
+                }
+            } catch (error) {
+                alert('حدث خطأ أثناء حذف المخزن');
+            }
+        }
+    </script>
+</body>
+</html> 
