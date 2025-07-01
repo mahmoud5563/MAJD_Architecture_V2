@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تقارير المبيعات</title>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         :root {
@@ -273,6 +275,7 @@ const BASE_URL = "https://6504-156-203-155-30.ngrok-free.app";
                     <td>
                         <button class="btn btn-sm btn-danger" onclick="deleteSale('${sale._id}')">حذف</button>
                         <button class="btn btn-sm btn-primary" onclick="editSale('${sale._id}')">تعديل</button>
+                        <button class="btn btn-sm btn-success" onclick="exportInvoiceExcel('${sale._id}')"><i class="fas fa-file-excel"></i> تصدير Excel</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -337,6 +340,39 @@ const BASE_URL = "https://6504-156-203-155-30.ngrok-free.app";
                 document.body.classList.remove('sidebar-open');
             }
         });
+
+        function exportInvoiceExcel(saleId) {
+            const sale = allSales.find(s => s._id === saleId);
+            if (!sale) return alert('لم يتم العثور على الفاتورة');
+            // تجهيز بيانات الأصناف
+            const items = (sale.items || []).map(item => [
+                item.name || (item.product && item.product.name) || '-',
+                item.quantity,
+                item.unitPrice,
+                item.total
+            ]);
+            // تجهيز بيانات الفاتورة
+            const data = [
+                ['رقم الفاتورة', sale.invoiceNumber],
+                ['التاريخ', new Date(sale.date).toLocaleDateString('en-GB')],
+                ['اسم العميل', sale.client ? sale.client.clientName : (sale.clientName || '-')],
+                ['الإجمالي', sale.total],
+                ['الحالة', sale.status],
+                ['نوع الدفع', sale.paymentType || '-'],
+                ['طريقة الدفع', sale.paymentMethod || '-'],
+                ['المدفوع', sale.paidAmount != null ? sale.paidAmount : '-'],
+                ['الباقي', sale.balance != null ? sale.balance : '-'],
+                [],
+                ['الأصناف'],
+                ['اسم الصنف', 'الكمية', 'سعر الوحدة', 'الإجمالي'],
+                ...items
+            ];
+            // إنشاء ملف Excel
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'فاتورة');
+            XLSX.writeFile(wb, `فاتورة_${sale.invoiceNumber}.xlsx`);
+        }
     </script>
 </body>
 </html> 

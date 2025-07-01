@@ -29,6 +29,7 @@
         <h2><i class="fas fa-file-invoice-dollar"></i> عرض سعر</h2>
         <div class="search-row">
             <select id="clientSelect" class="form-control" style="max-width:220px;"></select>
+            <button id="addClientBtn" class="btn btn-info" type="button" style="margin-right:5px;">إضافة عميل جديد</button>
             <select id="itemTypeSelect" class="form-control" style="max-width:120px;">
                 <option value="product">صنف</option>
                 <option value="service">خدمة</option>
@@ -62,6 +63,21 @@
         <button onclick="exportQuotationExcel()" class="btn btn-success">تصدير Excel</button>
         <button id="saveQuotationBtn" class="btn btn-primary">حفظ</button>
         <a href="sales.html" class="btn btn-info" style="float:left;">رجوع للمبيعات</a>
+    </div>
+    <!-- نافذة منبثقة لإضافة عميل جديد -->
+    <div id="addClientModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:1000;align-items:center;justify-content:center;">
+      <div style="background:#fff;padding:25px 20px;border-radius:8px;min-width:300px;max-width:90vw;box-shadow:0 2px 12px rgba(0,0,0,0.15);position:relative;">
+        <h3 style="margin-top:0;">إضافة عميل جديد</h3>
+        <div style="margin-bottom:10px;">
+          <input id="newClientName" class="form-control" placeholder="اسم العميل" style="margin-bottom:7px;">
+          <input id="newClientPhone" class="form-control" placeholder="رقم الهاتف" style="margin-bottom:7px;">
+          <input id="newClientAddress" class="form-control" placeholder="العنوان">
+        </div>
+        <div style="text-align:left;">
+          <button id="saveNewClientBtn" class="btn btn-success">حفظ</button>
+          <button id="closeAddClientModal" class="btn btn-danger" type="button">إلغاء</button>
+        </div>
+      </div>
     </div>
     <script>
     const BASE_URL = window.location.origin;
@@ -269,6 +285,44 @@
     // تحميل المنتجات والعملاء عند فتح الصفحة
     fetchProducts().then(renderQuotationTable);
     fetchClients();
+    // منطق فتح وغلق النافذة
+    const addClientBtn = document.getElementById('addClientBtn');
+    const addClientModal = document.getElementById('addClientModal');
+    const closeAddClientModal = document.getElementById('closeAddClientModal');
+    addClientBtn.onclick = () => { addClientModal.style.display = 'flex'; };
+    closeAddClientModal.onclick = () => { addClientModal.style.display = 'none'; };
+    addClientModal.onclick = (e) => { if (e.target === addClientModal) addClientModal.style.display = 'none'; };
+    // منطق حفظ العميل الجديد
+    const saveNewClientBtn = document.getElementById('saveNewClientBtn');
+    saveNewClientBtn.onclick = async function() {
+      const name = document.getElementById('newClientName').value.trim();
+      const phone = document.getElementById('newClientPhone').value.trim();
+      const address = document.getElementById('newClientAddress').value.trim();
+      if (!name) { alert('يرجى إدخال اسم العميل'); return; }
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch(`${BASE_URL}/api/clients`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+          body: JSON.stringify({ clientName: name, phone, address })
+        });
+        if (res.ok) {
+          addClientModal.style.display = 'none';
+          await fetchClients();
+          // اختيار العميل المضاف تلقائياً
+          const newClient = clientsList.find(c => c.clientName === name && c.phone === phone);
+          if (newClient) document.getElementById('clientSelect').value = newClient._id;
+          document.getElementById('newClientName').value = '';
+          document.getElementById('newClientPhone').value = '';
+          document.getElementById('newClientAddress').value = '';
+        } else {
+          const result = await res.json();
+          alert(result.message || 'حدث خطأ أثناء إضافة العميل');
+        }
+      } catch (err) {
+        alert('حدث خطأ أثناء إضافة العميل');
+      }
+    };
     </script>
 </body>
 </html> 

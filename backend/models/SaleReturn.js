@@ -6,7 +6,7 @@ const saleReturnSchema = new mongoose.Schema({
     clientName: { type: String }, // اسم العميل (اختياري)
     items: [
         {
-            product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+            product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: false },
             name: { type: String },
             quantity: { type: Number, required: true },
             unitPrice: { type: Number },

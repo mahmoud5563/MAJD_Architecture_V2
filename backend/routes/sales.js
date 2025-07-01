@@ -95,8 +95,8 @@ router.post('/', /*auth,*/ async (req, res) => {
         // خصم الكمية من المخزن المختار فقط
         if (warehouse && Array.isArray(items)) {
             for (const item of items) {
-                if (item.product) {
-                    await Product.findByIdAndUpdate(item.product, { $inc: { quantity: -item.quantity } });
+                if (item.product && item.product !== 'undefined') {
+                    await Product.findByIdAndUpdate(item.product, { $inc: { quantity: item.quantity } });
                     // إضافة عملية بيع في جدول العمليات المخزنية
                     await StockOperation.create({
                         type: 'بيع',
@@ -226,16 +226,19 @@ router.post('/sale-returns', auth, async (req, res) => {
         // تحديث المخزون: أضف الكمية للمخزن المختار فقط
         if (warehouse && Array.isArray(items)) {
             for (const item of items) {
-                await Product.findByIdAndUpdate(item.product, { $inc: { quantity: item.quantity } });
-                // إضافة عملية استرجاع في جدول العمليات المخزنية
-                await StockOperation.create({
-                    type: 'استرجاع',
-                    product: item.product,
-                    quantity: item.quantity,
-                    warehouse: warehouse,
-                    date: new Date(),
-                    notes: `استرجاع بسبب مرتجع فاتورة مبيعات`
-                });
+                if (item.product && item.product !== 'undefined') {
+                    await Product.findByIdAndUpdate(item.product, { $inc: { quantity: item.quantity } });
+                    // إضافة عملية استرجاع في جدول العمليات المخزنية
+                    await StockOperation.create({
+                        type: 'استرجاع',
+                        product: item.product,
+                        quantity: item.quantity,
+                        warehouse: warehouse,
+                        date: new Date(),
+                        notes: `استرجاع بسبب مرتجع فاتورة مبيعات`
+                    });
+                }
+                // إذا لم يكن هناك product id (خدمة)، لا تفعل شيئًا للمخزون، فقط احفظ بيانات المرتجع
             }
         }
         // خصم قيمة المرتجع من الخزينة المختارة

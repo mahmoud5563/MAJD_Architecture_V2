@@ -142,13 +142,17 @@
             if (qty > 0) {
                 const unitPrice = parseFloat(input.getAttribute('data-unitprice')) || 0;
                 const itemTotal = qty * unitPrice;
-                items.push({
-                    product: input.getAttribute('data-product'),
+                const productId = input.getAttribute('data-product');
+                const itemObj = {
                     name: input.getAttribute('data-name'),
                     quantity: qty,
                     unitPrice: unitPrice,
                     total: itemTotal
-                });
+                };
+                if (productId && productId !== 'undefined') {
+                    itemObj.product = productId;
+                }
+                items.push(itemObj);
                 total += itemTotal;
             }
         });
