@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عرض سعر</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+        .container { max-width: 700px; margin: 40px auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 30px 20px; }
+        h2 { color: #014C47; margin-bottom: 20px; }
+        .search-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .form-control { padding: 8px 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 15px; }
+        .btn { background: #014C47; color: #fff; border: none; padding: 8px 18px; border-radius: 5px; cursor: pointer; font-size: 15px; transition: background 0.2s; }
+        .btn-info { background: #17a2b8; }
+        .btn-success { background: #28a745; }
+        .btn-danger { background: #dc3545; }
+        .btn-sm { padding: 4px 10px; font-size: 13px; }
+        .table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        .table th, .table td { padding: 9px 10px; border: 1px solid #eee; text-align: right; }
+        .table th { background: #014C47; color: #fff; }
+        .table td { background: #fff; }
+        @media (max-width: 600px) { .container { padding: 10px 2px; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2><i class="fas fa-file-invoice-dollar"></i> عرض سعر</h2>
+        <div class="search-row">
+            <select id="clientSelect" class="form-control" style="max-width:220px;"></select>
+            <button id="addClientBtn" class="btn btn-info" type="button" style="margin-right:5px;">إضافة عميل جديد</button>
+            <select id="itemTypeSelect" class="form-control" style="max-width:120px;">
+                <option value="product">صنف</option>
+                <option value="service">خدمة</option>
+            </select>
+            <input type="text" id="searchProductQuotation" class="form-control" placeholder="بحث بالاسم أو الباركود" style="flex:1;">
+        </div>
+        <div id="serviceAddArea" style="display:none;margin-bottom:10px;">
+            <input type="text" id="serviceNameInput" class="form-control" placeholder="اسم الخدمة" style="max-width:180px;display:inline-block;margin-left:5px;">
+            <input type="text" id="serviceDescInput" class="form-control" placeholder="الوصف" style="max-width:180px;display:inline-block;margin-left:5px;">
+            <input type="number" id="serviceQtyInput" class="form-control" placeholder="الكمية" min="1" value="1" style="width:80px;display:inline-block;margin-left:5px;">
+            <input type="number" id="servicePriceInput" class="form-control" placeholder="السعر" min="0" value="0" style="width:100px;display:inline-block;margin-left:5px;">
+            <button onclick="addServiceToQuotation()" class="btn btn-info">إضافة</button>
+        </div>
+        <div id="searchResultsQuotation" style="margin-bottom:10px;"></div>
+        <table id="quotationTable" class="table">
+            <thead>
+                <tr>
+                    <th>البند</th>
+                    <th>الوصف</th>
+                    <th>الكمية</th>
+                    <th>سعر الوحدة</th>
+                    <th>الإجمالي</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <div style="text-align:left;margin-bottom:10px;">
+            <strong>الإجمالي الكلي: <span id="quotationTotal">0</span> جنيه</strong>
+        </div>
+        <button onclick="exportQuotationExcel()" class="btn btn-success">تصدير Excel</button>
+        <button id="saveQuotationBtn" class="btn btn-primary">حفظ</button>
+        <a href="sales.html" class="btn btn-info" style="float:left;">رجوع للمبيعات</a>
+    </div>
+    <!-- نافذة منبثقة لإضافة عميل جديد -->
+    <div id="addClientModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:1000;align-items:center;justify-content:center;">
+      <div style="background:#fff;padding:25px 20px;border-radius:8px;min-width:300px;max-width:90vw;box-shadow:0 2px 12px rgba(0,0,0,0.15);position:relative;">
+        <h3 style="margin-top:0;">إضافة عميل جديد</h3>
+        <div style="margin-bottom:10px;">
+          <input id="newClientName" class="form-control" placeholder="اسم العميل" style="margin-bottom:7px;">
+          <input id="newClientPhone" class="form-control" placeholder="رقم الهاتف" style="margin-bottom:7px;">
+          <input id="newClientAddress" class="form-control" placeholder="العنوان">
+        </div>
+        <div style="text-align:left;">
+          <button id="saveNewClientBtn" class="btn btn-success">حفظ</button>
+          <button id="closeAddClientModal" class="btn btn-danger" type="button">إلغاء</button>
+        </div>
+      </div>
+    </div>
+    <script>
+    const BASE_URL = window.location.origin;
+    let productsList = [];
+    let quotationProducts = [];
+    let clientsList = [];
+    // جلب الأصناف من API
+    async function fetchProducts() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('يرجى تسجيل الدخول أولاً');
+            window.location.href = '/';
+            return;
+        }
+        const res = await fetch(`${BASE_URL}/api/products`, { headers: { 'x-auth-token': token } });
+        productsList = await res.json();
+    }
+    // جلب العملاء
+    async function fetchClients() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('يرجى تسجيل الدخول أولاً');
+            window.location.href = '/';
+            return;
+        }
+        const res = await fetch(`${BASE_URL}/api/clients`, { headers: { 'x-auth-token': token } });
+        clientsList = await res.json();
+        const clientSelect = document.getElementById('clientSelect');
+        clientSelect.innerHTML = '<option value="">-- اختر عميل --</option>' + clientsList.map(c => `<option value="${c._id}">${c.clientName}</option>`).join('');
+    }
+    // بحث تلقائي
+    document.getElementById('searchProductQuotation').addEventListener('input', searchProductForQuotation);
+    function searchProductForQuotation() {
+        const val = document.getElementById('searchProductQuotation').value.trim();
+        if (!val) {
+            document.getElementById('searchResultsQuotation').innerHTML = '';
+            return;
+        }
+        const results = productsList.filter(p => p.name.includes(val) || (p.barcode && p.barcode.includes(val)));
+        if (results.length === 0) {
+            document.getElementById('searchResultsQuotation').innerHTML = '<div style="color:red;">لا يوجد نتائج</div>';
+            return;
+        }
+        document.getElementById('searchResultsQuotation').innerHTML = results.map(p =>
+            `<div style='margin-bottom:5px;'>
+                <b>${p.name}</b> (باركود: ${p.barcode || '-'}), سعر: ${p.salePrice || 0} جنيه
+                <input type='number' min='1' value='1' style='width:60px;margin:0 7px;' id='qty_${p._id}'>
+                <button class='btn btn-sm btn-info' onclick='addProductToQuotation("${p._id}")'>إضافة</button>
+            </div>`
+        ).join('');
+    }
+    function addProductToQuotation(id) {
+        const prod = productsList.find(p => p._id === id);
+        if (!prod) return;
+        const qty = parseInt(document.getElementById('qty_' + id).value) || 1;
+        const exist = quotationProducts.find(q => q._id === id);
+        if (exist) {
+            exist.qty += qty;
+        } else {
+            quotationProducts.push({ _id: id, name: prod.name, price: prod.salePrice || 0, qty });
+        }
+        renderQuotationTable();
+    }
+    function renderQuotationTable() {
+        const tbody = document.querySelector('#quotationTable tbody');
+        tbody.innerHTML = '';
+        let total = 0;
+        quotationProducts.forEach((item, idx) => {
+            const rowTotal = item.qty * item.price;
+            total += rowTotal;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${item.name}</td>
+                <td><textarea class='form-control' style='min-width:120px;' onchange='updateQuotationDesc(${idx}, this.value)'>${item.desc || ''}</textarea></td>
+                <td><input type='number' min='1' value='${item.qty}' style='width:60px;' onchange='updateQuotationQty(${idx}, this.value)'></td>
+                <td><input type='number' min='0' value='${item.price}' style='width:80px;' onchange='updateQuotationPrice(${idx}, this.value)'></td>
+                <td>${rowTotal}</td>
+                <td><button class='btn btn-danger btn-sm' onclick='removeQuotationItem(${idx})'>حذف</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+        document.getElementById('quotationTotal').textContent = total;
+    }
+    function updateQuotationQty(idx, val) {
+        quotationProducts[idx].qty = parseInt(val) || 1;
+        renderQuotationTable();
+    }
+    function updateQuotationPrice(idx, val) {
+        quotationProducts[idx].price = parseFloat(val) || 0;
+        renderQuotationTable();
+    }
+    function updateQuotationDesc(idx, val) {
+        quotationProducts[idx].desc = val;
+    }
+    function removeQuotationItem(idx) {
+        quotationProducts.splice(idx, 1);
+        renderQuotationTable();
+    }
+    function exportQuotationExcel() {
+        if (quotationProducts.length === 0) {
+            alert('لا يوجد أصناف في عرض السعر');
+            return;
+        }
+        const wb = XLSX.utils.book_new();
+        const data = [
+            ['اسم الصنف', 'الوصف', 'الكمية', 'سعر الوحدة', 'الإجمالي']
+        ];
+        quotationProducts.forEach(item => {
+            data.push([item.name, item.desc || '', item.qty, item.price, item.qty * item.price]);
+        });
+        data.push([]);
+        data.push(['الإجمالي الكلي', '', '', '', quotationProducts.reduce((sum, i) => sum + i.qty * i.price, 0)]);
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws, 'عرض سعر');
+        XLSX.writeFile(wb, 'عرض_سعر.xlsx');
+    }
+    document.getElementById('saveQuotationBtn').onclick = async function() {
+        const clientId = document.getElementById('clientSelect').value;
+        if (!clientId) {
+            alert('يرجى اختيار عميل');
+            return;
+        }
+        if (quotationProducts.length === 0) {
+            alert('لا يوجد أصناف في عرض السعر');
+            return;
+        }
+        const items = quotationProducts.map(item => ({
+            product: item._id,
+            name: item.name,
+            description: item.desc || '',
+            quantity: item.qty,
+            unitPrice: item.price,
+            total: item.qty * item.price
+        }));
+        const total = items.reduce((sum, i) => sum + i.total, 0);
+        const data = {
+            date: new Date(),
+            client: clientId,
+            type: 'خدمة',
+            items,
+            total,
+            status: 'عرض سعر'
+        };
+        const token = localStorage.getItem('token');
+        try {
+            const res = await fetch(`${BASE_URL}/api/sales`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-auth-token': token
+                },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (res.ok) {
+                alert('تم حفظ عرض السعر بنجاح!');
+                window.location.href = 'sales-reports.html';
+            } else {
+                alert(result.message || 'حدث خطأ أثناء الحفظ');
+            }
+        } catch (err) {
+            alert('حدث خطأ أثناء الحفظ');
+        }
+    };
+    document.getElementById('itemTypeSelect').addEventListener('change', function() {
+        if (this.value === 'product') {
+            document.getElementById('searchProductQuotation').style.display = '';
+            document.getElementById('searchResultsQuotation').style.display = '';
+            document.getElementById('serviceAddArea').style.display = 'none';
+        } else {
+            document.getElementById('searchProductQuotation').style.display = 'none';
+            document.getElementById('searchResultsQuotation').style.display = 'none';
+            document.getElementById('serviceAddArea').style.display = '';
+        }
+    });
+    // عند تحميل الصفحة، طبق نفس المنطق:
+    window.addEventListener('DOMContentLoaded', function() {
+        const type = document.getElementById('itemTypeSelect').value;
+        if (type === 'product') {
+            document.getElementById('searchProductQuotation').style.display = '';
+            document.getElementById('searchResultsQuotation').style.display = '';
+            document.getElementById('serviceAddArea').style.display = 'none';
+        } else {
+            document.getElementById('searchProductQuotation').style.display = 'none';
+            document.getElementById('searchResultsQuotation').style.display = 'none';
+            document.getElementById('serviceAddArea').style.display = '';
+        }
+    });
+    function addServiceToQuotation() {
+        const name = document.getElementById('serviceNameInput').value.trim();
+        const desc = document.getElementById('serviceDescInput').value.trim();
+        const qty = parseInt(document.getElementById('serviceQtyInput').value) || 1;
+        const price = parseFloat(document.getElementById('servicePriceInput').value) || 0;
+        if (!name) {
+            alert('يرجى إدخال اسم الخدمة');
+            return;
+        }
+        quotationProducts.push({ name, desc, qty, price });
+        renderQuotationTable();
+        document.getElementById('serviceNameInput').value = '';
+        document.getElementById('serviceDescInput').value = '';
+        document.getElementById('serviceQtyInput').value = 1;
+        document.getElementById('servicePriceInput').value = 0;
+    }
+    // تحميل المنتجات والعملاء عند فتح الصفحة
+    fetchProducts().then(renderQuotationTable);
+    fetchClients();
+    // منطق فتح وغلق النافذة
+    const addClientBtn = document.getElementById('addClientBtn');
+    const addClientModal = document.getElementById('addClientModal');
+    const closeAddClientModal = document.getElementById('closeAddClientModal');
+    addClientBtn.onclick = () => { addClientModal.style.display = 'flex'; };
+    closeAddClientModal.onclick = () => { addClientModal.style.display = 'none'; };
+    addClientModal.onclick = (e) => { if (e.target === addClientModal) addClientModal.style.display = 'none'; };
+    // منطق حفظ العميل الجديد
+    const saveNewClientBtn = document.getElementById('saveNewClientBtn');
+    saveNewClientBtn.onclick = async function() {
+      const name = document.getElementById('newClientName').value.trim();
+      const phone = document.getElementById('newClientPhone').value.trim();
+      const address = document.getElementById('newClientAddress').value.trim();
+      if (!name) { alert('يرجى إدخال اسم العميل'); return; }
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch(`${BASE_URL}/api/clients`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+          body: JSON.stringify({ clientName: name, phone, address })
+        });
+        if (res.ok) {
+          addClientModal.style.display = 'none';
+          await fetchClients();
+          // اختيار العميل المضاف تلقائياً
+          const newClient = clientsList.find(c => c.clientName === name && c.phone === phone);
+          if (newClient) document.getElementById('clientSelect').value = newClient._id;
+          document.getElementById('newClientName').value = '';
+          document.getElementById('newClientPhone').value = '';
+          document.getElementById('newClientAddress').value = '';
+        } else {
+          const result = await res.json();
+          alert(result.message || 'حدث خطأ أثناء إضافة العميل');
+        }
+      } catch (err) {
+        alert('حدث خطأ أثناء إضافة العميل');
+      }
+    };
+    </script>
+</body>
+</html> 

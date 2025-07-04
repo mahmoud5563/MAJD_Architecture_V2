@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إضافة قيد يومي</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #e6e6e6;
+            color: #333;
+            min-height: 100vh;
+            direction: rtl;
+        }
+        .header {
+            background-color: #014C47;
+            color: #f4f4f4;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .header .logo {
+            font-size: 22px;
+            font-weight: bold;
+        }
+        .main-container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(1,76,71,0.08);
+            padding: 32px 24px 24px 24px;
+        }
+        .page-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        .page-header h1 {
+            color: #014C47;
+            font-size: 26px;
+            margin: 0;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        label {
+            font-weight: 500;
+            margin-bottom: 6px;
+            display: block;
+        }
+        input[type="text"], input[type="date"], input[type="number"], select, textarea {
+            width: 100%;
+            padding: 10px 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+        textarea {
+            resize: vertical;
+        }
+        .journal-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 12px;
+        }
+        .journal-table th, .journal-table td {
+            border: 1px solid #ddd;
+            padding: 8px 6px;
+            text-align: center;
+        }
+        .journal-table th {
+            background: #f4f4f4;
+            color: #014C47;
+        }
+        .add-row-btn {
+            background: #00bfae;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 7px 18px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: background 0.2s;
+        }
+        .add-row-btn:hover {
+            background: #014C47;
+        }
+        .remove-row-btn {
+            background: #e74c3c;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 5px 12px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .totals-row td {
+            font-weight: bold;
+            background: #f9f9f9;
+        }
+        .error-message {
+            color: #b02a37;
+            background: #fff0f0;
+            border: 1px solid #f5b2b2;
+            border-radius: 8px;
+            padding: 10px 16px;
+            margin-bottom: 12px;
+            display: none;
+        }
+        .success-message {
+            color: #137a3a;
+            background: #e6fff0;
+            border: 1.5px solid #b2f2d7;
+            border-radius: 8px;
+            padding: 10px 16px;
+            margin-bottom: 12px;
+            display: none;
+        }
+        .tax-section {
+            margin: 12px 0 0 0;
+            padding: 10px 14px;
+            background: #f4f4f4;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .attachment-section {
+            margin: 18px 0 0 0;
+        }
+        .attachment-preview {
+            margin-top: 8px;
+            max-width: 180px;
+            max-height: 120px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .save-btn {
+            background: #014C47;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 32px;
+            font-size: 18px;
+            margin-top: 18px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .save-btn:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+        @media (max-width: 700px) {
+            .main-container {
+                padding: 10px 2vw;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo"><i class="fas fa-calculator"></i> إضافة قيد يومي</div>
+    </div>
+    <div class="main-container">
+        <div class="page-header">
+            <h1><i class="fas fa-plus-circle"></i> إضافة قيد يومي جديد</h1>
+        </div>
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+        <form id="journalEntryForm" enctype="multipart/form-data" autocomplete="off">
+            <div class="form-group">
+                <label for="entryDate">التاريخ</label>
+                <input type="date" id="entryDate" name="date" required>
+            </div>
+            <div class="form-group">
+                <label for="description">وصف القيد</label>
+                <textarea id="description" name="description" rows="2" required></textarea>
+            </div>
+            <div class="form-group">
+                <label>بنود القيد</label>
+                <div class="tax-section" style="margin-bottom:10px;">
+                    <label style="margin:0 8px 0 0;">طريقة احتساب الضريبة:</label>
+                    <select id="taxTypeGlobal" style="width:120px;">
+                        <option value="percent">نسبة %</option>
+                        <option value="fixed">مبلغ ثابت</option>
+                    </select>
+                    <input type="number" id="taxValueGlobal" placeholder="قيمة الضريبة" min="0" step="0.01" style="width:120px;">
+                    <span style="color:#888; font-size:14px;">(سيتم تطبيق الضريبة على كل بند تلقائيًا)</span>
+                </div>
+                <button type="button" class="add-row-btn" onclick="addJournalRow()"><i class="fas fa-plus"></i> صف جديد</button>
+                <table class="journal-table" id="journalTable">
+                    <thead>
+                        <tr>
+                            <th>الحساب</th>
+                            <th>مدين</th>
+                            <th>دائن</th>
+                            <th>الضريبة</th>
+                            <th>حذف</th>
+                        </tr>
+                    </thead>
+                    <tbody id="journalTableBody">
+                    </tbody>
+                    <tfoot>
+                        <tr class="totals-row">
+                            <td>المجموع</td>
+                            <td id="totalDebit">0.00</td>
+                            <td id="totalCredit">0.00</td>
+                            <td id="totalTax">0.00</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="attachment-section">
+                <label for="attachment">المرفقات (صورة أو ملف)</label>
+                <input type="file" id="attachment" name="attachment" accept="image/*,application/pdf">
+                <img id="attachmentPreview" class="attachment-preview" style="display:none;" />
+            </div>
+            <button type="submit" class="save-btn" id="saveBtn">حفظ القيد</button>
+        </form>
+    </div>
+    <script>
+        const BASE_URL = "http://localhost:3000";
+        // جلب الحسابات من API (عند توفرها)
+        let accountsList = [];
+        async function fetchAccounts() {
+            try {
+                const res = await fetch(`${BASE_URL}/api/accounts/accounts-tree`);
+                if (res.ok) {
+                    accountsList = await res.json();
+                } else {
+                    accountsList = [];
+                }
+            } catch {
+                accountsList = [];
+            }
+        }
+        // بناء شجرة الحسابات من القائمة المسطحة
+        function buildAccountsTree(accounts) {
+            const map = {};
+            accounts.forEach(acc => map[acc._id] = { ...acc, children: [] });
+            const roots = [];
+            accounts.forEach(acc => {
+                if (acc.parent) {
+                    if (map[acc.parent]) map[acc.parent].children.push(map[acc._id]);
+                } else {
+                    roots.push(map[acc._id]);
+                }
+            });
+            return roots;
+        }
+        // تعبئة الدروب داون للحسابات بشكل هرمي
+        function populateAccountsDropdown(select, selectedValue = '') {
+            select.innerHTML = '<option value="">اختر الحساب</option>';
+            const tree = buildAccountsTree(accountsList);
+            function addOptions(nodes, prefix = '') {
+                for (const node of nodes) {
+                    const opt = document.createElement('option');
+                    opt.value = node._id || node.id || node.name;
+                    opt.textContent = prefix + node.name;
+                    if (selectedValue && (selectedValue === opt.value || selectedValue === opt.textContent)) opt.selected = true;
+                    select.appendChild(opt);
+                    if (node.children && node.children.length) {
+                        addOptions(node.children, prefix + '— ');
+                    }
+                }
+            }
+            addOptions(tree);
+        }
+        // إضافة صف جديد
+        function addJournalRow(account = '', debit = '', credit = '', tax = '', taxType = '') {
+            const tbody = document.getElementById('journalTableBody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <select name="account[]" required>
+                        <option value="">اختر الحساب</option>
+                    </select>
+                </td>
+                <td><input type="number" name="debit[]" min="0" step="0.01" value="${debit}" oninput="updateTotals(); updateTaxForRow(this)"></td>
+                <td><input type="number" name="credit[]" min="0" step="0.01" value="${credit}" oninput="updateTotals(); updateTaxForRow(this)"></td>
+                <td><input type="number" name="tax[]" min="0" step="0.01" value="${tax || ''}" style="width:90px;" readonly></td>
+                <td><button type="button" class="remove-row-btn" onclick="removeJournalRow(this)"><i class="fas fa-trash"></i></button></td>
+            `;
+            tbody.appendChild(row);
+            populateAccountsDropdown(row.querySelector('select'), account);
+            updateTotals();
+            updateTaxForRow(row.querySelector('input[name="debit[]"]'));
+        }
+        // حذف صف
+        function removeJournalRow(btn) {
+            btn.closest('tr').remove();
+            updateTotals();
+        }
+        // تحديث المجاميع
+        function updateTotals() {
+            let totalDebit = 0, totalCredit = 0, totalTax = 0;
+            document.querySelectorAll('input[name="debit[]"]').forEach(inp => totalDebit += parseFloat(inp.value) || 0);
+            document.querySelectorAll('input[name="credit[]"]').forEach(inp => totalCredit += parseFloat(inp.value) || 0);
+            document.querySelectorAll('input[name="tax[]"]').forEach(inp => totalTax += parseFloat(inp.value) || 0);
+            document.getElementById('totalDebit').textContent = totalDebit.toFixed(2);
+            document.getElementById('totalCredit').textContent = totalCredit.toFixed(2);
+            document.getElementById('totalTax').textContent = totalTax.toFixed(2);
+        }
+        // الضريبة
+        function updateTaxForRow(input) {
+            const row = input.closest('tr');
+            const debit = parseFloat(row.querySelector('input[name="debit[]"]').value) || 0;
+            const credit = parseFloat(row.querySelector('input[name="credit[]"]').value) || 0;
+            const taxInput = row.querySelector('input[name="tax[]"]');
+            const taxType = document.getElementById('taxTypeGlobal').value;
+            const taxValue = parseFloat(document.getElementById('taxValueGlobal').value) || 0;
+            let tax = 0;
+            if (taxType === 'percent') {
+                tax = ((debit || credit) * taxValue) / 100;
+            } else {
+                tax = taxValue;
+            }
+            taxInput.value = tax > 0 ? tax.toFixed(2) : '';
+            updateTotals();
+        }
+        document.getElementById('taxTypeGlobal').addEventListener('change', function() {
+            document.querySelectorAll('#journalTableBody tr').forEach(tr => {
+                updateTaxForRow(tr.querySelector('input[name="debit[]"]'));
+            });
+        });
+        document.getElementById('taxValueGlobal').addEventListener('input', function() {
+            document.querySelectorAll('#journalTableBody tr').forEach(tr => {
+                updateTaxForRow(tr.querySelector('input[name="debit[]"]'));
+            });
+        });
+        // معاينة المرفق
+        document.getElementById('attachment').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('attachmentPreview');
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    preview.src = ev.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+        // التحقق من تساوي الطرفين
+        function validateTotals() {
+            const debit = parseFloat(document.getElementById('totalDebit').textContent) || 0;
+            const credit = parseFloat(document.getElementById('totalCredit').textContent) || 0;
+            return debit === credit && debit > 0;
+        }
+        // إرسال القيد
+        document.getElementById('journalEntryForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+            if (!validateTotals()) {
+                document.getElementById('errorMessage').textContent = 'يجب أن يكون مجموع المدين مساوياً لمجموع الدائن.';
+                document.getElementById('errorMessage').style.display = 'block';
+                return;
+            }
+            const formData = new FormData(this);
+            // إضافة تفاصيل البنود
+            const lines = [];
+            const accounts = this.querySelectorAll('select[name="account[]"]');
+            const debits = this.querySelectorAll('input[name="debit[]"]');
+            const credits = this.querySelectorAll('input[name="credit[]"]');
+            const taxes = this.querySelectorAll('input[name="tax[]"]');
+            for (let i = 0; i < accounts.length; i++) {
+                if (!accounts[i].value) continue;
+                lines.push({
+                    account: accounts[i].value,
+                    debit: parseFloat(debits[i].value) || 0,
+                    credit: parseFloat(credits[i].value) || 0,
+                    tax: parseFloat(taxes[i].value) || 0,
+                    taxType: document.getElementById('taxTypeGlobal').value
+                });
+            }
+            formData.append('lines', JSON.stringify(lines));
+            // إرسال البيانات
+            try {
+                const res = await fetch(`${BASE_URL}/api/accounts/add-journal-entry`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById('successMessage').textContent = 'تم حفظ القيد بنجاح';
+                    document.getElementById('successMessage').style.display = 'block';
+                    this.reset();
+                    document.getElementById('journalTableBody').innerHTML = '';
+                    updateTotals();
+                } else {
+                    document.getElementById('errorMessage').textContent = data.message || 'حدث خطأ أثناء الحفظ';
+                    document.getElementById('errorMessage').style.display = 'block';
+                }
+            } catch (err) {
+                document.getElementById('errorMessage').textContent = 'حدث خطأ أثناء الاتصال بالخادم';
+                document.getElementById('errorMessage').style.display = 'block';
+            }
+        });
+        // تحميل الحسابات عند تحميل الصفحة
+        window.addEventListener('DOMContentLoaded', async () => {
+            await fetchAccounts();
+            // أضف صف افتراضي واحد
+            addJournalRow();
+        });
+    </script>
+</body>
+</html> 

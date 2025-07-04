@@ -1,0 +1,1058 @@
+
+
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المشاريع - MAJD Architecture</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #014C47;
+            --primary-dark: #003a35;
+            --secondary-bg: #e6e6e6;
+            --text-color: #333;
+            --light-text-color: #f4f4f4;
+            --border-color: #ddd;
+            --sidebar-width: 250px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            direction: rtl;
+            text-align: right;
+        }
+
+        /* Header Styling */
+        .header {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        .header .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .header .user-info span {
+            margin-right: 15px;
+        }
+
+        .header .logout-button {
+            background-color: var(--primary-dark);
+            color: var(--light-text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .header .logout-button:hover {
+            background-color: #002b28;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--light-text-color);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Layout Container */
+        .main-container {
+            display: flex;
+            flex: 1;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 5px;
+        }
+
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--light-text-color);
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar ul li a i {
+            margin-left: 10px;
+            font-size: 18px;
+        }
+
+        .sidebar ul li a:hover,
+        .sidebar ul li.active a {
+            background-color: var(--primary-dark);
+            border-radius: 0 20px 20px 0;
+        }
+
+        /* Main Content Area */
+        .content-area {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .page-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            /* Allow wrapping on small screens */
+            justify-content: flex-end;
+            /* Align right for RTL */
+        }
+
+        .filter-controls input[type="text"],
+        .filter-controls select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 15px;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+            flex: 1;
+            /* Allow inputs to grow */
+            min-width: 180px;
+            /* Minimum width for inputs */
+        }
+
+        .filter-controls button {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .filter-controls button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        /* Table Styling */
+        .table-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+            /* For responsive tables */
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px 15px;
+            border: 1px solid #eee;
+            text-align: right;
+            white-space: nowrap;
+            /* Prevent text wrapping in cells */
+        }
+
+        .data-table th {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .data-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .action-buttons button {
+            background-color: #6c757d;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            margin-right: 5px;
+            /* Adjust for RTL */
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 14px;
+        }
+
+        .action-buttons button.view {
+            background-color: #007bff;
+        }
+
+        .action-buttons button.edit {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        .action-buttons button.delete {
+            background-color: #dc3545;
+        }
+
+        .action-buttons button.excel {
+            background-color: #28a745;
+        }
+
+        /* New Excel button color */
+
+
+        .action-buttons button:hover {
+            opacity: 0.9;
+        }
+
+        /* Modal Styling (for Edit Project) */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            width: 90%;
+            max-width: 600px;
+            animation-name: animatetop;
+            animation-duration: 0.4s;
+            text-align: right;
+        }
+
+        @keyframes animatetop {
+            from {
+                top: -300px;
+                opacity: 0
+            }
+
+            to {
+                top: 0;
+                opacity: 1
+            }
+        }
+
+        .close-button {
+            color: #aaa;
+            float: left;
+            font-size: 28px;
+            font-weight: bold;
+            margin-left: -10px;
+            margin-top: -10px;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-content h3 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+
+        .modal-form-group {
+            margin-bottom: 15px;
+        }
+
+        .modal-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+            font-size: 15px;
+        }
+
+        .modal-form-group input[type="text"],
+        .modal-form-group input[type="date"],
+        .modal-form-group textarea,
+        .modal-form-group select {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 15px;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+        }
+
+        .modal-form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .modal-button {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-button.cancel {
+            background-color: #6c757d;
+        }
+
+        .modal-button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .modal-button.cancel:hover {
+            background-color: #5a6268;
+        }
+
+        /* View Project Details Modal Styling (REMOVED FROM HERE - now in project-details.html) */
+
+        /* Responsive Adjustments for general layout and modals */
+        @media (max-width: 768px) {
+            .header .user-info span {
+                display: none;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                right: 0;
+                height: 100%;
+                width: var(--sidebar-width);
+                transform: translateX(100%);
+                z-index: 999;
+                box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+                padding-top: 70px;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .content-area {
+                margin-right: 0;
+            }
+
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 998;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+
+            .modal-content {
+                padding: 20px;
+                width: 95%;
+            }
+
+            .modal-content h3 {
+                font-size: 20px;
+            }
+
+            .modal-button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+
+            .add-button {
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+
+            .action-buttons button {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+
+            .filter-controls {
+                flex-direction: column;
+                /* Stack filters vertically */
+            }
+
+            .filter-controls input,
+            .filter-controls select,
+            .filter-controls button {
+                width: 100%;
+                /* Full width for filters */
+            }
+        }
+
+        #dashboardMessage {
+            position: fixed;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            min-width: 260px;
+            max-width: 90vw;
+            padding: 18px 36px 18px 18px;
+            border-radius: 12px;
+            font-size: 18px;
+            text-align: right;
+            font-weight: bold;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        #dashboardMessage.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #dashboardMessage.success {
+            background: #e6fff0;
+            color: #137a3a;
+            border: 1.5px solid #b2f2d7;
+        }
+        #dashboardMessage.error {
+            background: #fff0f0;
+            color: #b02a37;
+            border: 1.5px solid #f5b2b2;
+        }
+        #dashboardMessage .msg-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .add-button {
+            background-color: #28a745;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-right: 10px;
+        }
+        .add-button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="dashboardMessage" style="display:none;"></div>
+    <div class="header">
+        <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="logo">
+            MAJD Architecture
+        </div>
+        <div class="user-info">
+            <span id="loggedInUser"></span>
+            <button class="logout-button" id="logoutButton">تسجيل الخروج</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="overlay" id="sidebarOverlay"></div>
+
+        <div class="sidebar" id="sidebar">
+            <ul>
+                <li><a href="/dashboard.html" data-page="dashboard"><i class="fas fa-home"></i>الرئيسية</a></li>
+                <li><a href="/projects.html" data-page="projects"><i class="fas fa-project-diagram"></i> المشاريع</a></li>
+                <li><a href="/clients.html" data-page="clients"><i class="fas fa-users"></i> العملاء</a></li>
+                <li><a href="/contractors.html" data-page="contractors"><i class="fas fa-hard-hat"></i> المقاولون</a></li>
+                <li><a href="/treasuries.html" data-page="treasuries"><i class="fas fa-boxes"></i> عرض الخزائن</a></li>
+                <li><a href="/general-expenses.html" data-page="general-expenses"><i class="fas fa-money-bill-wave"></i> المصروفات العامة</a></li>
+                <li><a href="/employees.html" data-page="employees"><i class="fas fa-user-tie"></i> الموظفين</a></li>
+                <li><a href="/users.html" data-page="users"><i class="fas fa-user-friends"></i> المستخدمون</a></li>
+                <li><a href="/categories.html" data-page="categories"><i class="fas fa-tags"></i> إدارة التصنيفات</a></li>
+                <li><a href="/warehouses.html" data-page="warehouses"><i class="fas fa-warehouse"></i> المخازن</a></li>
+                <li><a href="/sales.html" data-page="sales"><i class="fas fa-shopping-cart"></i> المبيعات</a></li>
+                <li><a href="#" id="sidebarLogoutButton"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
+            </ul>
+        </div>
+
+        <div class="content-area" id="contentArea">
+            <div class="page-header">
+                <h1>المشاريع</h1>
+                <button class="add-button" onclick="window.location.href='add-project.html'">
+                    <i class="fas fa-plus"></i> إضافة مشروع
+                </button>
+            </div>
+
+            <div class="filter-controls">
+                <input type="text" id="projectSearchName" placeholder="البحث بالاسم...">
+                <select id="projectSearchStatus">
+                    <option value="">جميع الحالات</option>
+                    <option value="جاري">جاري</option>
+                    <option value="مكتمل">مكتمل</option>
+                    <option value="معلق">معلق</option>
+                    <option value="ملغى">ملغى</option>
+                </select>
+                <button id="applyProjectFilter">تطبيق البحث</button>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>اسم المشروع</th>
+                            <th>العنوان</th>
+                            <th>المهندس</th>
+                            <th>العميل</th>
+                            <th>تاريخ البدء</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="projectsTableBody">
+                        <!-- Project data will be loaded here -->
+                        <tr>
+                            <td colspan="7" style="text-align: center;">جاري تحميل المشاريع...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Project Modal -->
+    <div id="editProjectModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3>تعديل بيانات المشروع</h3>
+            <form id="editProjectForm">
+                <input type="hidden" id="editProjectId">
+                <div class="modal-form-group">
+                    <label for="editProjectName">اسم المشروع:</label>
+                    <input type="text" id="editProjectName" name="projectName" required>
+                </div>
+                <div class="modal-form-group">
+                    <label for="editProjectAddress">العنوان:</label>
+                    <input type="text" id="editProjectAddress" name="address" required>
+                </div>
+                <div class="modal-form-group">
+                    <label for="editProjectDescription">الوصف:</label>
+                    <textarea id="editProjectDescription" name="description"></textarea>
+                </div>
+                <div class="modal-form-group">
+                    <label for="editProjectEngineer">المهندس:</label>
+                    <select id="editProjectEngineer" name="engineer">
+                        <option value="">(اختياري) - اختر مهندس</option>
+                        <!-- Engineers will be loaded here -->
+                    </select>
+                </div>
+                <div class="modal-form-group">
+                    <label for="editProjectClient">العميل:</label>
+                    <select id="editProjectClient" name="client">
+                        <option value="">(اختياري) - اختر عميل</option>
+                        <!-- Clients will be loaded here -->
+                    </select>
+                </div>
+                <div class="modal-form-group">
+                    <label for="editProjectStartDate">تاريخ البدء:</label>
+                    <input type="date" id="editProjectStartDate" name="startDate" required>
+                </div>
+                <div class="modal-form-group">
+                    <label for="editProjectEndDate">تاريخ الانتهاء:</label>
+                    <input type="date" id="editProjectEndDate" name="endDate">
+                </div>
+                <div class="modal-form-group">
+                    <label for="editProjectNotes">ملاحظات:</label>
+                    <textarea id="editProjectNotes" name="notes"></textarea>
+                </div>
+                <div class="modal-form-group">
+                    <label for="editProjectStatus">الحالة:</label>
+                    <select id="editProjectStatus" name="status">
+                        <option value="جاري">جاري</option>
+                        <option value="مكتمل">مكتمل</option>
+                        <option value="معلق">معلق</option>
+                        <option value="ملغى">ملغى</option>
+                    </select>
+                </div>
+                <div class="modal-buttons">
+                    <button type="submit" class="modal-button">حفظ التغييرات</button>
+                    <button type="button" class="modal-button cancel" id="cancelEditProject">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Project Details Modal (REMOVED FROM HERE) -->
+
+
+    <script>
+        const BASE_URL = "http://localhost:3000";
+        
+        // Global variables for user info
+        let currentUserRole = '';
+        let currentUserPayload = null;
+        
+        // Client-side authentication check and redirection
+        document.addEventListener('DOMContentLoaded', function () {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const decodedPayload = decodeURIComponent(escape(window.atob(base64)));
+                const payload = JSON.parse(decodedPayload);
+
+                const username = payload.user.username || payload.user.id || 'مستخدم';
+                const role = payload.user.role || 'غير محدد';
+                
+                // Store in global variables
+                currentUserRole = role;
+                currentUserPayload = payload;
+
+                document.getElementById('loggedInUser').textContent = `مرحباً، ${username} (${role})`;
+
+                // Client-side authorization based on role for sidebar visibility
+                const sidebar = document.getElementById('sidebar');
+                const addProjectLink = sidebar.querySelector('[data-page="add-project"]');
+                const usersLink = sidebar.querySelector('[data-page="users"]');
+                const categoriesLink = sidebar.querySelector('[data-page="categories"]');
+                const addTreasuryLink = sidebar.querySelector('[data-page="add-treasury"]');
+                const treasuriesLink = sidebar.querySelector('[data-page="treasuries"]');
+                const contractorsLink = sidebar.querySelector('[data-page="contractors"]');
+                const clientsLink = sidebar.querySelector('[data-page="clients"]');
+                const generalExpensesLink = sidebar.querySelector('[data-page="general-expenses"]');
+
+                if (role === 'مهندس') {
+                    // Hide restricted elements for engineer
+                    if (addProjectLink) addProjectLink.style.display = 'none';
+                    if (usersLink) usersLink.style.display = 'none';
+                    if (addTreasuryLink) addTreasuryLink.style.display = 'none';
+                    if (contractorsLink) contractorsLink.style.display = 'none';
+                    if (clientsLink) clientsLink.style.display = 'none';
+                    if (generalExpensesLink) generalExpensesLink.style.display = 'none';
+                }
+
+                // Set active link in sidebar (for this page)
+                const currentPageLink = document.querySelector(`.sidebar ul li a[data-page="projects"]`);
+                if (currentPageLink) {
+                    currentPageLink.parentElement.classList.add('active');
+                }
+            } catch (e) {
+                console.error("Failed to decode token:", e);
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            }
+
+            // Logout functionality
+            const logout = () => {
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            };
+            document.getElementById('logoutButton').addEventListener('click', logout);
+            document.getElementById('sidebarLogoutButton').addEventListener('click', logout);
+
+            // Responsive Sidebar Toggle
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+                sidebarOverlay.classList.toggle('active');
+                document.body.classList.toggle('sidebar-open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+                document.body.classList.remove('sidebar-open');
+            });
+
+            // Simple navigation - let links work normally
+            sidebar.addEventListener('click', (event) => {
+                const link = event.target.closest('a');
+                if (link && link.id !== 'sidebarLogoutButton') {
+                    // Close sidebar on mobile
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                    document.body.classList.remove('sidebar-open');
+                }
+            });
+
+            /* --- Projects Page Logic --- */
+            const projectsTableBody = document.getElementById('projectsTableBody');
+            const projectSearchName = document.getElementById('projectSearchName');
+            const projectSearchStatus = document.getElementById('projectSearchStatus');
+            const applyProjectFilterBtn = document.getElementById('applyProjectFilter');
+
+            // Edit Project Modal elements
+            const editProjectModal = document.getElementById('editProjectModal');
+            const editProjectIdInput = document.getElementById('editProjectId');
+            const editProjectNameInput = document.getElementById('editProjectName');
+            const editProjectAddressInput = document.getElementById('editProjectAddress');
+            const editProjectDescriptionTextarea = document.getElementById('editProjectDescription');
+            const editProjectEngineerSelect = document.getElementById('editProjectEngineer');
+            const editProjectClientSelect = document.getElementById('editProjectClient');
+            const editProjectStartDateInput = document.getElementById('editProjectStartDate');
+            const editProjectEndDateInput = document.getElementById('editProjectEndDate');
+            const editProjectNotesTextarea = document.getElementById('editProjectNotes');
+            const editProjectStatusSelect = document.getElementById('editProjectStatus');
+            const editProjectForm = document.getElementById('editProjectForm');
+            const cancelEditProjectBtn = document.getElementById('cancelEditProject');
+
+
+            // Function to fetch all projects
+            const fetchProjects = async () => {
+                projectsTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">جاري تحميل المشاريع...</td></tr>';
+
+                let query = '';
+                const searchTerm = projectSearchName.value.trim();
+                const statusFilter = projectSearchStatus.value;
+
+                if (searchTerm) {
+                    query += `name=${searchTerm}`;
+                }
+                if (statusFilter) {
+                    query += `${query ? '&' : ''}status=${statusFilter}`;
+                }
+
+                try {
+                    // Use the same API endpoint for all users
+                    const apiUrl = `${BASE_URL}/api/projects`;
+                    
+                    const response = await fetch(`${apiUrl}${query ? '?' + query : ''}`, {
+                        headers: {
+                            'x-auth-token': localStorage.getItem('token')
+                        }
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        projectsTableBody.innerHTML = '';
+                        if (data.length === 0) {
+                            projectsTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">لا يوجد مشاريع لعرضها.</td></tr>';
+                            return;
+                        }
+
+                        data.forEach(project => {
+                            const row = projectsTableBody.insertRow();
+                            row.innerHTML = `
+                                <td>${project.projectName}</td>
+                                <td>${project.address}</td>
+                                <td>${project.engineer ? project.engineer.username : 'غير محدد'}</td>
+                                <td>${project.client ? project.client.clientName : 'غير محدد'}</td>
+                                <td>${new Date(project.startDate).toLocaleDateString('en-GB')}</td>
+                                <td>${project.status}</td>
+                                <td class="action-buttons">
+                                    <button class="view" data-id="${project._id}"><i class="fas fa-eye"></i> عرض</button>
+                                    ${currentUserRole !== 'مهندس' ? 
+                                        `<button class="edit" data-id="${project._id}"><i class="fas fa-edit"></i> تعديل</button>
+                                         <button class="delete" data-id="${project._id}"><i class="fas fa-trash-alt"></i> حذف</button>` : 
+                                        ''}
+                                </td>
+                            `;
+                        });
+                    } else {
+                        projectsTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">فشل في جلب المشاريع.</td></tr>';
+                        setTimeout(() => projectsTableBody.innerHTML = '', 3000);
+                    }
+                } catch (error) {
+                    console.error('Error fetching projects:', error);
+                    projectsTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">خطأ في الاتصال بالخادم.</td></tr>';
+                    setTimeout(() => projectsTableBody.innerHTML = '', 3000);
+                }
+            };
+
+            // Initial fetch of projects
+            fetchProjects();
+
+            // Apply filter button click
+            applyProjectFilterBtn.addEventListener('click', fetchProjects);
+
+            // Close Modal Function (for edit project modal)
+            const closeEditProjectModal = () => {
+                editProjectModal.style.display = 'none';
+            };
+            editProjectModal.querySelector('.close-button').addEventListener('click', closeEditProjectModal);
+            cancelEditProjectBtn.addEventListener('click', closeEditProjectModal);
+            window.addEventListener('click', (event) => {
+                if (event.target == editProjectModal) {
+                    closeEditProjectModal();
+                }
+            });
+
+            // Function to fetch engineers and clients for dropdowns
+            const loadProjectFormDropdowns = async (engineerSelectElement, clientSelectElement) => {
+                // Fetch engineers
+                try {
+                    const engineersResponse = await fetch(`${BASE_URL}/api/projects/engineers`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    if (engineersResponse.ok) {
+                        const engineers = await engineersResponse.json();
+                        engineerSelectElement.innerHTML = '<option value="">(اختياري) - اختر مهندس</option>';
+                        engineers.forEach(engineer => {
+                            const option = document.createElement('option');
+                            option.value = engineer._id;
+                            option.textContent = engineer.username;
+                            engineerSelectElement.appendChild(option);
+                        });
+                    } else {
+                        console.error('Failed to fetch engineers for project form:', await engineersResponse.json());
+                    }
+                } catch (error) {
+                    console.error('Error fetching engineers for project form:', error);
+                }
+
+                // Fetch clients
+                try {
+                    const clientsResponse = await fetch(`${BASE_URL}/api/clients`, {
+                        headers: { 'x-auth-token': localStorage.getItem('token') }
+                    });
+                    if (clientsResponse.ok) {
+                        const clients = await clientsResponse.json();
+                        clientSelectElement.innerHTML = '<option value="">(اختياري) - اختر عميل</option>';
+                        clients.forEach(client => {
+                            const option = document.createElement('option');
+                            option.value = client._id;
+                            option.textContent = client.clientName;
+                            clientSelectElement.appendChild(option);
+                        });
+                    } else {
+                        console.error('Failed to fetch clients for project form:', await clientsResponse.json());
+                    }
+                } catch (error) {
+                    console.error('Error fetching clients for project form:', error);
+                }
+            };
+
+
+            // Handle Edit/Delete/View buttons on projects table
+            projectsTableBody.addEventListener('click', async (event) => {
+                const target = event.target.closest('button');
+                if (!target) return;
+
+                const projectId = target.dataset.id;
+                const action = target.classList[0]; // 'view', 'edit', 'delete'
+
+                if (action === 'edit') {
+                    await loadProjectFormDropdowns(editProjectEngineerSelect, editProjectClientSelect);
+
+                    try {
+                        const response = await fetch(`${BASE_URL}/api/projects/${projectId}`, {
+                            headers: { 'x-auth-token': localStorage.getItem('token') }
+                        });
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            editProjectIdInput.value = data._id;
+                            editProjectNameInput.value = data.projectName;
+                            editProjectAddressInput.value = data.address;
+                            editProjectDescriptionTextarea.value = data.description || '';
+                            editProjectEngineerSelect.value = data.engineer ? data.engineer._id : ''; // Set selected engineer ID
+                            editProjectClientSelect.value = data.client ? data.client._id : '';     // Set selected client ID
+                            editProjectStartDateInput.value = data.startDate ? new Date(data.startDate).toISOString().split('T')[0] : '';
+                            editProjectEndDateInput.value = data.endDate ? new Date(data.endDate).toISOString().split('T')[0] : '';
+                            editProjectNotesTextarea.value = data.notes || '';
+                            editProjectStatusSelect.value = data.status;
+
+                            editProjectModal.style.display = 'flex'; // Show modal
+                        } else {
+                            showDashboardMessage('فشل في جلب بيانات المشروع للتعديل.', 'error', 2500);
+                        }
+                    } catch (error) {
+                        console.error('Error fetching project for edit:', error);
+                        showDashboardMessage('خطأ في الاتصال بالخادم لجلب بيانات المشروع.', 'error', 2500);
+                    }
+                } else if (action === 'delete') {
+                    if (confirm('هل أنت متأكد أنك تريد حذف هذا المشروع؟ لا يمكن التراجع عن هذا الإجراء.')) {
+                        try {
+                            const response = await fetch(`${BASE_URL}/api/projects/${projectId}`, {
+                                method: 'DELETE',
+                                headers: { 'x-auth-token': localStorage.getItem('token') }
+                            });
+                            const data = await response.json();
+
+                            if (response.ok) {
+                                showDashboardMessage('تم حذف المشروع بنجاح', 'success', 2000);
+                                fetchProjects(); // Refresh list after deletion
+                            } else {
+                                showDashboardMessage(data.message || 'فشل في حذف المشروع.', 'error', 2500);
+                            }
+                        } catch (error) {
+                            console.error('Error deleting project:', error);
+                            showDashboardMessage('خطأ في الاتصال بالخادم أثناء حذف المشروع.', 'error', 2500);
+                        }
+                    }
+                } else if (action === 'view') {
+                    // هذا هو التعديل الرئيسي: التوجيه إلى صفحة تفاصيل المشروع الجديدة
+                    window.location.href = `${BASE_URL}/project-details.html?id=${projectId}`;
+                }
+            });
+
+            // Handle Edit Project Form Submission
+            editProjectForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const projectId = editProjectIdInput.value;
+                const projectData = {
+                    projectName: editProjectNameInput.value,
+                    address: editProjectAddressInput.value,
+                    description: editProjectDescriptionTextarea.value || undefined,
+                    engineer: editProjectEngineerSelect.value || undefined,
+                    client: editProjectClientSelect.value || undefined,
+                    startDate: editProjectStartDateInput.value,
+                    endDate: editProjectEndDateInput.value || undefined,
+                    notes: editProjectNotesTextarea.value || undefined,
+                    status: editProjectStatusSelect.value
+                };
+
+                try {
+                    const response = await fetch(`${BASE_URL}/api/projects/${projectId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-auth-token': localStorage.getItem('token')
+                        },
+                        body: JSON.stringify(projectData)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        showDashboardMessage('تم تحديث المشروع بنجاح', 'success', 2000);
+                        fetchProjects(); // Refresh project list
+                        setTimeout(closeEditProjectModal, 1500);
+                    } else {
+                        showDashboardMessage(data.message || 'فشل في تحديث المشروع. الرجاء التحقق من البيانات.', 'error', 2500);
+                    }
+                } catch (error) {
+                    console.error('Error updating project:', error);
+                    showDashboardMessage('حدث خطأ أثناء الاتصال بالخادم. الرجاء المحاولة لاحقاً.', 'error', 2500);
+                }
+            });
+        });
+
+        // أضف دالة showDashboardMessage
+        function showDashboardMessage(message, type = 'success', duration = 2000) {
+            const msgDiv = document.getElementById('dashboardMessage');
+            let icon = type === 'success'
+                ? '<span class="msg-icon">✅</span>'
+                : '<span class="msg-icon">❌</span>';
+            msgDiv.innerHTML = icon + '<span>' + message + '</span>';
+            msgDiv.className = type + ' active';
+            msgDiv.style.display = 'flex';
+            setTimeout(() => {
+                msgDiv.classList.remove('active');
+                setTimeout(() => { msgDiv.style.display = 'none'; }, 400);
+            }, duration);
+        }
+    </script>
+</body>
+
+</html>

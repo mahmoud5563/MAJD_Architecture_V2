@@ -1,0 +1,175 @@
+ابا CTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مرتجعات المبيعات</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f4f4; margin: 0; }
+        .container { max-width: 1100px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 30px; }
+        h1 { color: #014C47; margin-bottom: 30px; }
+        .search-bar { margin-bottom: 20px; }
+        .search-bar input { padding: 8px 12px; border: 1px solid #ccc; border-radius: 5px; width: 250px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px 10px; border: 1px solid #eee; text-align: right; }
+        th { background: #014C47; color: #fff; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .action-btn { background: #ffc107; color: #333; border: none; padding: 7px 15px; border-radius: 5px; cursor: pointer; transition: 0.2s; }
+        .action-btn:hover { background: #e0a800; }
+        .back-btn { background: #6c757d; color: #fff; border: none; padding: 7px 15px; border-radius: 5px; cursor: pointer; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <button class="back-btn" onclick="window.location.href='sales.html'"><i class="fas fa-arrow-right"></i> عودة للمبيعات</button>
+            <button class="add-button" id="showReturnedInvoicesBtn"><i class="fas fa-list"></i> فواتير عليها مرتجع</button>
+        </div>
+        <h1>مرتجعات المبيعات</h1>
+        <div id="returnedInvoicesBox" style="display:none;margin-bottom:20px;"></div>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="ابحث برقم الفاتورة أو اسم العميل...">
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>رقم الفاتورة</th>
+                    <th>اسم العميل</th>
+                    <th>التاريخ</th>
+                    <th>الإجمالي</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="salesTableBody">
+                <tr><td colspan="5" style="text-align:center;">جاري تحميل الفواتير...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="detailsModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:3000;background:rgba(0,0,0,0.3);justify-content:center;align-items:center;">
+        <div style="background:#fff;border-radius:10px;padding:25px;min-width:340px;max-width:95vw;box-shadow:0 6px 24px rgba(0,0,0,0.18);position:relative;">
+            <span id="closeDetailsModal" style="position:absolute;left:15px;top:10px;font-size:22px;cursor:pointer;">&times;</span>
+            <h3 style="margin-bottom:15px;">تفاصيل المرتجعات على الفاتورة</h3>
+            <div id="detailsContent"></div>
+        </div>
+    </div>
+    <script>
+    const BASE_URL = "http://localhost:3000";
+    const salesTableBody = document.getElementById('salesTableBody');
+    const searchInput = document.getElementById('searchInput');
+
+    // جلب الفواتير
+    async function fetchSales(query = "") {
+        salesTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">جاري تحميل الفواتير...</td></tr>';
+        try {
+            let url = `${BASE_URL}/api/sales`;
+            if (query) url += `?search=${encodeURIComponent(query)}`;
+            const res = await fetch(url, { headers: { 'x-auth-token': localStorage.getItem('token') } });
+            const data = await res.json();
+            if (res.ok) {
+                if (!data.length) {
+                    salesTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لا توجد فواتير.</td></tr>';
+                    return;
+                }
+                salesTableBody.innerHTML = '';
+                data.forEach(sale => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${sale.invoiceNumber || sale._id}</td>
+                        <td>${sale.clientName || '-'}</td>
+                        <td>${sale.date ? new Date(sale.date).toLocaleDateString('ar-EG') : '-'}</td>
+                        <td>${sale.total || '-'}</td>
+                        <td><button class="action-btn" onclick="window.location.href='sales-return-create.html?invoice=${sale._id}'">إنشاء مرتجع</button></td>
+                    `;
+                    salesTableBody.appendChild(row);
+                });
+            } else {
+                salesTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">فشل في جلب الفواتير.</td></tr>';
+            }
+        } catch (e) {
+            salesTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">خطأ في الاتصال بالخادم.</td></tr>';
+        }
+    }
+
+    searchInput.addEventListener('input', e => {
+        fetchSales(e.target.value);
+    });
+
+    fetchSales();
+
+    document.getElementById('showReturnedInvoicesBtn').addEventListener('click', async function() {
+        const box = document.getElementById('returnedInvoicesBox');
+        if (box.style.display === 'block') { box.style.display = 'none'; return; }
+        box.style.display = 'block';
+        box.innerHTML = 'جاري التحميل...';
+        try {
+            const res = await fetch(`${BASE_URL}/api/sales/sale-returns`, { headers: { 'x-auth-token': localStorage.getItem('token') } });
+            const data = await res.json();
+            if (res.ok && data.length) {
+                let html = `<table style='width:100%;border-collapse:collapse;margin-top:10px;'>
+                    <thead><tr><th>رقم الفاتورة</th><th>اسم العميل</th><th>تاريخ المرتجع</th><th>الإجراءات</th></tr></thead><tbody>`;
+                const seen = new Set();
+                data.forEach(r => {
+                    if (seen.has(r.sale?._id || r.sale)) return;
+                    seen.add(r.sale?._id || r.sale);
+                    html += `<tr>
+                        <td>${r.sale?.invoiceNumber || '-'}</td>
+                        <td>${r.clientName || r.sale?.clientName || '-'}</td>
+                        <td>${r.date ? new Date(r.date).toLocaleDateString('ar-EG') : '-'}</td>
+                        <td><button class="action-btn details-btn" data-saleid="${r.sale?._id || r.sale}">التفاصيل</button></td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                box.innerHTML = html;
+            } else {
+                box.innerHTML = '<div class="msg error">لا توجد فواتير عليها مرتجع.</div>';
+            }
+        } catch (e) {
+            box.innerHTML = '<div class="msg error">حدث خطأ أثناء جلب البيانات.</div>';
+        }
+    });
+
+    document.body.insertAdjacentHTML('beforeend', document.getElementById('detailsModal') ? '' : `
+    <div id="detailsModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:3000;background:rgba(0,0,0,0.3);justify-content:center;align-items:center;">
+        <div style="background:#fff;border-radius:10px;padding:25px;min-width:340px;max-width:95vw;box-shadow:0 6px 24px rgba(0,0,0,0.18);position:relative;">
+            <span id="closeDetailsModal" style="position:absolute;left:15px;top:10px;font-size:22px;cursor:pointer;">&times;</span>
+            <h3 style="margin-bottom:15px;">تفاصيل المرتجعات على الفاتورة</h3>
+            <div id="detailsContent"></div>
+        </div>
+    </div>`);
+    const detailsModal = document.getElementById('detailsModal');
+    const detailsContent = document.getElementById('detailsContent');
+    document.getElementById('closeDetailsModal').onclick = () => { detailsModal.style.display = 'none'; };
+    document.addEventListener('click', async function(e) {
+        if (e.target.classList.contains('details-btn')) {
+            const saleId = e.target.getAttribute('data-saleid');
+            detailsContent.innerHTML = 'جاري التحميل...';
+            detailsModal.style.display = 'flex';
+            try {
+                const res = await fetch(`${BASE_URL}/api/sales/sale-returns`, { headers: { 'x-auth-token': localStorage.getItem('token') } });
+                const data = await res.json();
+                const related = data.filter(r => (r.sale?._id || r.sale) === saleId);
+                if (!related.length) {
+                    detailsContent.innerHTML = '<div class="msg error">لا يوجد مرتجعات على هذه الفاتورة.</div>';
+                    return;
+                }
+                let html = '';
+                related.forEach((ret, idx) => {
+                    html += `<div style='border-bottom:1px solid #eee;margin-bottom:10px;padding-bottom:10px;'>
+                        <strong>تاريخ المرتجع:</strong> ${ret.date ? new Date(ret.date).toLocaleDateString('ar-EG') : '-'}<br>
+                        <strong>سبب المرتجع:</strong> ${ret.reason || '-'}<br>
+                        <strong>الأصناف المرتجعة:</strong>
+                        <ul style='margin:5px 0 0 0;padding-right:18px;'>
+                            ${ret.items.map(i => `<li>${i.name || '-'} - الكمية: ${i.quantity}</li>`).join('')}
+                        </ul>
+                    </div>`;
+                });
+                detailsContent.innerHTML = html;
+            } catch (e) {
+                detailsContent.innerHTML = '<div class="msg error">حدث خطأ أثناء جلب التفاصيل.</div>';
+            }
+        }
+    });
+    </script>
+</body>
+</html> 

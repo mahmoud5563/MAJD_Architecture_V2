@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شجرة الحسابات</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #e6e6e6;
+            color: #333;
+            min-height: 100vh;
+            direction: rtl;
+        }
+        .header {
+            background-color: #014C47;
+            color: #f4f4f4;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .header .logo {
+            font-size: 22px;
+            font-weight: bold;
+        }
+        .main-container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(1,76,71,0.08);
+            padding: 32px 24px 24px 24px;
+        }
+        .page-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        .page-header h1 {
+            color: #014C47;
+            font-size: 26px;
+            margin: 0;
+        }
+        .tree {
+            margin: 0;
+            padding: 0 0 0 0;
+            list-style: none;
+        }
+        .tree li {
+            margin: 0 0 0 0;
+            padding: 6px 0 6px 18px;
+            position: relative;
+            font-size: 17px;
+        }
+        .tree li::before {
+            content: '';
+            position: absolute;
+            right: -10px;
+            top: 0;
+            width: 1px;
+            height: 100%;
+            background: #b2dfdb;
+        }
+        .tree li:last-child::before {
+            height: 18px;
+        }
+        .tree li .account {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f4f4f4;
+            border-radius: 6px;
+            padding: 7px 12px;
+            margin-bottom: 2px;
+            transition: background 0.2s;
+            cursor: pointer;
+            user-select: none;
+        }
+        .tree li .account:hover {
+            background: #e0f2f1;
+        }
+        .tree li .account .fa-folder {
+            color: #014C47;
+        }
+        .tree li .account .fa-file {
+            color: #00bfae;
+        }
+        .tree li .arrow {
+            display: inline-block;
+            transition: transform 0.2s;
+            font-size: 15px;
+            margin-left: 4px;
+            color: #014C47;
+        }
+        .tree li .arrow.open {
+            transform: rotate(90deg);
+        }
+        .tree ul {
+            margin-right: 18px;
+            padding-right: 10px;
+            border-right: 1px dashed #b2dfdb;
+            display: none;
+        }
+        .tree ul.open {
+            display: block;
+        }
+        @media (max-width: 700px) {
+            .main-container {
+                padding: 10px 2vw;
+            }
+            .tree li .account {
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo"><i class="fas fa-sitemap"></i> شجرة الحسابات</div>
+    </div>
+    <div class="main-container">
+        <div class="page-header">
+            <h1><i class="fas fa-tree"></i> شجرة الحسابات</h1>
+        </div>
+        <div id="treeContainer">
+            <div style="text-align:center; color:#888; margin:30px;" id="loadingMsg">جاري تحميل الشجرة...</div>
+        </div>
+    </div>
+    <script>
+        const BASE_URL = "http://localhost:3000";
+        async function fetchAccountsTree() {
+            const res = await fetch(`${BASE_URL}/api/accounts/accounts-tree`);
+            if (!res.ok) return [];
+            return await res.json();
+        }
+        function buildTree(accounts) {
+            const map = {};
+            accounts.forEach(acc => map[acc._id] = { ...acc, children: [] });
+            const roots = [];
+            accounts.forEach(acc => {
+                if (acc.parent) {
+                    if (map[acc.parent]) map[acc.parent].children.push(map[acc._id]);
+                } else {
+                    roots.push(map[acc._id]);
+                }
+            });
+            return roots;
+        }
+        function renderTree(nodes, level = 0) {
+            if (!nodes.length) return '<div style="color:#b02a37;">لا توجد حسابات</div>';
+            let html = '<ul class="tree' + (level === 0 ? ' open' : '') + '">';
+            for (const node of nodes) {
+                const hasChildren = node.children.length > 0;
+                html += '<li>';
+                html += `<span class="account" onclick="toggleAccordion(this)">`;
+                if (hasChildren) {
+                    html += `<span class="arrow">&#9654;</span>`;
+                }
+                html += `<i class="fas ${hasChildren ? 'fa-folder' : 'fa-file'}"></i> <b>${node.name}</b> <span style=\"color:#888;font-size:13px;\">[${node.code}]</span></span>`;
+                if (hasChildren) {
+                    html += renderTree(node.children, level + 1);
+                }
+                html += '</li>';
+            }
+            html += '</ul>';
+            return html;
+        }
+        window.toggleAccordion = function(el) {
+            const arrow = el.querySelector('.arrow');
+            const nextUl = el.nextElementSibling;
+            if (arrow && nextUl && nextUl.tagName === 'UL') {
+                const isOpen = nextUl.classList.toggle('open');
+                arrow.classList.toggle('open', isOpen);
+            }
+        }
+        async function showTree() {
+            document.getElementById('loadingMsg').style.display = 'block';
+            const accounts = await fetchAccountsTree();
+            const tree = buildTree(accounts);
+            document.getElementById('treeContainer').innerHTML = renderTree(tree);
+        }
+        showTree();
+    </script>
+</body>
+</html> 
